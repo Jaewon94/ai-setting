@@ -1,0 +1,12 @@
+# Codex CLI 프로젝트 설정 (공통 베이스)
+# 공식 문서: https://developers.openai.com/codex/config-reference/
+
+model = "o4-mini"
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+[features]
+multi_agent = true
+
+[tui]
+notifications = true
