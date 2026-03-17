@@ -1,0 +1,9 @@
+{
+  "context": {
+    "fileName": "GEMINI.md",
+    "fileFiltering": {
+      "respectGitIgnore": true,
+      "respectGeminiIgnore": true
+    }
+  }
+}

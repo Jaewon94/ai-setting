@@ -22,30 +22,35 @@ cd my-new-project
 
 실행하면:
 ```
-[1/6] Claude Code 설정 복사 (.claude/)
+[1/7] Claude Code 설정 복사 (.claude/)
   ⚠ .claude/ 이미 존재 — 백업 후 덮어쓰기
   📦 백업: /path/to/project/.claude.backup.20260317120000
   ✅ standard profile 적용됨 (settings 1개, hooks 2개, agents 4개, skills 5개)
-[2/6] Codex CLI 설정 복사 (.codex/)
+[2/7] Cursor / Gemini / Copilot 설정 복사
+  ✅ Cursor rule 적용됨 (.cursor/rules/ai-setting.mdc)
+  ✅ Gemini settings 적용됨 (.gemini/settings.json)
+[3/7] Codex CLI 설정 복사 (.codex/)
   ⚠ .codex/config.toml 이미 존재 — 백업 후 덮어쓰기
   📦 백업: /path/to/project/.codex/config.toml.backup.20260317120000
   ✅ config.toml
-[3/6] 프로젝트 로컬 MCP preset 생성
+[4/7] 프로젝트 로컬 MCP preset 생성
   ⚠ .mcp.json 이미 존재 — 백업 후 덮어쓰기
   📦 백업: /path/to/project/.mcp.json.backup.20260317120000
   ✅ Codex MCP preset 적용됨 (core)
   ✅ Claude MCP config 생성됨 (.mcp.json)
-[4/6] 템플릿 복사
+[5/7] 템플릿 복사
   ✅ CLAUDE.md 생성됨
   ✅ AGENTS.md 생성됨
-[5/6] AI로 CLAUDE.md / AGENTS.md 자동 생성
+  ✅ GEMINI.md 생성됨
+  ✅ .github/copilot-instructions.md 생성됨
+[6/7] AI로 프로젝트 문서 자동 생성
   mode: hybrid (문서와 구현 신호가 모두 있어 함께 해석하는 편이 적합함)
   archetype: frontend-web (웹 프론트엔드 구성 신호가 확인됨)
   stack: Next.js (TypeScript/JavaScript) [next.config.ts]
   signals: docs=[README.md,docs] | impl=[package.json,src] | tests=[tests] | ops=[Dockerfile,.env.example]
   🔄 Claude Code로 프로젝트 분석 중...
-  ✅ Claude Code가 CLAUDE.md / AGENTS.md를 자동 생성했습니다
-[6/6] 완료!
+  ✅ Claude Code가 프로젝트 문서를 자동 생성했습니다
+[7/7] 완료!
 ```
 
 ### 동작 방식
@@ -53,9 +58,9 @@ cd my-new-project
 ```
 init.sh 실행
   │
-  ├─ 1~4단계: 공통 설정 + 프로젝트 로컬 MCP + 템플릿 복사 (즉시 완료)
+  ├─ 1~5단계: 공통 설정 + 멀티 도구 파일 + 프로젝트 로컬 MCP + 템플릿 복사 (즉시 완료)
   │
-  └─ 5단계: AI가 프로젝트를 분석해서 CLAUDE.md / AGENTS.md 자동 채우기
+  └─ 6단계: AI가 프로젝트를 분석해서 프로젝트 문서 자동 채우기
        │
        ├─ Claude Code 있으면 → Claude Code가 처리
        ├─ 없으면 Codex 있으면 → Codex가 처리
@@ -122,6 +127,16 @@ init.sh 실행
 - ai-setting이 관리하는 agents/skills/hooks만 정리 후 선택한 profile 기준으로 다시 복사
 - 사용자가 따로 만든 다른 `.claude` 파일은 그대로 둠
 
+### 멀티 도구 지원
+
+기본 실행만으로 아래 도구용 파일도 함께 생성됩니다.
+
+| 도구 | 생성 파일 | 메모 |
+|------|-----------|------|
+| Cursor | `.cursor/rules/ai-setting.mdc` | `AGENTS.md`, `CLAUDE.md`를 import하는 always-apply rule |
+| Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | `GEMINI.md`가 `CLAUDE.md`, `AGENTS.md`를 import |
+| GitHub Copilot | `.github/copilot-instructions.md` | 저장소 공통 build/test/validation 규칙 요약 |
+
 ## 적용 후 확인
 
 아래 설명은 기본값인 `standard` profile 기준입니다. `--profile minimal`을 사용했다면 hooks만 남고 managed agents/skills는 복사되지 않습니다.
@@ -131,6 +146,9 @@ init.sh 실행
 - `.claude/hooks/*` — 보호 파일 차단 + 위험 명령 차단
 - `.claude/agents/*` — 보안 리뷰, 설계 검증, 테스트 작성, 리서치
 - `.claude/skills/*` — 배포, 코드 리뷰, 이슈 수정, Gap 체크, 교차검증
+- `.cursor/rules/ai-setting.mdc` — Cursor project-wide rule
+- `.gemini/settings.json` / `GEMINI.md` — Gemini CLI 컨텍스트
+- `.github/copilot-instructions.md` — GitHub Copilot 저장소 지침
 - `.codex/config.toml` — Codex CLI 기본 설정 + 프로젝트 로컬 MCP
 - `.mcp.json` — Claude Code 프로젝트 로컬 MCP
 
@@ -156,10 +174,10 @@ init.sh 실행
 기본값은 여전히 `core`만 적용되고, `--auto-mcp`를 줬을 때만 추천 preset이 자동 반영됩니다.
 
 ### AI가 자동 생성한 파일 확인
-`CLAUDE.md`와 `AGENTS.md`가 프로젝트에 맞게 채워졌는지 확인.
+`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`가 프로젝트에 맞게 채워졌는지 확인.
 AI 생성이 실패했거나 `--skip-ai`로 건너뛴 경우 `[대괄호]` 부분을 직접 채우거나:
 ```
-claude "CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 채워줘"
+claude "프로젝트 문서의 [대괄호] 부분을 채워줘"
 ```
 
 ### 프로젝트 해석 모드 자동 감지
@@ -251,6 +269,8 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 반복 실행 시 overwrite 정책:
 - `.claude/`가 이미 있으면 디렉토리 전체를 `.claude.backup.TIMESTAMP`로 백업
+- `.cursor/rules/ai-setting.mdc`가 이미 있으면 `.backup.TIMESTAMP`로 백업
+- `.gemini/settings.json`이 이미 있으면 `.backup.TIMESTAMP`로 백업
 - `.codex/config.toml`이 이미 있으면 `.codex/config.toml.backup.TIMESTAMP`로 백업
 - `.mcp.json`이 이미 있으면 `.mcp.json.backup.TIMESTAMP`로 백업
 - `--profile minimal`로 전환하면 ai-setting이 관리하던 agents/skills는 정리되고 minimal 설정만 남음
@@ -260,8 +280,8 @@ blank-start에서도 의도를 미리 줄 수 있음:
 `init.sh --doctor /path/to/project`로 현재 상태를 점검할 수 있습니다.
 
 진단 항목:
-- 필수 바이너리: `jq`, `npx`, `uvx`, `claude`, `codex`
-- 핵심 파일: `.claude/settings.json`, profile별 hooks, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
+- 필수 바이너리: `jq`, `npx`, `uvx`, `claude`, `codex`, `gemini`
+- 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
 - `.mcp.json` JSON 유효성
 - 템플릿/skill placeholder 잔존 여부
 
@@ -285,6 +305,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 동작:
 - `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md` 기준으로 비교
+- `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`도 포함
 - 실제 파일은 변경하지 않음
 - AI 자동 채우기 결과는 포함하지 않음
 
@@ -297,6 +318,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 동작:
 - `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`를 대상 프로젝트 아래 `.ai-setting.backup.TIMESTAMP/`로 백업
+- `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`도 함께 백업
 - 이후 overwrite 단계에서는 개별 `.backup.*`를 중복 생성하지 않고 snapshot 포함 안내만 출력
 - `--dry-run`과 함께 쓰면 snapshot 생성 예정만 출력
 
@@ -309,6 +331,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 동작:
 - 기존 `CLAUDE.md`, `AGENTS.md`는 backup 후 새 템플릿으로 재생성
+- 기존 `GEMINI.md`, `.github/copilot-instructions.md`도 backup 후 새 템플릿으로 재생성
 - 이후 AI 자동 채우기 단계가 다시 실행됨
 - `.claude`, `.codex`, `.mcp.json`은 기존처럼 최신 설정으로 다시 적용
 - `docs/decisions.md`는 사용자 기록 파일로 보고 유지
@@ -344,11 +367,18 @@ ai-setting/
 │       ├── fix-issue/SKILL.md             # 이슈 수정 워크플로우
 │       ├── gap-check/SKILL.md             # 빠진 요구사항 탐지
 │       └── cross-validate/SKILL.md        # AI 출력물 교차검증
+├── cursor/
+│   └── rules/
+│       └── ai-setting.mdc                 # Cursor always-apply rule
+├── gemini/
+│   └── settings.json                      # Gemini CLI workspace settings
 ├── codex/
 │   └── config.toml                        # Codex CLI 기본 설정 (MCP preset은 init 시 추가)
 ├── templates/
 │   ├── CLAUDE.md.template                 # [대괄호]만 채우면 됨
 │   ├── AGENTS.md.template                 # [대괄호]만 채우면 됨
+│   ├── GEMINI.md.template                 # Gemini CLI 컨텍스트 템플릿
+│   ├── copilot-instructions.md.template   # Copilot 저장소 지침 템플릿
 │   └── decisions.md.template              # 기술 의사결정 기록
 └── README.md
 ```

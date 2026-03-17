@@ -1,0 +1,12 @@
+---
+description: Project-wide coding and validation rules from ai-setting
+alwaysApply: true
+---
+
+Follow the project-wide rules in `AGENTS.md` and `CLAUDE.md`.
+Use `docs/decisions.md` for technical decision history.
+Before substantial changes, confirm the build, test, and lint commands from `CLAUDE.md`.
+Keep code changes and documentation updates in sync.
+
+@AGENTS.md
+@CLAUDE.md

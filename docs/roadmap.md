@@ -9,7 +9,7 @@
 - [x] Priority 1: `blank-start / docs-first / hybrid / code-first` 분기 도입
 - [x] Priority 2: archetype / stack 자동 감지 1차 도입
 - [x] Priority 3: `doctor / dry-run / diff / backup-all / reapply` 도입
-- [ ] Phase 1: 멀티 도구 지원
+- [x] Phase 1: 멀티 도구 지원
 - [ ] Phase 2: 동기화 시스템
 - [ ] Phase 3: 프로필 시스템 고도화
 - [ ] Phase 4: 플러그인 마켓플레이스
@@ -318,24 +318,31 @@ AI 자동 채우기 시 아래 원칙을 명시한다.
 - 어떤 파일이 왜 바뀌는지 미리 확인할 수 있다
 - 문제 발생 시 "무엇이 빠졌는지"를 문서가 아니라 명령으로 확인할 수 있다
 
-## 현재 상태 (v1-alpha)
+## 현재 상태 (v1-beta)
 
 ```
 init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → AI가 템플릿 채우기
 ```
 
 - Claude Code: `standard` / `minimal` profile, hooks, agents 4개, skills 5개
+- Multi-tool: Cursor, Gemini CLI, GitHub Copilot 1차 지원
 - Codex: `config.toml` + 프로젝트 로컬 MCP preset
 - Safety: `doctor`, `dry-run`, `diff`, `backup-all`, `reapply`
 - Detection: `blank-start / docs-first / hybrid / code-first`, archetype / stack 자동 감지, `--auto-mcp`
-- Templates: `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
-- 현재 한계: 멀티 도구 지원 미구현, 동기화 시스템 미구현, `strict/team` profile 미구현
+- Templates: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `docs/decisions.md`
+- 현재 한계: 동기화 시스템 미구현, `strict/team` profile 미구현, 플러그인/배포 경로 미구현
 
 ---
 
 ## Phase 1: 멀티 도구 지원
 
 > "AI 도구가 뭐든 같은 규칙이 적용된다"
+
+현재 상태:
+- Cursor 지원: `.cursor/rules/ai-setting.mdc` 생성
+- Gemini CLI 지원: `.gemini/settings.json`, `GEMINI.md` 생성
+- GitHub Copilot 지원: `.github/copilot-instructions.md` 생성
+- `doctor / diff / backup-all / reapply`도 새 관리 대상 파일을 함께 인식
 
 ### 1-1. Cursor 지원 추가
 - `.cursor/rules/*.mdc` 파일 생성

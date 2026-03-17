@@ -162,6 +162,12 @@ run_doctor() {
     doctor_warn "codex 미설치 — Codex fallback 자동 채우기 사용 불가"
   fi
 
+  if command -v gemini &> /dev/null; then
+    doctor_ok "gemini 설치됨"
+  else
+    doctor_warn "gemini 미설치 — Gemini CLI는 설정 파일만 생성되고 CLI 실행은 불가할 수 있음"
+  fi
+
   if [ -f "$target/.claude/settings.json" ]; then
     doctor_ok ".claude/settings.json 존재"
     if [ "$DETECTED_CLAUDE_PROFILE" = "custom" ]; then
@@ -171,6 +177,30 @@ run_doctor() {
     fi
   else
     doctor_error ".claude/settings.json 없음"
+  fi
+
+  if [ -f "$target/.cursor/rules/ai-setting.mdc" ]; then
+    doctor_ok ".cursor/rules/ai-setting.mdc 존재"
+  else
+    doctor_warn ".cursor/rules/ai-setting.mdc 없음 — Cursor 지원 파일이 아직 생성되지 않았을 수 있음"
+  fi
+
+  if [ -f "$target/.gemini/settings.json" ]; then
+    doctor_ok ".gemini/settings.json 존재"
+  else
+    doctor_warn ".gemini/settings.json 없음 — Gemini CLI 지원 파일이 아직 생성되지 않았을 수 있음"
+  fi
+
+  if [ -f "$target/GEMINI.md" ]; then
+    doctor_ok "GEMINI.md 존재"
+  else
+    doctor_warn "GEMINI.md 없음 — Gemini CLI 프로젝트 컨텍스트가 아직 생성되지 않았을 수 있음"
+  fi
+
+  if [ -f "$target/.github/copilot-instructions.md" ]; then
+    doctor_ok ".github/copilot-instructions.md 존재"
+  else
+    doctor_warn ".github/copilot-instructions.md 없음 — GitHub Copilot 지원 파일이 아직 생성되지 않았을 수 있음"
   fi
 
   if [ -x "$target/.claude/hooks/protect-files.sh" ]; then
@@ -233,11 +263,17 @@ run_doctor() {
     if [ -f "$target/AGENTS.md" ]; then
       placeholder_count=$((placeholder_count + $(rg -o '\[(프로젝트명|프로젝트 한 줄 설명|아키텍처 다이어그램|백엔드 스택|프론트엔드 스택|프로젝트별 테스트 명령어|프로젝트 디렉토리 구조|프로젝트별 도메인 개념)\]' "$target/AGENTS.md" 2>/dev/null | wc -l | tr -d ' ')))
     fi
+    if [ -f "$target/GEMINI.md" ]; then
+      placeholder_count=$((placeholder_count + $(rg -o '\[(프로젝트명|Gemini CLI에서 특히 강조할 프로젝트 규칙)\]' "$target/GEMINI.md" 2>/dev/null | wc -l | tr -d ' ')))
+    fi
+    if [ -f "$target/.github/copilot-instructions.md" ]; then
+      placeholder_count=$((placeholder_count + $(rg -o '\[(프로젝트 한 줄 설명|프로젝트별 build 또는 run 명령|프로젝트별 테스트 명령어|프로젝트별 린트 또는 포맷 명령|프로젝트별 추가 검증 또는 협업 규칙)\]' "$target/.github/copilot-instructions.md" 2>/dev/null | wc -l | tr -d ' ')))
+    fi
 
     if [ "$placeholder_count" -eq 0 ]; then
-      doctor_ok "CLAUDE.md / AGENTS.md 플레이스홀더 없음"
+      doctor_ok "문서 템플릿 플레이스홀더 없음"
     else
-      doctor_warn "CLAUDE.md / AGENTS.md에 템플릿 플레이스홀더가 남아 있음"
+      doctor_warn "CLAUDE.md / AGENTS.md / GEMINI.md / copilot instructions에 템플릿 플레이스홀더가 남아 있음"
     fi
 
     if [ "$DETECTED_CLAUDE_PROFILE" = "minimal" ]; then
@@ -279,6 +315,7 @@ run_diff_preview() {
   local -a internal_args
 
   managed_paths=(".claude" ".codex/config.toml" "CLAUDE.md" "AGENTS.md" "docs/decisions.md")
+  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" ".github/copilot-instructions.md")
   if [ "$MCP_ENABLED" = true ]; then
     managed_paths+=(".mcp.json")
   fi
@@ -368,10 +405,14 @@ run_diff_preview() {
 build_backup_managed_paths() {
   BACKUP_MANAGED_PATHS=(
     ".claude"
+    ".cursor/rules/ai-setting.mdc"
+    ".gemini/settings.json"
     ".codex/config.toml"
     ".mcp.json"
     "CLAUDE.md"
     "AGENTS.md"
+    "GEMINI.md"
+    ".github/copilot-instructions.md"
     "docs/decisions.md"
   )
 }
@@ -666,6 +707,22 @@ copy_claude_profile_assets() {
     run_copy "$SCRIPT_DIR/claude/skills/gap-check/SKILL.md" "$TARGET/.claude/skills/gap-check/"
     run_copy "$SCRIPT_DIR/claude/skills/cross-validate/SKILL.md" "$TARGET/.claude/skills/cross-validate/"
   fi
+}
+
+copy_cursor_assets() {
+  run_mkdir_p "$TARGET/.cursor/rules"
+  if [ -f "$TARGET/.cursor/rules/ai-setting.mdc" ]; then
+    backup_existing_path "$TARGET/.cursor/rules/ai-setting.mdc" ".cursor/rules/ai-setting.mdc"
+  fi
+  run_copy "$SCRIPT_DIR/cursor/rules/ai-setting.mdc" "$TARGET/.cursor/rules/ai-setting.mdc"
+}
+
+copy_gemini_assets() {
+  run_mkdir_p "$TARGET/.gemini"
+  if [ -f "$TARGET/.gemini/settings.json" ]; then
+    backup_existing_path "$TARGET/.gemini/settings.json" ".gemini/settings.json"
+  fi
+  run_copy "$SCRIPT_DIR/gemini/settings.json" "$TARGET/.gemini/settings.json"
 }
 
 backup_existing_path() {
@@ -1473,7 +1530,7 @@ fi
 # ============================================================
 # 1단계: Claude Code 설정 복사
 # ============================================================
-echo -e "${GREEN}[1/6]${NC} Claude Code 설정 복사 (.claude/)"
+echo -e "${GREEN}[1/7]${NC} Claude Code 설정 복사 (.claude/)"
 
 if [ -d "$TARGET/.claude" ]; then
   backup_existing_path "$TARGET/.claude" ".claude/"
@@ -1497,9 +1554,25 @@ else
 fi
 
 # ============================================================
-# 2단계: Codex 설정 복사
+# 2단계: 추가 AI 도구 설정 복사
 # ============================================================
-echo -e "${GREEN}[2/6]${NC} Codex CLI 설정 복사 (.codex/)"
+echo -e "${GREEN}[2/7]${NC} Cursor / Gemini / Copilot 설정 복사"
+
+copy_cursor_assets
+copy_gemini_assets
+
+if [ "$DRY_RUN" = true ]; then
+  echo "  ✅ Cursor rule 복사 예정 (.cursor/rules/ai-setting.mdc)"
+  echo "  ✅ Gemini settings 복사 예정 (.gemini/settings.json)"
+else
+  echo "  ✅ Cursor rule 적용됨 (.cursor/rules/ai-setting.mdc)"
+  echo "  ✅ Gemini settings 적용됨 (.gemini/settings.json)"
+fi
+
+# ============================================================
+# 3단계: Codex 설정 복사
+# ============================================================
+echo -e "${GREEN}[3/7]${NC} Codex CLI 설정 복사 (.codex/)"
 
 run_mkdir_p "$TARGET/.codex"
 if [ -f "$TARGET/.codex/config.toml" ]; then
@@ -1514,9 +1587,9 @@ else
 fi
 
 # ============================================================
-# 3단계: 프로젝트 로컬 MCP preset 생성
+# 4단계: 프로젝트 로컬 MCP preset 생성
 # ============================================================
-echo -e "${GREEN}[3/6]${NC} 프로젝트 로컬 MCP preset 생성"
+echo -e "${GREEN}[4/7]${NC} 프로젝트 로컬 MCP preset 생성"
 
 if [ "$MCP_ENABLED" = false ]; then
   echo -e "  ${YELLOW}--no-mcp 옵션으로 건너뜀${NC}"
@@ -1540,9 +1613,9 @@ else
 fi
 
 # ============================================================
-# 4단계: CLAUDE.md / AGENTS.md 템플릿 복사
+# 5단계: 프로젝트 문서 템플릿 복사
 # ============================================================
-echo -e "${GREEN}[4/6]${NC} 템플릿 복사"
+echo -e "${GREEN}[5/7]${NC} 템플릿 복사"
 
 TEMPLATES_COPIED=false
 
@@ -1588,6 +1661,49 @@ else
   echo -e "  ${YELLOW}⚠ AGENTS.md 이미 존재 — 건너뜀${NC}"
 fi
 
+if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/GEMINI.md" ]; then
+  backup_existing_path "$TARGET/GEMINI.md" "GEMINI.md"
+  run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ GEMINI.md 재생성 예정"
+  else
+    echo "  ✅ GEMINI.md 재생성됨"
+  fi
+  TEMPLATES_COPIED=true
+elif [ ! -f "$TARGET/GEMINI.md" ]; then
+  run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ GEMINI.md 생성 예정"
+  else
+    echo "  ✅ GEMINI.md 생성됨"
+  fi
+  TEMPLATES_COPIED=true
+else
+  echo -e "  ${YELLOW}⚠ GEMINI.md 이미 존재 — 건너뜀${NC}"
+fi
+
+run_mkdir_p "$TARGET/.github"
+if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.github/copilot-instructions.md" ]; then
+  backup_existing_path "$TARGET/.github/copilot-instructions.md" ".github/copilot-instructions.md"
+  run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ .github/copilot-instructions.md 재생성 예정"
+  else
+    echo "  ✅ .github/copilot-instructions.md 재생성됨"
+  fi
+  TEMPLATES_COPIED=true
+elif [ ! -f "$TARGET/.github/copilot-instructions.md" ]; then
+  run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ .github/copilot-instructions.md 생성 예정"
+  else
+    echo "  ✅ .github/copilot-instructions.md 생성됨"
+  fi
+  TEMPLATES_COPIED=true
+else
+  echo -e "  ${YELLOW}⚠ .github/copilot-instructions.md 이미 존재 — 건너뜀${NC}"
+fi
+
 run_mkdir_p "$TARGET/docs"
 if [ ! -f "$TARGET/docs/decisions.md" ]; then
   run_copy "$SCRIPT_DIR/templates/decisions.md.template" "$TARGET/docs/decisions.md"
@@ -1605,9 +1721,9 @@ else
 fi
 
 # ============================================================
-# 5단계: AI로 템플릿 자동 채우기 (Claude Code → Codex → 수동)
+# 6단계: AI로 템플릿 자동 채우기 (Claude Code → Codex → 수동)
 # ============================================================
-echo -e "${GREEN}[5/6]${NC} AI로 CLAUDE.md / AGENTS.md 자동 생성"
+echo -e "${GREEN}[6/7]${NC} AI로 프로젝트 문서 자동 생성"
 
 if [ "$CLAUDE_PROFILE" = "minimal" ]; then
   AI_PROFILE_GUIDANCE=$(cat <<'EOF'
@@ -1616,14 +1732,14 @@ Claude 프로필 지침:
 - `.claude/skills`가 없으면 생성하지 말고, skills 전용 placeholder도 건드릴 수 없으면 그대로 둬.
 EOF
 )
-  AI_SKILL_TASK="2. minimal profile이므로 .claude/skills/ 관련 파일이 이미 없으면 새로 만들지 마. 존재하는 경우에만 {{중괄호}} 플레이스홀더를 프로젝트에 맞게 교체해."
+  AI_SKILL_TASK="4. minimal profile이므로 .claude/skills/ 관련 파일이 이미 없으면 새로 만들지 마. 존재하는 경우에만 {{중괄호}} 플레이스홀더를 프로젝트에 맞게 교체해."
 else
   AI_PROFILE_GUIDANCE=$(cat <<'EOF'
 Claude 프로필 지침:
 - 현재 프로젝트는 standard profile을 사용하므로 managed skills placeholder도 함께 실제 명령어로 치환해.
 EOF
 )
-  AI_SKILL_TASK="2. .claude/skills/ 안의 SKILL.md 파일들에서 {{중괄호}} 플레이스홀더({{TEST_CMD}}, {{LINT_CMD}}, {{DEPLOY_BACKEND_CMD}} 등)를 프로젝트에 맞는 실제 명령어로 교체해줘."
+  AI_SKILL_TASK="4. .claude/skills/ 안의 SKILL.md 파일들에서 {{중괄호}} 플레이스홀더({{TEST_CMD}}, {{LINT_CMD}}, {{DEPLOY_BACKEND_CMD}} 등)를 프로젝트에 맞는 실제 명령어로 교체해줘."
 fi
 
 AI_PROMPT=$(cat <<EOF
@@ -1663,9 +1779,11 @@ ${AI_PROFILE_GUIDANCE}
 
 작업:
 1. CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 이 프로젝트에 맞게 전부 채워줘. 대괄호를 실제 내용으로 교체하고, 프로젝트에 해당하지 않는 섹션은 제거해. 기존 템플릿의 공통 규칙(Coding Rules, Forbidden 등)은 유지하되 프로젝트 스택에 맞게 보강해.
+2. GEMINI.md가 있으면 [대괄호] 부분을 채우고, Gemini CLI에서 참고할 핵심 지침이 CLAUDE.md / AGENTS.md와 모순되지 않게 정리해줘.
+3. .github/copilot-instructions.md가 있으면 GitHub Copilot이 바로 참고할 수 있도록 프로젝트 요약, build/test/lint 명령, 핵심 협업 규칙을 간결하게 정리해줘.
 ${AI_SKILL_TASK}
-3. 문서와 구현이 충돌하면 CLAUDE.md 끝에 '## Detected Mismatches' 섹션을 추가하고, 확인한 불일치를 짧게 정리해. 충돌이 없으면 이 섹션은 만들지 마.
-4. 확실하지 않은 내용은 사실처럼 단정하지 말고 TODO, 가정, 예정으로 표시해.
+5. 문서와 구현이 충돌하면 CLAUDE.md 끝에 '## Detected Mismatches' 섹션을 추가하고, 확인한 불일치를 짧게 정리해. 충돌이 없으면 이 섹션은 만들지 마.
+6. 확실하지 않은 내용은 사실처럼 단정하지 말고 TODO, 가정, 예정으로 표시해.
 EOF
 )
 
@@ -1697,7 +1815,7 @@ else
     echo "  🔄 Claude Code로 프로젝트 분석 중..."
     if cd "$TARGET" && claude -p "$AI_PROMPT" --allowedTools Write,Edit,Read,Glob,Grep 2>/dev/null; then
       AI_SUCCESS=true
-      echo "  ✅ Claude Code가 CLAUDE.md / AGENTS.md를 자동 생성했습니다"
+      echo "  ✅ Claude Code가 프로젝트 문서를 자동 생성했습니다"
     else
       echo -e "  ${YELLOW}  Claude Code 실행 실패 — Codex로 시도합니다${NC}"
     fi
@@ -1711,7 +1829,7 @@ else
       echo "  🔄 Codex로 프로젝트 분석 중..."
       if (cd "$TARGET" && codex -q "$AI_PROMPT") 2>/dev/null; then
         AI_SUCCESS=true
-        echo "  ✅ Codex가 CLAUDE.md / AGENTS.md를 자동 생성했습니다"
+        echo "  ✅ Codex가 프로젝트 문서를 자동 생성했습니다"
       else
         echo -e "  ${YELLOW}  Codex 실행 실패${NC}"
       fi
@@ -1727,21 +1845,21 @@ else
     echo -e "  Claude Code와 Codex를 모두 사용할 수 없습니다."
     echo ""
     echo -e "  ${CYAN}수동으로 채우는 방법:${NC}"
-    echo "    1. CLAUDE.md와 AGENTS.md를 열어서 [대괄호] 부분을 직접 채우세요"
+    echo "    1. CLAUDE.md, AGENTS.md, GEMINI.md, .github/copilot-instructions.md의 [대괄호] 부분을 직접 채우세요"
     echo "    2. 또는 Claude Code / Codex 설치 후 프로젝트 디렉토리에서:"
-    echo "       claude \"CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 채워줘\""
+    echo "       claude \"프로젝트 문서의 [대괄호] 부분을 채워줘\""
     echo ""
   fi
 fi
 
 # ============================================================
-# 6단계: 완료 요약
+# 7단계: 완료 요약
 # ============================================================
 echo ""
 if [ "$DRY_RUN" = true ]; then
-  echo -e "${GREEN}[6/6]${NC} dry-run 완료!"
+  echo -e "${GREEN}[7/7]${NC} dry-run 완료!"
 else
-  echo -e "${GREEN}[6/6]${NC} 완료!"
+  echo -e "${GREEN}[7/7]${NC} 완료!"
 fi
 echo ""
 echo -e "${CYAN}━━━ 적용된 설정 ━━━${NC}"
@@ -1756,6 +1874,8 @@ else
   echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
   echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
 fi
+echo "    .cursor/rules/ai-setting.mdc — Cursor project rules"
+echo "    .gemini/settings.json     — Gemini CLI workspace settings"
 echo "    .codex/config.toml        — Codex CLI 설정 + 프로젝트 로컬 MCP"
 if [ "$MCP_ENABLED" = true ]; then
   echo "    .mcp.json                 — Claude Code 프로젝트 로컬 MCP"
@@ -1766,6 +1886,8 @@ if [ "$TEMPLATES_COPIED" = true ]; then
   echo "  프로젝트 맞춤 설정:"
   echo "    CLAUDE.md                 — 프로젝트 빌드/실행/도메인 설정"
   echo "    AGENTS.md                 — 아키텍처/스택/코딩 규칙"
+  echo "    GEMINI.md                 — Gemini CLI 프로젝트 컨텍스트"
+  echo "    .github/copilot-instructions.md — GitHub Copilot 저장소 지침"
   echo "    docs/decisions.md         — 기술 의사결정 기록"
 fi
 if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then

@@ -1,0 +1,10 @@
+# [프로젝트명] - Gemini CLI Context
+
+이 파일은 Gemini CLI용 프로젝트 컨텍스트입니다.
+핵심 규칙과 실행/검증 방식은 아래 문서를 우선 기준으로 삼습니다.
+
+@CLAUDE.md
+@AGENTS.md
+
+## Gemini-specific Notes
+- [Gemini CLI에서 특히 강조할 프로젝트 규칙]
