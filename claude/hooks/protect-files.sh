@@ -5,43 +5,57 @@
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
-PROTECTED_PATTERNS=(
-  # 시크릿 / 환경변수
-  ".env"
-  ".env.local"
-  ".env.production"
-  ".env.development"
-
-  # Git 내부
+# 디렉토리 패턴 (경로에 포함되면 차단)
+DIR_PATTERNS=(
   ".git/"
-
-  # 의존성 / 빌드 산출물
   "node_modules/"
   "__pycache__/"
   ".venv/"
   "dist/"
   "build/"
   ".next/"
+)
 
-  # Lock 파일 (패키지 매니저가 관리)
+# 파일명 패턴 (basename 기준으로 매칭)
+FILE_PATTERNS=(
+  ".env"
+  ".env.local"
+  ".env.production"
+  ".env.development"
   "package-lock.json"
   "pnpm-lock.yaml"
   "yarn.lock"
   "uv.lock"
-
-  # DB / 데이터
-  "*.sqlite"
-  "*.sqlite3"
-
-  # 인증 / 키
-  "*.pem"
-  "*.key"
   "credentials.json"
 )
 
-for pattern in "${PROTECTED_PATTERNS[@]}"; do
+# 확장자 패턴 (basename 끝이 매칭)
+EXT_PATTERNS=(
+  ".sqlite"
+  ".sqlite3"
+  ".pem"
+  ".key"
+)
+
+BASENAME=$(basename "$FILE_PATH")
+
+for pattern in "${DIR_PATTERNS[@]}"; do
   if [[ "$FILE_PATH" == *"$pattern"* ]]; then
-    echo "Blocked: $FILE_PATH matches protected pattern '$pattern'. Edit manually if needed." >&2
+    echo "Blocked: $FILE_PATH matches protected directory '$pattern'. Edit manually if needed." >&2
+    exit 2
+  fi
+done
+
+for pattern in "${FILE_PATTERNS[@]}"; do
+  if [[ "$BASENAME" == "$pattern" ]]; then
+    echo "Blocked: $FILE_PATH matches protected file '$pattern'. Edit manually if needed." >&2
+    exit 2
+  fi
+done
+
+for pattern in "${EXT_PATTERNS[@]}"; do
+  if [[ "$BASENAME" == *"$pattern" ]]; then
+    echo "Blocked: $FILE_PATH matches protected extension '$pattern'. Edit manually if needed." >&2
     exit 2
   fi
 done

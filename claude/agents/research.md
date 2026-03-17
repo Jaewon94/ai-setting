@@ -1,3 +1,9 @@
+---
+name: research
+description: 기술 리서치 전담 에이전트 (공식 문서 + 웹 검색)
+tools: WebSearch, WebFetch, Read, Grep, Glob
+---
+
 # Research Agent — 기술 리서치 전담
 
 ## 역할

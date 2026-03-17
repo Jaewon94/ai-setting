@@ -3,8 +3,9 @@
 # 사용법: /path/to/ai-setting/init.sh [프로젝트 경로]
 #
 # 1단계: 공통 설정 파일 복사 (hooks, agents, skills, codex)
-# 2단계: CLAUDE.md / AGENTS.md 템플릿 복사
-# 3단계: AI로 템플릿의 [대괄호] 부분 자동 채우기
+# 2단계: 프로젝트 로컬 MCP preset 생성
+# 3단계: CLAUDE.md / AGENTS.md 템플릿 복사
+# 4단계: AI로 템플릿의 [대괄호] 부분 자동 채우기
 #         Claude Code → Codex → 수동 안내 (fallback 체인)
 
 set -e
@@ -15,32 +16,424 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
+RUN_TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 
-# --skip-ai 옵션: AI 자동 채우기 건너뛰기
-SKIP_AI=false
-for arg in "$@"; do
-  if [ "$arg" = "--skip-ai" ]; then
-    SKIP_AI=true
+usage() {
+  cat <<'EOF'
+사용법: init.sh [옵션] [프로젝트 경로]
+
+옵션:
+  --skip-ai                AI 자동 채우기 건너뛰기
+  --mcp-preset PRESETS     프로젝트 로컬 MCP preset 지정 (예: core,web)
+  --no-mcp                 프로젝트 로컬 MCP 생성 건너뛰기
+  -h, --help               도움말 출력
+
+MCP preset:
+  core   sequential-thinking, serena, upstash-context-7-mcp
+  web    playwright (core와 함께 사용 권장)
+  infra  docker (core와 함께 사용 권장)
+EOF
+}
+
+contains_value() {
+  local needle="$1"
+  shift
+  local value
+  for value in "$@"; do
+    if [ "$value" = "$needle" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+add_mcp_preset() {
+  local preset="$1"
+  case "$preset" in
+    core|web|infra)
+      ;;
+    *)
+      echo -e "${RED}오류: 알 수 없는 MCP preset '$preset'${NC}" >&2
+      usage
+      exit 1
+      ;;
+  esac
+
+  if ! contains_value "$preset" "${MCP_PRESETS[@]}"; then
+    MCP_PRESETS+=("$preset")
   fi
+}
+
+normalize_mcp_presets() {
+  if [ "$MCP_ENABLED" = false ]; then
+    MCP_PRESETS=()
+    return
+  fi
+
+  if [ "${#MCP_PRESETS[@]}" -eq 0 ]; then
+    MCP_PRESETS=("core")
+    return
+  fi
+
+  if ! contains_value "core" "${MCP_PRESETS[@]}"; then
+    MCP_PRESETS=("core" "${MCP_PRESETS[@]}")
+  fi
+}
+
+backup_existing_path() {
+  local path="$1"
+  local label="$2"
+  local backup_path
+
+  if [ ! -e "$path" ]; then
+    return
+  fi
+
+  backup_path="${path}.backup.${RUN_TIMESTAMP}"
+  echo -e "${YELLOW}  ⚠ ${label} 이미 존재 — 백업 후 덮어쓰기${NC}"
+  echo -e "  📦 백업: ${backup_path}"
+
+  if [ -d "$path" ]; then
+    cp -r "$path" "$backup_path"
+  else
+    cp "$path" "$backup_path"
+  fi
+}
+
+count_existing_paths() {
+  local base="$1"
+  shift
+  local count=0
+  local rel_path
+
+  for rel_path in "$@"; do
+    if [ -e "$base/$rel_path" ]; then
+      count=$((count + 1))
+    fi
+  done
+
+  echo "$count"
+}
+
+join_existing_paths() {
+  local base="$1"
+  shift
+  local rel_path
+  local matches=()
+  local old_ifs="$IFS"
+
+  for rel_path in "$@"; do
+    if [ -e "$base/$rel_path" ]; then
+      matches+=("$rel_path")
+    fi
+  done
+
+  if [ "${#matches[@]}" -eq 0 ]; then
+    echo "없음"
+    return
+  fi
+
+  IFS=', '
+  echo "${matches[*]}"
+  IFS="$old_ifs"
+}
+
+set_project_mode_guidance() {
+  case "$PROJECT_CONTEXT_MODE" in
+    docs-first)
+      PROJECT_MODE_GUIDANCE=$(cat <<'EOF'
+docs-first 모드 지침:
+- README, docs, spec, prd, requirements를 1차 근거로 사용해.
+- 아직 구현되지 않은 내용은 TODO, 예정, 가정으로 명확히 표시해.
+- 검증 가능한 코드/설정이 없는 내용은 단정하지 마.
+EOF
+)
+      ;;
+    hybrid)
+      PROJECT_MODE_GUIDANCE=$(cat <<'EOF'
+hybrid 모드 지침:
+- 실제 코드, 설정, 테스트를 먼저 확인하고 문서는 설계 의도와 누락 보완용으로 사용해.
+- 문서와 구현이 다르면 구현을 우선하되, 중요한 차이는 짧게 기록해.
+- 문서와 구현을 섞어 쓰더라도 확인하지 못한 내용은 추정으로 표시해.
+EOF
+)
+      ;;
+    code-first)
+      PROJECT_MODE_GUIDANCE=$(cat <<'EOF'
+code-first 모드 지침:
+- 실제 디렉토리 구조, 실행 명령, 테스트, 설정 파일을 1차 근거로 사용해.
+- 문서가 코드와 다르면 코드를 우선하고, 충돌 내용은 짧게 드러내.
+- 오래된 문서 표현을 그대로 옮기지 말고 현재 구현 상태에 맞게 다시 써.
+EOF
+)
+      ;;
+  esac
+}
+
+detect_project_context_mode() {
+  local base="$1"
+  local doc_markers=(
+    "README.md"
+    "docs"
+    "spec"
+    "specs"
+    "prd"
+    "requirements"
+    "docs/architecture.md"
+    "docs/requirements.md"
+    "docs/product.md"
+  )
+  local manifest_markers=(
+    "package.json"
+    "pyproject.toml"
+    "go.mod"
+    "Cargo.toml"
+    "pom.xml"
+    "build.gradle"
+    "build.gradle.kts"
+    "requirements.txt"
+    "Gemfile"
+    "composer.json"
+  )
+  local code_dir_markers=(
+    "src"
+    "app"
+    "backend"
+    "frontend"
+    "server"
+    "client"
+    "cmd"
+    "bin"
+    "lib"
+    "internal"
+  )
+  local test_markers=(
+    "tests"
+    "test"
+    "__tests__"
+    ".github/workflows"
+  )
+  local ops_markers=(
+    "Dockerfile"
+    "docker-compose.yml"
+    "docker-compose.yaml"
+    "compose.yaml"
+    "compose.yml"
+    ".env.example"
+    ".github/workflows"
+    "deploy"
+    "infra"
+    "terraform"
+    "ansible"
+    "helm"
+  )
+  local manifest_count
+  local code_dir_count
+
+  DOC_SIGNAL_COUNT="$(count_existing_paths "$base" "${doc_markers[@]}")"
+  PROJECT_DOC_SIGNALS="$(join_existing_paths "$base" "${doc_markers[@]}")"
+
+  manifest_count="$(count_existing_paths "$base" "${manifest_markers[@]}")"
+  code_dir_count="$(count_existing_paths "$base" "${code_dir_markers[@]}")"
+  IMPLEMENTATION_SIGNAL_COUNT=$((manifest_count + code_dir_count))
+  PROJECT_IMPLEMENTATION_SIGNALS="$(join_existing_paths "$base" "${manifest_markers[@]}" "${code_dir_markers[@]}")"
+
+  TEST_SIGNAL_COUNT="$(count_existing_paths "$base" "${test_markers[@]}")"
+  PROJECT_TEST_SIGNALS="$(join_existing_paths "$base" "${test_markers[@]}")"
+
+  OPS_SIGNAL_COUNT="$(count_existing_paths "$base" "${ops_markers[@]}")"
+  PROJECT_OPS_SIGNALS="$(join_existing_paths "$base" "${ops_markers[@]}")"
+
+  if [ "$IMPLEMENTATION_SIGNAL_COUNT" -le 1 ] && [ "$DOC_SIGNAL_COUNT" -ge 2 ]; then
+    PROJECT_CONTEXT_MODE="docs-first"
+    PROJECT_CONTEXT_REASON="문서 신호가 충분하고 실행 가능한 구현 신호가 적음"
+  elif [ "$IMPLEMENTATION_SIGNAL_COUNT" -ge 4 ] || \
+       { [ "$IMPLEMENTATION_SIGNAL_COUNT" -ge 3 ] && { [ "$TEST_SIGNAL_COUNT" -ge 1 ] || [ "$OPS_SIGNAL_COUNT" -ge 1 ]; }; } || \
+       { [ "$IMPLEMENTATION_SIGNAL_COUNT" -ge 2 ] && [ "$DOC_SIGNAL_COUNT" -eq 0 ]; }; then
+    PROJECT_CONTEXT_MODE="code-first"
+    PROJECT_CONTEXT_REASON="코드/설정/테스트 신호가 풍부해 실제 구현을 우선 해석하는 편이 안전함"
+  elif [ "$DOC_SIGNAL_COUNT" -ge 1 ] && [ "$IMPLEMENTATION_SIGNAL_COUNT" -ge 1 ]; then
+    PROJECT_CONTEXT_MODE="hybrid"
+    PROJECT_CONTEXT_REASON="문서와 구현 신호가 모두 있어 함께 해석하는 편이 적합함"
+  elif [ "$IMPLEMENTATION_SIGNAL_COUNT" -ge 1 ]; then
+    PROJECT_CONTEXT_MODE="code-first"
+    PROJECT_CONTEXT_REASON="문서보다 구현 신호가 상대적으로 많음"
+  else
+    PROJECT_CONTEXT_MODE="docs-first"
+    PROJECT_CONTEXT_REASON="확실한 구현 신호가 부족하므로 확인 가능한 사실만 채우는 편이 안전함"
+  fi
+
+  set_project_mode_guidance
+}
+
+append_codex_mcp_preset() {
+  local preset="$1"
+  local file="$2"
+
+  case "$preset" in
+    core)
+      cat <<'EOF' >> "$file"
+
+# Project-local MCP preset: core
+[mcp_servers.sequential-thinking]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+
+[mcp_servers.serena]
+command = "uvx"
+args = ["--from", "git+https://github.com/oraios/serena", "serena-mcp-server", "--enable-web-dashboard", "false", "start-mcp-server"]
+
+[mcp_servers.upstash-context-7-mcp]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp@latest"]
+EOF
+      ;;
+    web)
+      cat <<'EOF' >> "$file"
+
+# Project-local MCP preset: web
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+EOF
+      ;;
+    infra)
+      cat <<'EOF' >> "$file"
+
+# Project-local MCP preset: infra
+[mcp_servers.docker]
+command = "npx"
+args = ["-y", "@hypnosis/docker-mcp-server"]
+EOF
+      ;;
+  esac
+}
+
+CLAUDE_MCP_FIRST=true
+
+append_claude_mcp_server() {
+  local file="$1"
+  local server_name="$2"
+  local command_name="$3"
+  local args_json="$4"
+
+  if [ "$CLAUDE_MCP_FIRST" = true ]; then
+    CLAUDE_MCP_FIRST=false
+  else
+    printf ',\n' >> "$file"
+  fi
+
+  printf '    "%s": {\n      "command": "%s",\n      "args": %s\n    }' \
+    "$server_name" \
+    "$command_name" \
+    "$args_json" >> "$file"
+}
+
+write_claude_mcp_config() {
+  local file="$1"
+  local preset
+
+  cat <<'EOF' > "$file"
+{
+  "mcpServers": {
+EOF
+
+  CLAUDE_MCP_FIRST=true
+
+  for preset in "${MCP_PRESETS[@]}"; do
+    case "$preset" in
+      core)
+        append_claude_mcp_server "$file" "sequential-thinking" "npx" '["-y", "@modelcontextprotocol/server-sequential-thinking"]'
+        append_claude_mcp_server "$file" "serena" "uvx" '["--from", "git+https://github.com/oraios/serena", "serena-mcp-server", "--enable-web-dashboard", "false", "start-mcp-server"]'
+        append_claude_mcp_server "$file" "upstash-context-7-mcp" "npx" '["-y", "@upstash/context7-mcp@latest"]'
+        ;;
+      web)
+        append_claude_mcp_server "$file" "playwright" "npx" '["-y", "@playwright/mcp@latest"]'
+        ;;
+      infra)
+        append_claude_mcp_server "$file" "docker" "npx" '["-y", "@hypnosis/docker-mcp-server"]'
+        ;;
+    esac
+  done
+
+  printf '\n' >> "$file"
+
+  cat <<'EOF' >> "$file"
+
+  }
+}
+EOF
+}
+
+# 옵션 파싱
+SKIP_AI=false
+MCP_ENABLED=true
+MCP_PRESETS=()
+TARGET=""
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --skip-ai)
+      SKIP_AI=true
+      ;;
+    --no-mcp)
+      MCP_ENABLED=false
+      ;;
+    --mcp-preset)
+      if [ -z "${2:-}" ]; then
+        echo -e "${RED}오류: --mcp-preset 뒤에 값이 필요합니다${NC}" >&2
+        usage
+        exit 1
+      fi
+      MCP_ENABLED=true
+      IFS=',' read -r -a REQUESTED_PRESETS <<< "$2"
+      for preset in "${REQUESTED_PRESETS[@]}"; do
+        preset="${preset// /}"
+        if [ -n "$preset" ]; then
+          add_mcp_preset "$preset"
+        fi
+      done
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --*)
+      echo -e "${RED}오류: 알 수 없는 옵션 '$1'${NC}" >&2
+      usage
+      exit 1
+      ;;
+    *)
+      if [ -n "$TARGET" ]; then
+        echo -e "${RED}오류: 프로젝트 경로는 하나만 지정할 수 있습니다${NC}" >&2
+        usage
+        exit 1
+      fi
+      TARGET="$1"
+      ;;
+  esac
+  shift
 done
 
 # ai-setting 디렉토리 (이 스크립트가 있는 곳)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# 대상 프로젝트 디렉토리 (--skip-ai가 아닌 첫 번째 인자)
-TARGET=""
-for arg in "$@"; do
-  if [ "$arg" != "--skip-ai" ]; then
-    TARGET="$arg"
-    break
-  fi
-done
 TARGET="${TARGET:-.}"
 TARGET="$(cd "$TARGET" && pwd)"
+normalize_mcp_presets
+detect_project_context_mode "$TARGET"
+
+MCP_PRESET_LABEL="none"
+if [ "${#MCP_PRESETS[@]}" -gt 0 ]; then
+  MCP_PRESET_LABEL="$(IFS=,; echo "${MCP_PRESETS[*]}")"
+fi
 
 echo -e "${CYAN}━━━ AI Setting Init ━━━${NC}"
 echo -e "소스: ${SCRIPT_DIR}"
 echo -e "대상: ${TARGET}"
+echo -e "MCP preset: ${MCP_PRESET_LABEL}"
+echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
 echo ""
 
 # jq 의존성 체크 (hooks가 jq로 JSON 파싱)
@@ -54,10 +447,10 @@ fi
 # ============================================================
 # 1단계: Claude Code 설정 복사
 # ============================================================
-echo -e "${GREEN}[1/5]${NC} Claude Code 설정 복사 (.claude/)"
+echo -e "${GREEN}[1/6]${NC} Claude Code 설정 복사 (.claude/)"
 
 if [ -d "$TARGET/.claude" ]; then
-  echo -e "${YELLOW}  ⚠ .claude/ 이미 존재 — 덮어쓰기합니다${NC}"
+  backup_existing_path "$TARGET/.claude" ".claude/"
 fi
 
 mkdir -p "$TARGET/.claude/hooks"
@@ -89,17 +482,41 @@ echo "  ✅ settings.json, hooks 2개, agents 4개, skills 5개"
 # ============================================================
 # 2단계: Codex 설정 복사
 # ============================================================
-echo -e "${GREEN}[2/5]${NC} Codex CLI 설정 복사 (.codex/)"
+echo -e "${GREEN}[2/6]${NC} Codex CLI 설정 복사 (.codex/)"
 
 mkdir -p "$TARGET/.codex"
+if [ -f "$TARGET/.codex/config.toml" ]; then
+  backup_existing_path "$TARGET/.codex/config.toml" ".codex/config.toml"
+fi
 cp "$SCRIPT_DIR/codex/config.toml" "$TARGET/.codex/config.toml"
 
 echo "  ✅ config.toml"
 
 # ============================================================
-# 3단계: CLAUDE.md / AGENTS.md 템플릿 복사
+# 3단계: 프로젝트 로컬 MCP preset 생성
 # ============================================================
-echo -e "${GREEN}[3/5]${NC} 템플릿 복사"
+echo -e "${GREEN}[3/6]${NC} 프로젝트 로컬 MCP preset 생성"
+
+if [ "$MCP_ENABLED" = false ]; then
+  echo -e "  ${YELLOW}--no-mcp 옵션으로 건너뜀${NC}"
+else
+  if [ -f "$TARGET/.mcp.json" ]; then
+    backup_existing_path "$TARGET/.mcp.json" ".mcp.json"
+  fi
+
+  for preset in "${MCP_PRESETS[@]}"; do
+    append_codex_mcp_preset "$preset" "$TARGET/.codex/config.toml"
+  done
+  write_claude_mcp_config "$TARGET/.mcp.json"
+
+  echo "  ✅ Codex MCP preset 적용됨 ($MCP_PRESET_LABEL)"
+  echo "  ✅ Claude MCP config 생성됨 (.mcp.json)"
+fi
+
+# ============================================================
+# 4단계: CLAUDE.md / AGENTS.md 템플릿 복사
+# ============================================================
+echo -e "${GREEN}[4/6]${NC} 템플릿 복사"
 
 TEMPLATES_COPIED=false
 
@@ -128,11 +545,31 @@ else
 fi
 
 # ============================================================
-# 4단계: AI로 템플릿 자동 채우기 (Claude Code → Codex → 수동)
+# 5단계: AI로 템플릿 자동 채우기 (Claude Code → Codex → 수동)
 # ============================================================
-echo -e "${GREEN}[4/5]${NC} AI로 CLAUDE.md / AGENTS.md 자동 생성"
+echo -e "${GREEN}[5/6]${NC} AI로 CLAUDE.md / AGENTS.md 자동 생성"
 
-AI_PROMPT="이 프로젝트의 디렉토리 구조, 파일들, package.json/pyproject.toml 등을 분석해서 CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 이 프로젝트에 맞게 전부 채워줘. 대괄호를 실제 내용으로 교체하고, 프로젝트에 해당하지 않는 섹션은 제거해. 기존 템플릿의 공통 규칙(Coding Rules, Forbidden 등)은 유지하되 프로젝트 스택에 맞게 보강해."
+AI_PROMPT=$(cat <<EOF
+이 프로젝트를 아래 규칙으로 분석해.
+
+프로젝트 해석 모드: ${PROJECT_CONTEXT_MODE}
+선정 이유: ${PROJECT_CONTEXT_REASON}
+
+감지 신호:
+- 문서: ${PROJECT_DOC_SIGNALS}
+- 구현: ${PROJECT_IMPLEMENTATION_SIGNALS}
+- 테스트: ${PROJECT_TEST_SIGNALS}
+- 운영: ${PROJECT_OPS_SIGNALS}
+
+${PROJECT_MODE_GUIDANCE}
+
+작업:
+1. CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 이 프로젝트에 맞게 전부 채워줘. 대괄호를 실제 내용으로 교체하고, 프로젝트에 해당하지 않는 섹션은 제거해. 기존 템플릿의 공통 규칙(Coding Rules, Forbidden 등)은 유지하되 프로젝트 스택에 맞게 보강해.
+2. .claude/skills/ 안의 SKILL.md 파일들에서 {{중괄호}} 플레이스홀더({{TEST_CMD}}, {{LINT_CMD}}, {{DEPLOY_BACKEND_CMD}} 등)를 프로젝트에 맞는 실제 명령어로 교체해줘.
+3. 문서와 구현이 충돌하면 CLAUDE.md 끝에 '## Detected Mismatches' 섹션을 추가하고, 확인한 불일치를 짧게 정리해. 충돌이 없으면 이 섹션은 만들지 마.
+4. 확실하지 않은 내용은 사실처럼 단정하지 말고 TODO, 가정, 예정으로 표시해.
+EOF
+)
 
 if [ "$SKIP_AI" = true ]; then
   echo -e "  ${YELLOW}--skip-ai 옵션으로 건너뜀${NC}"
@@ -140,6 +577,8 @@ elif [ "$TEMPLATES_COPIED" = false ]; then
   echo -e "  ${YELLOW}새 템플릿이 없음 (이미 존재) — 건너뜀${NC}"
 else
   AI_SUCCESS=false
+  echo "  mode: ${PROJECT_CONTEXT_MODE} (${PROJECT_CONTEXT_REASON})"
+  echo "  signals: docs=[${PROJECT_DOC_SIGNALS}] | impl=[${PROJECT_IMPLEMENTATION_SIGNALS}] | tests=[${PROJECT_TEST_SIGNALS}] | ops=[${PROJECT_OPS_SIGNALS}]"
 
   # 시도 1: Claude Code
   if command -v claude &> /dev/null; then
@@ -184,10 +623,10 @@ else
 fi
 
 # ============================================================
-# 5단계: 완료 요약
+# 6단계: 완료 요약
 # ============================================================
 echo ""
-echo -e "${GREEN}[5/5]${NC} 완료!"
+echo -e "${GREEN}[6/6]${NC} 완료!"
 echo ""
 echo -e "${CYAN}━━━ 적용된 설정 ━━━${NC}"
 echo ""
@@ -196,7 +635,10 @@ echo "    .claude/settings.json     — hooks 6개 (포맷터, 파일보호, 명
 echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단"
 echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
 echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
-echo "    .codex/config.toml        — Codex CLI 설정"
+echo "    .codex/config.toml        — Codex CLI 설정 + 프로젝트 로컬 MCP"
+if [ "$MCP_ENABLED" = true ]; then
+  echo "    .mcp.json                 — Claude Code 프로젝트 로컬 MCP"
+fi
 echo ""
 
 if [ "$TEMPLATES_COPIED" = true ]; then

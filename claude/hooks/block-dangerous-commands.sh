@@ -8,7 +8,7 @@ COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 DANGEROUS_PATTERNS=(
   "rm -rf /"
   "rm -rf ~"
-  "rm -rf \."
+  "rm -rf ."
   "sudo "
   "git push --force"
   "git push -f "
