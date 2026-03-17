@@ -25,6 +25,9 @@ usage() {
 옵션:
   --doctor                 현재 프로젝트 설정 상태 진단
   --dry-run                실제 변경 없이 예정 작업만 출력
+  --project-name NAME      프로젝트 이름 힌트 제공
+  --archetype TYPE         프로젝트 archetype 힌트 제공
+  --stack NAME             주 스택 힌트 제공
   --skip-ai                AI 자동 채우기 건너뛰기
   --mcp-preset PRESETS     프로젝트 로컬 MCP preset 지정 (예: core,web)
   --no-mcp                 프로젝트 로컬 MCP 생성 건너뛰기
@@ -34,6 +37,10 @@ MCP preset:
   core   sequential-thinking, serena, upstash-context-7-mcp
   web    playwright (core와 함께 사용 권장)
   infra  docker (core와 함께 사용 권장)
+
+Archetype:
+  frontend-web | backend-api | cli-tool | worker-batch
+  data-automation | library-sdk | infra-iac | general-app
 EOF
 }
 
@@ -465,6 +472,48 @@ set_project_archetype_guidance() {
   esac
 }
 
+validate_archetype_hint() {
+  local archetype="$1"
+
+  case "$archetype" in
+    frontend-web|backend-api|cli-tool|worker-batch|data-automation|library-sdk|infra-iac|general-app)
+      ;;
+    *)
+      echo -e "${RED}오류: 알 수 없는 archetype '$archetype'${NC}" >&2
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+apply_user_hints() {
+  HAS_USER_GUIDANCE=false
+
+  PROJECT_NAME="${TARGET_BASENAME}"
+  PROJECT_NAME_SOURCE="target directory"
+
+  if [ -n "$USER_PROJECT_NAME_HINT" ]; then
+    PROJECT_NAME="$USER_PROJECT_NAME_HINT"
+    PROJECT_NAME_SOURCE="user hint"
+    HAS_USER_GUIDANCE=true
+  fi
+
+  if [ -n "$USER_STACK_HINT" ]; then
+    PROJECT_STACK="$USER_STACK_HINT"
+    PROJECT_STACK_SIGNALS="user hint"
+    HAS_USER_GUIDANCE=true
+  fi
+
+  if [ -n "$USER_ARCHETYPE_HINT" ]; then
+    validate_archetype_hint "$USER_ARCHETYPE_HINT"
+    PROJECT_ARCHETYPE="$USER_ARCHETYPE_HINT"
+    PROJECT_ARCHETYPE_SIGNALS="user hint"
+    PROJECT_ARCHETYPE_REASON="사용자 힌트로 지정됨"
+    set_project_archetype_guidance
+    HAS_USER_GUIDANCE=true
+  fi
+}
+
 detect_project_archetype() {
   local base="$1"
   local frontend_markers=(
@@ -831,6 +880,9 @@ SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
 TARGET=""
+USER_PROJECT_NAME_HINT=""
+USER_ARCHETYPE_HINT=""
+USER_STACK_HINT=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -839,6 +891,33 @@ while [ "$#" -gt 0 ]; do
       ;;
     --dry-run)
       DRY_RUN=true
+      ;;
+    --project-name)
+      if [ -z "${2:-}" ]; then
+        echo -e "${RED}오류: --project-name 뒤에 값이 필요합니다${NC}" >&2
+        usage
+        exit 1
+      fi
+      USER_PROJECT_NAME_HINT="$2"
+      shift
+      ;;
+    --archetype)
+      if [ -z "${2:-}" ]; then
+        echo -e "${RED}오류: --archetype 뒤에 값이 필요합니다${NC}" >&2
+        usage
+        exit 1
+      fi
+      USER_ARCHETYPE_HINT="$2"
+      shift
+      ;;
+    --stack)
+      if [ -z "${2:-}" ]; then
+        echo -e "${RED}오류: --stack 뒤에 값이 필요합니다${NC}" >&2
+        usage
+        exit 1
+      fi
+      USER_STACK_HINT="$2"
+      shift
       ;;
     --skip-ai)
       SKIP_AI=true
@@ -888,10 +967,12 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 TARGET="${TARGET:-.}"
 TARGET="$(cd "$TARGET" && pwd)"
+TARGET_BASENAME="$(basename "$TARGET")"
 normalize_mcp_presets
 detect_project_context_mode "$TARGET"
 detect_project_stack "$TARGET"
 detect_project_archetype "$TARGET"
+apply_user_hints
 
 MCP_PRESET_LABEL="none"
 if [ "${#MCP_PRESETS[@]}" -gt 0 ]; then
@@ -910,9 +991,13 @@ echo -e "${CYAN}━━━ AI Setting Init ━━━${NC}"
 echo -e "소스: ${SCRIPT_DIR}"
 echo -e "대상: ${TARGET}"
 echo -e "MCP preset: ${MCP_PRESET_LABEL}"
+echo -e "프로젝트명: ${PROJECT_NAME}"
 echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
 echo -e "프로젝트 유형: ${PROJECT_ARCHETYPE}"
 echo -e "주 스택: ${PROJECT_STACK}"
+if [ "$HAS_USER_GUIDANCE" = true ]; then
+  echo -e "사용자 힌트: project-name=${USER_PROJECT_NAME_HINT:-없음}, archetype=${USER_ARCHETYPE_HINT:-없음}, stack=${USER_STACK_HINT:-없음}"
+fi
 if [ "$DRY_RUN" = true ]; then
   echo -e "실행 모드: dry-run"
 fi
@@ -1060,6 +1145,9 @@ echo -e "${GREEN}[5/6]${NC} AI로 CLAUDE.md / AGENTS.md 자동 생성"
 AI_PROMPT=$(cat <<EOF
 이 프로젝트를 아래 규칙으로 분석해.
 
+프로젝트 이름: ${PROJECT_NAME}
+프로젝트 이름 출처: ${PROJECT_NAME_SOURCE}
+
 프로젝트 해석 모드: ${PROJECT_CONTEXT_MODE}
 선정 이유: ${PROJECT_CONTEXT_REASON}
 
@@ -1067,6 +1155,11 @@ AI_PROMPT=$(cat <<EOF
 선정 이유: ${PROJECT_ARCHETYPE_REASON}
 주 스택: ${PROJECT_STACK}
 스택 신호: ${PROJECT_STACK_SIGNALS}
+
+사용자 제공 힌트:
+- project-name: ${USER_PROJECT_NAME_HINT:-없음}
+- archetype: ${USER_ARCHETYPE_HINT:-없음}
+- stack: ${USER_STACK_HINT:-없음}
 
 감지 신호:
 - 문서: ${PROJECT_DOC_SIGNALS}
@@ -1077,6 +1170,10 @@ AI_PROMPT=$(cat <<EOF
 
 ${PROJECT_MODE_GUIDANCE}
 ${PROJECT_ARCHETYPE_GUIDANCE}
+
+추가 지침:
+- 사용자 힌트가 있으면 자동 감지보다 우선하는 의도로 간주해.
+- blank-start + 사용자 힌트 조합이면 guided blank-start로 보고, 힌트 기반 초안을 만들되 확인할 수 없는 명령어/구조는 TODO나 가정으로 표시해.
 
 작업:
 1. CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 이 프로젝트에 맞게 전부 채워줘. 대괄호를 실제 내용으로 교체하고, 프로젝트에 해당하지 않는 섹션은 제거해. 기존 템플릿의 공통 규칙(Coding Rules, Forbidden 등)은 유지하되 프로젝트 스택에 맞게 보강해.
@@ -1090,7 +1187,7 @@ if [ "$SKIP_AI" = true ]; then
   echo -e "  ${YELLOW}--skip-ai 옵션으로 건너뜀${NC}"
 elif [ "$DRY_RUN" = true ]; then
   echo -e "  ${YELLOW}--dry-run 모드에서는 AI 자동 채우기를 실행하지 않습니다${NC}"
-elif [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then
+elif [ "$PROJECT_CONTEXT_MODE" = "blank-start" ] && [ "$HAS_USER_GUIDANCE" = false ]; then
   echo "  mode: ${PROJECT_CONTEXT_MODE} (${PROJECT_CONTEXT_REASON})"
   echo -e "  ${YELLOW}프로젝트 근거가 거의 없어 AI 자동 채우기를 건너뜁니다${NC}"
   echo "  README, package.json, pyproject.toml, src/ 같은 신호가 생긴 뒤 다시 실행하세요"
@@ -1099,8 +1196,14 @@ elif [ "$TEMPLATES_COPIED" = false ]; then
 else
   AI_SUCCESS=false
   echo "  mode: ${PROJECT_CONTEXT_MODE} (${PROJECT_CONTEXT_REASON})"
+  if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ] && [ "$HAS_USER_GUIDANCE" = true ]; then
+    echo "  blank-start with guidance: 사용자 힌트를 바탕으로 초안을 시도합니다"
+  fi
   echo "  archetype: ${PROJECT_ARCHETYPE} (${PROJECT_ARCHETYPE_REASON})"
   echo "  stack: ${PROJECT_STACK} [${PROJECT_STACK_SIGNALS}]"
+  if [ "$HAS_USER_GUIDANCE" = true ]; then
+    echo "  user hints: project-name=${USER_PROJECT_NAME_HINT:-없음}, archetype=${USER_ARCHETYPE_HINT:-없음}, stack=${USER_STACK_HINT:-없음}"
+  fi
   echo "  signals: docs=[${PROJECT_DOC_SIGNALS}] | impl=[${PROJECT_IMPLEMENTATION_SIGNALS}] | tests=[${PROJECT_TEST_SIGNALS}] | ops=[${PROJECT_OPS_SIGNALS}]"
 
   # 시도 1: Claude Code

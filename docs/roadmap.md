@@ -108,6 +108,7 @@
 - AI 자동 채우기 프롬프트에 감지 모드와 근거 신호를 함께 주입
 - 문서/구현 충돌 시 `CLAUDE.md`에 짧은 mismatch 섹션을 남기도록 1차 반영
 - `blank-start`에서는 과추론을 피하기 위해 AI 자동 채우기를 기본적으로 건너뛰고 재실행을 안내
+- `--project-name`, `--archetype`, `--stack` 힌트로 blank-start에서도 guided bootstrap 가능
 
 ### 공통 규칙
 

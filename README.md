@@ -83,6 +83,9 @@ init.sh 실행
 # 실제 변경 없이 예정 작업만 확인
 /path/to/ai-setting/init.sh --dry-run /path/to/my-new-project
 
+# 빈 프로젝트에서 의도 힌트와 함께 시작
+/path/to/ai-setting/init.sh --project-name my-api --archetype backend-api --stack Python /path/to/my-new-project
+
 # 현재 프로젝트 상태 진단
 /path/to/ai-setting/init.sh --doctor /path/to/my-new-project
 ```
@@ -140,6 +143,13 @@ claude "CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 채워줘"
 - `CLAUDE.md`, `AGENTS.md`는 과추론 없이 그대로 두고 AI 자동 채우기는 건너뜀
 - 이후 `README.md`, `package.json`, `pyproject.toml`, `src/` 같은 신호가 생긴 뒤 다시 실행하면 됨
 
+blank-start에서도 의도를 미리 줄 수 있음:
+- `--project-name my-api`
+- `--archetype backend-api`
+- `--stack Python`
+
+이 힌트가 있으면 `guided blank-start`로 보고, 힌트 기반 초안을 만들되 확인할 수 없는 부분은 TODO/가정으로 남깁니다.
+
 ### 프로젝트 유형과 스택 자동 감지
 
 `init.sh`는 해석 모드와 별개로 프로젝트 archetype과 주 스택도 함께 감지해서 AI 프롬프트에 전달합니다.
@@ -159,6 +169,21 @@ claude "CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 채워줘"
 - `Vite (TypeScript/JavaScript)`
 - `Node.js / TypeScript`
 - `Python`, `Go`, `Rust`, `Java / Kotlin`, `Ruby`, `PHP`
+
+사용자 힌트 옵션:
+- `--project-name NAME`
+- `--archetype TYPE`
+- `--stack NAME`
+
+`--archetype` 지원값:
+- `frontend-web`
+- `backend-api`
+- `cli-tool`
+- `worker-batch`
+- `data-automation`
+- `library-sdk`
+- `infra-iac`
+- `general-app`
 
 ### 프로젝트별 선택 추가
 
