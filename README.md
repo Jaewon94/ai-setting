@@ -79,6 +79,9 @@ init.sh 실행
 
 # 프로젝트 로컬 MCP 생성 건너뛰기
 /path/to/ai-setting/init.sh --no-mcp /path/to/my-new-project
+
+# 현재 프로젝트 상태 진단
+/path/to/ai-setting/init.sh --doctor /path/to/my-new-project
 ```
 
 ## 적용 후 확인
@@ -181,6 +184,20 @@ claude "CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 채워줘"
 - `.claude/`가 이미 있으면 디렉토리 전체를 `.claude.backup.TIMESTAMP`로 백업
 - `.codex/config.toml`이 이미 있으면 `.codex/config.toml.backup.TIMESTAMP`로 백업
 - `.mcp.json`이 이미 있으면 `.mcp.json.backup.TIMESTAMP`로 백업
+
+### Doctor 모드
+
+`init.sh --doctor /path/to/project`로 현재 상태를 점검할 수 있습니다.
+
+진단 항목:
+- 필수 바이너리: `jq`, `npx`, `uvx`, `claude`, `codex`
+- 핵심 파일: `.claude/settings.json`, hooks, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
+- `.mcp.json` JSON 유효성
+- 템플릿/skill placeholder 잔존 여부
+
+참고:
+- `blank-start` 모드에서는 템플릿/skill placeholder가 남아 있어도 정상으로 취급
+- error가 있으면 종료 코드 `1`, error가 없으면 종료 코드 `0`
 
 ---
 

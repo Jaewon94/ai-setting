@@ -23,6 +23,7 @@ usage() {
 사용법: init.sh [옵션] [프로젝트 경로]
 
 옵션:
+  --doctor                 현재 프로젝트 설정 상태 진단
   --skip-ai                AI 자동 채우기 건너뛰기
   --mcp-preset PRESETS     프로젝트 로컬 MCP preset 지정 (예: core,web)
   --no-mcp                 프로젝트 로컬 MCP 생성 건너뛰기
@@ -33,6 +34,159 @@ MCP preset:
   web    playwright (core와 함께 사용 권장)
   infra  docker (core와 함께 사용 권장)
 EOF
+}
+
+doctor_ok() {
+  DOCTOR_OK_COUNT=$((DOCTOR_OK_COUNT + 1))
+  echo -e "${GREEN}[OK]${NC} $1"
+}
+
+doctor_warn() {
+  DOCTOR_WARN_COUNT=$((DOCTOR_WARN_COUNT + 1))
+  echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+doctor_error() {
+  DOCTOR_ERROR_COUNT=$((DOCTOR_ERROR_COUNT + 1))
+  echo -e "${RED}[ERROR]${NC} $1"
+}
+
+run_doctor() {
+  local target="$1"
+  local placeholder_count
+  local skill_placeholder_count
+
+  DOCTOR_OK_COUNT=0
+  DOCTOR_WARN_COUNT=0
+  DOCTOR_ERROR_COUNT=0
+
+  echo -e "${CYAN}━━━ AI Setting Doctor ━━━${NC}"
+  echo -e "대상: ${target}"
+  echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
+  echo -e "프로젝트 유형: ${PROJECT_ARCHETYPE}"
+  echo -e "주 스택: ${PROJECT_STACK}"
+  echo ""
+
+  if command -v jq &> /dev/null; then
+    doctor_ok "jq 설치됨"
+  else
+    doctor_warn "jq 미설치 — hooks JSON 파싱 및 .mcp.json 검증이 제한됨"
+  fi
+
+  if command -v npx &> /dev/null; then
+    doctor_ok "npx 설치됨"
+  else
+    doctor_warn "npx 미설치 — sequential-thinking/context7/playwright/docker MCP 실행 불가"
+  fi
+
+  if command -v uvx &> /dev/null; then
+    doctor_ok "uvx 설치됨"
+  else
+    doctor_warn "uvx 미설치 — serena MCP 실행 불가"
+  fi
+
+  if command -v claude &> /dev/null; then
+    doctor_ok "claude 설치됨"
+  else
+    doctor_warn "claude 미설치 — Claude Code 자동 채우기 사용 불가"
+  fi
+
+  if command -v codex &> /dev/null; then
+    doctor_ok "codex 설치됨"
+  else
+    doctor_warn "codex 미설치 — Codex fallback 자동 채우기 사용 불가"
+  fi
+
+  if [ -f "$target/.claude/settings.json" ]; then
+    doctor_ok ".claude/settings.json 존재"
+  else
+    doctor_error ".claude/settings.json 없음"
+  fi
+
+  if [ -x "$target/.claude/hooks/protect-files.sh" ]; then
+    doctor_ok ".claude/hooks/protect-files.sh 실행 가능"
+  else
+    doctor_error ".claude/hooks/protect-files.sh 없음 또는 실행 권한 없음"
+  fi
+
+  if [ -x "$target/.claude/hooks/block-dangerous-commands.sh" ]; then
+    doctor_ok ".claude/hooks/block-dangerous-commands.sh 실행 가능"
+  else
+    doctor_error ".claude/hooks/block-dangerous-commands.sh 없음 또는 실행 권한 없음"
+  fi
+
+  if [ -f "$target/.codex/config.toml" ]; then
+    doctor_ok ".codex/config.toml 존재"
+  else
+    doctor_error ".codex/config.toml 없음"
+  fi
+
+  if [ -f "$target/.mcp.json" ]; then
+    if command -v jq &> /dev/null && jq empty "$target/.mcp.json" >/dev/null 2>&1; then
+      doctor_ok ".mcp.json 유효한 JSON"
+    elif command -v jq &> /dev/null; then
+      doctor_error ".mcp.json JSON 형식이 올바르지 않음"
+    else
+      doctor_warn ".mcp.json 존재하지만 jq가 없어 형식 검증은 건너뜀"
+    fi
+  else
+    doctor_warn ".mcp.json 없음 — --no-mcp로 초기화했거나 설정이 누락되었을 수 있음"
+  fi
+
+  if [ -f "$target/CLAUDE.md" ]; then
+    doctor_ok "CLAUDE.md 존재"
+  else
+    doctor_error "CLAUDE.md 없음"
+  fi
+
+  if [ -f "$target/AGENTS.md" ]; then
+    doctor_ok "AGENTS.md 존재"
+  else
+    doctor_error "AGENTS.md 없음"
+  fi
+
+  if [ -f "$target/docs/decisions.md" ]; then
+    doctor_ok "docs/decisions.md 존재"
+  else
+    doctor_warn "docs/decisions.md 없음"
+  fi
+
+  if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then
+    doctor_ok "blank-start 모드 — 템플릿/skill 플레이스홀더 잔존은 현재 정상"
+  else
+    placeholder_count=0
+    if [ -f "$target/CLAUDE.md" ]; then
+      placeholder_count=$((placeholder_count + $(rg -o '\[(프로젝트명|프로젝트에 맞게 수정|프로젝트별 문서 참조 추가: @docs/architecture.md 등)\]' "$target/CLAUDE.md" 2>/dev/null | wc -l | tr -d ' ')))
+    fi
+    if [ -f "$target/AGENTS.md" ]; then
+      placeholder_count=$((placeholder_count + $(rg -o '\[(프로젝트명|프로젝트 한 줄 설명|아키텍처 다이어그램|백엔드 스택|프론트엔드 스택|프로젝트별 테스트 명령어|프로젝트 디렉토리 구조|프로젝트별 도메인 개념)\]' "$target/AGENTS.md" 2>/dev/null | wc -l | tr -d ' ')))
+    fi
+
+    if [ "$placeholder_count" -eq 0 ]; then
+      doctor_ok "CLAUDE.md / AGENTS.md 플레이스홀더 없음"
+    else
+      doctor_warn "CLAUDE.md / AGENTS.md에 템플릿 플레이스홀더가 남아 있음"
+    fi
+
+    skill_placeholder_count=$(rg -o '\{\{[A-Z0-9_]+\}\}' "$target/.claude/skills" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$skill_placeholder_count" -eq 0 ]; then
+      doctor_ok ".claude/skills 플레이스홀더 없음"
+    else
+      doctor_warn ".claude/skills에 치환되지 않은 {{PLACEHOLDER}}가 남아 있음"
+    fi
+  fi
+
+  echo ""
+  echo -e "${CYAN}━━━ Doctor Summary ━━━${NC}"
+  echo "  OK: ${DOCTOR_OK_COUNT}"
+  echo "  WARN: ${DOCTOR_WARN_COUNT}"
+  echo "  ERROR: ${DOCTOR_ERROR_COUNT}"
+
+  if [ "$DOCTOR_ERROR_COUNT" -gt 0 ]; then
+    return 1
+  fi
+
+  return 0
 }
 
 contains_value() {
@@ -601,6 +755,7 @@ EOF
 }
 
 # 옵션 파싱
+DOCTOR_MODE=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
@@ -608,6 +763,9 @@ TARGET=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --doctor)
+      DOCTOR_MODE=true
+      ;;
     --skip-ai)
       SKIP_AI=true
       ;;
@@ -664,6 +822,14 @@ detect_project_archetype "$TARGET"
 MCP_PRESET_LABEL="none"
 if [ "${#MCP_PRESETS[@]}" -gt 0 ]; then
   MCP_PRESET_LABEL="$(IFS=,; echo "${MCP_PRESETS[*]}")"
+fi
+
+if [ "$DOCTOR_MODE" = true ]; then
+  if run_doctor "$TARGET"; then
+    exit 0
+  else
+    exit 1
+  fi
 fi
 
 echo -e "${CYAN}━━━ AI Setting Init ━━━${NC}"
