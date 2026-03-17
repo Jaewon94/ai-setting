@@ -511,7 +511,8 @@ init.sh --profile team /path/to/project
 - `strict` / `team` 프로필에 branch 보호 hook 적용 완료
 - `standard` / `strict` / `team` 프로필에 compact 대응용 `session-context` hook 1차 적용
 - `standard` / `strict` / `team` 프로필에 async test hook 1차 적용
-- 팀 알림, 전용 PreCompact 백업은 아직 미구현
+- `team` 프로필에 optional webhook notify hook 1차 적용
+- 전용 PreCompact 백업은 아직 미구현
 
 ### 5-1. 브랜치 보호 hook
 ```bash
@@ -535,6 +536,11 @@ fi
 ### 5-3. Slack/Discord 알림 hook
 - HTTP hook으로 작업 완료/실패 시 팀 채널에 알림
 - `"type": "command"` → `curl -X POST webhook_url`
+
+현재 1차 구현:
+- `team` profile에서 Stop 시점에 optional webhook 전송 훅 실행
+- 실제 webhook URL은 환경변수로 두고, 프로젝트에는 `.ai-setting/team-webhook.json` 메타설정만 저장
+- 기본값은 disabled라서 별도 활성화 전까지는 no-op
 
 ### 5-4. 컴팩션 컨텍스트 주입 hook
 - PreCompact 시점에 핵심 컨텍스트를 별도 파일에 백업

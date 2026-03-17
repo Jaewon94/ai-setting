@@ -156,7 +156,7 @@ init.sh 실행
 | `standard` | 파일 보호, 위험 명령 차단, 자동 포맷, 알림, Stop 체크, agents 4개, skills 5개 |
 | `minimal` | 파일 보호, 자동 포맷만 활성화. managed agents/skills는 복사하지 않음 |
 | `strict` | `standard` + main/master 직접 git 작업 차단 hook |
-| `team` | `strict` + `.github/pull_request_template.md` 생성 |
+| `team` | `strict` + `.github/pull_request_template.md`, `.ai-setting/team-webhook.json` 생성 |
 
 프로필 전환 시:
 - 기존 `.claude/`는 먼저 백업
@@ -221,6 +221,7 @@ init.sh 실행
 - `.claude/agents/*` — 보안 리뷰, 설계 검증, 테스트 작성, 리서치
 - `.claude/skills/*` — 배포, 코드 리뷰, 이슈 수정, Gap 체크, 교차검증
 - `.claude/hooks/protect-main-branch.sh` — strict/team에서 main/master 직접 git 작업 차단
+- `.ai-setting/team-webhook.json` — team profile용 웹훅 메타설정 템플릿
 - `.cursor/rules/ai-setting.mdc` — Cursor project-wide rule
 - `.gemini/settings.json` / `GEMINI.md` — Gemini CLI 컨텍스트
 - `.github/copilot-instructions.md` — GitHub Copilot 저장소 지침
@@ -359,6 +360,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 진단 항목:
 - 필수 바이너리: `jq`, `npx`, `uvx`, `claude`, `codex`, `gemini`
 - 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`(team), `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
+- team profile에서는 `.ai-setting/team-webhook.json`도 함께 확인
 - `.mcp.json` JSON 유효성
 - 템플릿/skill placeholder 잔존 여부
 - 공유 자산 모드가 `copy`인지 `symlink`인지
@@ -443,7 +445,8 @@ ai-setting/
 │   │   ├── block-dangerous-commands.sh    # 위험 명령어 차단 (14개 패턴)
 │   │   ├── async-test.sh                  # 편집 후 백그라운드 테스트
 │   │   ├── protect-main-branch.sh         # main/master 직접 git 작업 차단
-│   │   └── session-context.sh             # compact 대비용 컨텍스트 스냅샷
+│   │   ├── session-context.sh             # compact 대비용 컨텍스트 스냅샷
+│   │   └── team-webhook-notify.sh         # team profile 웹훅 알림
 │   ├── agents/
 │   │   ├── security-reviewer.md           # 보안 리뷰 (읽기 전용, opus)
 │   │   ├── architect-reviewer.md          # 설계 검증 (읽기 전용, opus)
@@ -468,6 +471,7 @@ ai-setting/
 │   ├── GEMINI.md.template                 # Gemini CLI 컨텍스트 템플릿
 │   ├── copilot-instructions.md.template   # Copilot 저장소 지침 템플릿
 │   ├── pull_request_template.md.template  # team profile용 PR 템플릿
+│   ├── team-webhook.json.template         # team profile 웹훅 메타설정 템플릿
 │   └── decisions.md.template              # 기술 의사결정 기록
 └── README.md
 ```
@@ -484,6 +488,7 @@ ai-setting/
 | **block-dangerous-commands.sh** | Bash 실행 전 | rm -rf, sudo, force push, DROP TABLE 등 차단 |
 | **async-test.sh** | PostToolUse(Edit/Write) | 코드 파일 편집 후 비동기 테스트를 best-effort로 실행 |
 | **session-context.sh** | Stop / SessionStart(compact) | compact 대비용 프로젝트 컨텍스트 스냅샷 갱신 및 복원 |
+| **team-webhook-notify.sh** | Stop(team) | 선택적으로 Slack/Discord 웹훅에 완료 알림 전송 |
 | **auto-format** | 파일 편집 후 | Python→ruff, TS/JS→prettier 자동 포맷 |
 | **test-check** | 작업 완료 시 | 코드 변경 후 테스트 실행 여부 확인 |
 | **notification** | 입력 필요 시 | macOS 데스크톱 알림 |
@@ -552,6 +557,30 @@ chmod 777    mkfs    > /dev/sda    fork bomb
 ```bash
 mkdir -p .ai-setting
 printf '%s\n' 'pnpm test -- --runInBand' > .ai-setting/test-command
+```
+
+### 팀 웹훅 알림 (team-webhook-notify.sh)
+
+- `team` profile에서만 활성화되는 선택형 훅입니다.
+- 실제 URL은 환경변수로 두고, 프로젝트에는 `.ai-setting/team-webhook.json`의 메타설정만 두는 방식을 권장합니다.
+- 기본값은 `enabled: false`라서 생성 직후에는 아무 것도 전송하지 않습니다.
+- 상태 파일은 `.claude/context/team-webhook-status.md`에 남습니다.
+
+예시:
+
+```bash
+export AI_SETTING_TEAM_WEBHOOK_URL='https://hooks.slack.com/services/...'
+
+cat > .ai-setting/team-webhook.json <<'JSON'
+{
+  "enabled": true,
+  "url_env": "AI_SETTING_TEAM_WEBHOOK_URL",
+  "channel": "#ai-alerts",
+  "username": "Claude Code",
+  "mention": "",
+  "events": ["stop"]
+}
+JSON
 ```
 
 ---

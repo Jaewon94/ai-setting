@@ -298,10 +298,39 @@ run_doctor() {
   fi
 
   if [ "$DETECTED_CLAUDE_PROFILE" = "team" ]; then
+    if [ -x "$target/.claude/hooks/team-webhook-notify.sh" ]; then
+      doctor_ok ".claude/hooks/team-webhook-notify.sh 실행 가능"
+    else
+      doctor_error ".claude/hooks/team-webhook-notify.sh 없음 또는 실행 권한 없음"
+    fi
+
     if [ -f "$target/.github/pull_request_template.md" ]; then
       doctor_ok ".github/pull_request_template.md 존재"
     else
       doctor_error ".github/pull_request_template.md 없음"
+    fi
+
+    if [ -f "$target/.ai-setting/team-webhook.json" ]; then
+      doctor_ok ".ai-setting/team-webhook.json 존재"
+      if command -v jq >/dev/null 2>&1; then
+        if [ "$(jq -r '.enabled // false' "$target/.ai-setting/team-webhook.json")" = "true" ]; then
+          local webhook_url
+          local webhook_url_env
+          webhook_url="$(jq -r '.url // empty' "$target/.ai-setting/team-webhook.json")"
+          webhook_url_env="$(jq -r '.url_env // "AI_SETTING_TEAM_WEBHOOK_URL"' "$target/.ai-setting/team-webhook.json")"
+          if [ -n "$webhook_url" ] || [ -n "${!webhook_url_env:-}" ]; then
+            doctor_ok "team webhook 활성화 설정 감지"
+          else
+            doctor_warn "team webhook 활성화 상태이지만 URL이 비어 있음"
+          fi
+        else
+          doctor_ok "team webhook 기본 비활성 상태"
+        fi
+      else
+        doctor_warn "jq가 없어 team-webhook.json 세부 검증은 건너뜀"
+      fi
+    else
+      doctor_error ".ai-setting/team-webhook.json 없음"
     fi
   fi
 
@@ -455,7 +484,7 @@ run_diff_preview() {
   local -a internal_args
 
   managed_paths=(".claude" ".codex/config.toml" "CLAUDE.md" "AGENTS.md" "docs/decisions.md")
-  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" ".github/copilot-instructions.md" ".github/pull_request_template.md")
+  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" ".github/copilot-instructions.md" ".github/pull_request_template.md" ".ai-setting/team-webhook.json")
   if [ "$MCP_ENABLED" = true ]; then
     managed_paths+=(".mcp.json")
   fi
@@ -557,6 +586,7 @@ build_backup_managed_paths() {
     "GEMINI.md"
     ".github/copilot-instructions.md"
     ".github/pull_request_template.md"
+    ".ai-setting/team-webhook.json"
     "docs/decisions.md"
   )
 }
@@ -836,10 +866,12 @@ cleanup_managed_claude_assets() {
     "$TARGET/.claude/hooks/protect-main-branch.sh"
     "$TARGET/.claude/hooks/session-context.sh"
     "$TARGET/.claude/hooks/async-test.sh"
+    "$TARGET/.claude/hooks/team-webhook-notify.sh"
     "$TARGET/.claude/context/async-test-status.md"
     "$TARGET/.claude/context/async-test.log"
     "$TARGET/.claude/context/async-test.pid"
     "$TARGET/.claude/context/session-context.md"
+    "$TARGET/.claude/context/team-webhook-status.md"
     "$TARGET/.claude/agents/security-reviewer.md"
     "$TARGET/.claude/agents/architect-reviewer.md"
     "$TARGET/.claude/agents/test-writer.md"
@@ -888,6 +920,10 @@ copy_claude_profile_assets() {
 
   if [ "$CLAUDE_PROFILE" = "strict" ] || [ "$CLAUDE_PROFILE" = "team" ]; then
     install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/protect-main-branch.sh" "$TARGET/.claude/hooks/protect-main-branch.sh"
+  fi
+
+  if [ "$CLAUDE_PROFILE" = "team" ]; then
+    install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/team-webhook-notify.sh" "$TARGET/.claude/hooks/team-webhook-notify.sh"
   fi
 
   if [ "$CLAUDE_PROFILE" != "minimal" ]; then
@@ -1805,15 +1841,15 @@ elif [ "$CLAUDE_PROFILE" = "strict" ]; then
 elif [ "$CLAUDE_PROFILE" = "team" ]; then
   if [ "$DRY_RUN" = true ]; then
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ team profile 심링크 적용 예정 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "  ✅ team profile 심링크 적용 예정 (settings 1개, hooks 6개, agents 4개, skills 5개)"
     else
-      echo "  ✅ team profile 적용 예정 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "  ✅ team profile 적용 예정 (settings 1개, hooks 6개, agents 4개, skills 5개)"
     fi
   else
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ team profile 심링크 적용됨 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "  ✅ team profile 심링크 적용됨 (settings 1개, hooks 6개, agents 4개, skills 5개)"
     else
-      echo "  ✅ team profile 적용됨 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "  ✅ team profile 적용됨 (settings 1개, hooks 6개, agents 4개, skills 5개)"
     fi
   fi
 else
@@ -2011,6 +2047,26 @@ if [ "$CLAUDE_PROFILE" = "team" ]; then
     fi
   else
     echo -e "  ${YELLOW}⚠ .github/pull_request_template.md 이미 존재 — 건너뜀${NC}"
+  fi
+
+  run_mkdir_p "$TARGET/.ai-setting"
+  if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.ai-setting/team-webhook.json" ]; then
+    backup_existing_path "$TARGET/.ai-setting/team-webhook.json" ".ai-setting/team-webhook.json"
+    run_copy "$SCRIPT_DIR/templates/team-webhook.json.template" "$TARGET/.ai-setting/team-webhook.json"
+    if [ "$DRY_RUN" = true ]; then
+      echo "  ✅ .ai-setting/team-webhook.json 재생성 예정"
+    else
+      echo "  ✅ .ai-setting/team-webhook.json 재생성됨"
+    fi
+  elif [ ! -f "$TARGET/.ai-setting/team-webhook.json" ]; then
+    run_copy "$SCRIPT_DIR/templates/team-webhook.json.template" "$TARGET/.ai-setting/team-webhook.json"
+    if [ "$DRY_RUN" = true ]; then
+      echo "  ✅ .ai-setting/team-webhook.json 생성 예정"
+    else
+      echo "  ✅ .ai-setting/team-webhook.json 생성됨"
+    fi
+  else
+    echo -e "  ${YELLOW}⚠ .ai-setting/team-webhook.json 이미 존재 — 건너뜀${NC}"
   fi
 fi
 
@@ -2216,7 +2272,7 @@ elif [ "$CLAUDE_PROFILE" = "team" ]; then
   else
     echo "    .claude/settings.json     — team workflow hooks + branch 보호"
   fi
-  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + compact 컨텍스트 + main/master 보호"
+  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + compact 컨텍스트 + main/master 보호 + team webhook"
   echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
   echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
 else

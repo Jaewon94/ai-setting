@@ -1,0 +1,8 @@
+{
+  "enabled": false,
+  "url_env": "AI_SETTING_TEAM_WEBHOOK_URL",
+  "channel": "#ai-alerts",
+  "username": "Claude Code",
+  "mention": "",
+  "events": ["stop"]
+}
