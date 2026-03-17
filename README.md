@@ -3,6 +3,8 @@
 > 새 프로젝트에 Claude Code, Codex 등 AI 코딩 도구 설정을 한 번에 적용.
 > StoryForge, TaskRelay + 커뮤니티 베스트 프랙티스에서 추출.
 
+기여나 확장 작업은 [CONTRIBUTING.md](/Users/jaewon/my-project/ai-setting/CONTRIBUTING.md)를 기준으로 진행하면 됩니다.
+
 ## 빠른 시작
 
 ```bash

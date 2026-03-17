@@ -530,6 +530,11 @@ fi
 
 > "더 많은 사람이 쓰고, 더 많은 사람이 기여한다"
 
+현재 상태:
+- `CONTRIBUTING.md` 추가
+- 기능 추가 시 검증/문서/커밋 규칙을 저장소 내부 기준으로 문서화
+- public 전환, 패키지화, 커뮤니티 배포는 아직 미진행
+
 ### 6-1. sync-conf.dev 등록
 - 커뮤니티 디렉토리에 등록하여 `npx sync-conf install jaewon/ai-setting`으로 설치 가능
 
