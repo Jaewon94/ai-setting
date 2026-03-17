@@ -28,6 +28,7 @@ usage() {
   --diff                   실제 변경 없이 관리 대상 파일 diff 출력
   --backup-all             적용 전 관리 대상 전체 스냅샷 백업
   --reapply                CLAUDE.md/AGENTS.md를 다시 생성하고 AI 채우기 재실행
+  --auto-mcp               감지된 archetype 기반 추천 MCP preset 자동 적용
   --project-name NAME      프로젝트 이름 힌트 제공
   --archetype TYPE         프로젝트 archetype 힌트 제공
   --stack NAME             주 스택 힌트 제공
@@ -461,6 +462,49 @@ normalize_mcp_presets() {
   if ! contains_value "core" "${MCP_PRESETS[@]}"; then
     MCP_PRESETS=("core" "${MCP_PRESETS[@]}")
   fi
+}
+
+add_recommended_mcp_preset() {
+  local preset="$1"
+
+  if ! contains_value "$preset" "${RECOMMENDED_MCP_PRESETS[@]}"; then
+    RECOMMENDED_MCP_PRESETS+=("$preset")
+  fi
+}
+
+calculate_recommended_mcp_presets() {
+  RECOMMENDED_MCP_PRESETS=("core")
+
+  case "$PROJECT_ARCHETYPE" in
+    frontend-web)
+      add_recommended_mcp_preset "web"
+      ;;
+    infra-iac)
+      add_recommended_mcp_preset "infra"
+      ;;
+    backend-api|worker-batch|data-automation)
+      if [ "$OPS_SIGNAL_COUNT" -ge 1 ]; then
+        add_recommended_mcp_preset "infra"
+      fi
+      ;;
+  esac
+
+  RECOMMENDED_MCP_PRESET_LABEL="$(IFS=,; echo "${RECOMMENDED_MCP_PRESETS[*]}")"
+}
+
+apply_auto_mcp_presets() {
+  local preset
+
+  if [ "$AUTO_MCP" = true ] && [ "$MCP_ENABLED" = true ] && [ "$USER_MCP_PRESET_SPECIFIED" = false ]; then
+    for preset in "${RECOMMENDED_MCP_PRESETS[@]}"; do
+      add_mcp_preset "$preset"
+    done
+    AUTO_MCP_APPLIED=true
+  else
+    AUTO_MCP_APPLIED=false
+  fi
+
+  normalize_mcp_presets
 }
 
 backup_existing_path() {
@@ -1049,6 +1093,7 @@ DRY_RUN=false
 DIFF_MODE=false
 BACKUP_ALL=false
 REAPPLY_MODE=false
+AUTO_MCP=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
@@ -1056,6 +1101,7 @@ TARGET=""
 USER_PROJECT_NAME_HINT=""
 USER_ARCHETYPE_HINT=""
 USER_STACK_HINT=""
+USER_MCP_PRESET_SPECIFIED=false
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -1073,6 +1119,9 @@ while [ "$#" -gt 0 ]; do
       ;;
     --reapply)
       REAPPLY_MODE=true
+      ;;
+    --auto-mcp)
+      AUTO_MCP=true
       ;;
     --project-name)
       if [ -z "${2:-}" ]; then
@@ -1106,6 +1155,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     --no-mcp)
       MCP_ENABLED=false
+      USER_MCP_PRESET_SPECIFIED=true
       ;;
     --mcp-preset)
       if [ -z "${2:-}" ]; then
@@ -1114,6 +1164,7 @@ while [ "$#" -gt 0 ]; do
         exit 1
       fi
       MCP_ENABLED=true
+      USER_MCP_PRESET_SPECIFIED=true
       IFS=',' read -r -a REQUESTED_PRESETS <<< "$2"
       for preset in "${REQUESTED_PRESETS[@]}"; do
         preset="${preset// /}"
@@ -1176,11 +1227,12 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TARGET="${TARGET:-.}"
 TARGET="$(cd "$TARGET" && pwd)"
 TARGET_BASENAME="$(basename "$TARGET")"
-normalize_mcp_presets
 detect_project_context_mode "$TARGET"
 detect_project_stack "$TARGET"
 detect_project_archetype "$TARGET"
 apply_user_hints
+calculate_recommended_mcp_presets
+apply_auto_mcp_presets
 
 MCP_PRESET_LABEL="none"
 if [ "${#MCP_PRESETS[@]}" -gt 0 ]; then
@@ -1207,12 +1259,20 @@ echo -e "${CYAN}━━━ AI Setting Init ━━━${NC}"
 echo -e "소스: ${SCRIPT_DIR}"
 echo -e "대상: ${TARGET}"
 echo -e "MCP preset: ${MCP_PRESET_LABEL}"
+echo -e "MCP 추천: ${RECOMMENDED_MCP_PRESET_LABEL}"
 echo -e "프로젝트명: ${PROJECT_NAME}"
 echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
 echo -e "프로젝트 유형: ${PROJECT_ARCHETYPE}"
 echo -e "주 스택: ${PROJECT_STACK}"
 if [ "$HAS_USER_GUIDANCE" = true ]; then
   echo -e "사용자 힌트: project-name=${USER_PROJECT_NAME_HINT:-없음}, archetype=${USER_ARCHETYPE_HINT:-없음}, stack=${USER_STACK_HINT:-없음}"
+fi
+if [ "$AUTO_MCP" = true ]; then
+  if [ "$AUTO_MCP_APPLIED" = true ]; then
+    echo -e "MCP 자동 추천 적용: on"
+  else
+    echo -e "MCP 자동 추천 적용: 요청됨 (명시 preset 또는 --no-mcp 우선)"
+  fi
 fi
 if [ "$DRY_RUN" = true ]; then
   echo -e "실행 모드: dry-run"

@@ -92,6 +92,9 @@ init.sh 실행
 # CLAUDE.md / AGENTS.md를 fresh template로 다시 생성
 /path/to/ai-setting/init.sh --reapply /path/to/my-new-project
 
+# 감지된 archetype 기반 추천 MCP preset 자동 적용
+/path/to/ai-setting/init.sh --auto-mcp /path/to/my-new-project
+
 # 빈 프로젝트에서 의도 힌트와 함께 시작
 /path/to/ai-setting/init.sh --project-name my-api --archetype backend-api --stack Python /path/to/my-new-project
 
@@ -122,6 +125,13 @@ init.sh 실행
 기본 포함에서 제외된 것:
 - `brave-search` — API 키 필요
 - `filesystem` — 경로 스코프 설계 후 별도 검토
+
+자동 추천 기준:
+- `frontend-web` → `core + web`
+- `infra-iac` → `core + infra`
+- `backend-api`, `worker-batch`, `data-automation` + 운영 신호(Docker/compose 등) → `core + infra`
+
+기본값은 여전히 `core`만 적용되고, `--auto-mcp`를 줬을 때만 추천 preset이 자동 반영됩니다.
 
 ### AI가 자동 생성한 파일 확인
 `CLAUDE.md`와 `AGENTS.md`가 프로젝트에 맞게 채워졌는지 확인.
