@@ -54,6 +54,10 @@
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-context.sh write standard"
           },
           {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/compact-backup.sh write standard"
+          },
+          {
             "type": "prompt",
             "prompt": "Check if the last task involved code changes. If so, verify: 1) Were tests mentioned or run? 2) Were there any obvious issues left unaddressed? If tests should have been run but weren't, respond with {\"ok\": false, \"reason\": \"Please run the relevant tests to verify these changes work correctly.\"}. Otherwise respond with {\"ok\": true}."
           }

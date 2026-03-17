@@ -40,7 +40,7 @@ cd my-new-project
 [1/7] Claude Code 설정 복사 (.claude/)
   ⚠ .claude/ 이미 존재 — 백업 후 덮어쓰기
   📦 백업: /path/to/project/.claude.backup.20260317120000
-  ✅ standard profile 적용됨 (settings 1개, hooks 4개, agents 4개, skills 5개)
+  ✅ standard profile 적용됨 (settings 1개, hooks 5개, agents 4개, skills 5개)
 [2/7] Cursor / Gemini / Copilot 설정 복사
   ✅ Cursor rule 적용됨 (.cursor/rules/ai-setting.mdc)
   ✅ Gemini settings 적용됨 (.gemini/settings.json)
@@ -217,7 +217,7 @@ init.sh 실행
 
 ### 그대로 사용 (수정 불필요)
 - `.claude/settings.json` — hooks, 포맷터, 알림 전부 포함
-- `.claude/hooks/*` — 보호 파일 차단 + 위험 명령 차단 + async test + compact 컨텍스트
+- `.claude/hooks/*` — 보호 파일 차단 + 위험 명령 차단 + async test + session context + compact backup
 - `.claude/agents/*` — 보안 리뷰, 설계 검증, 테스트 작성, 리서치
 - `.claude/skills/*` — 배포, 코드 리뷰, 이슈 수정, Gap 체크, 교차검증
 - `.claude/hooks/protect-main-branch.sh` — strict/team에서 main/master 직접 git 작업 차단
@@ -365,10 +365,12 @@ blank-start에서도 의도를 미리 줄 수 있음:
 - 템플릿/skill placeholder 잔존 여부
 - 공유 자산 모드가 `copy`인지 `symlink`인지
 - async test 명령이 명시되었는지 또는 자동 감지가 가능한지
+- compact backup hook 존재 여부
 
 참고:
 - `blank-start` 모드에서는 템플릿/skill placeholder가 남아 있어도 정상으로 취급
 - `minimal` profile은 `block-dangerous-commands`, `async-test`와 managed skills 부재를 정상으로 취급
+- `minimal` profile은 `session-context`, `compact-backup`도 비활성 상태를 정상으로 취급
 - `strict/team` profile은 `protect-main-branch.sh`가 없으면 error
 - error가 있으면 종료 코드 `1`, error가 없으면 종료 코드 `0`
 
@@ -444,6 +446,7 @@ ai-setting/
 │   │   ├── protect-files.sh               # 민감 파일 편집 차단 (20개 패턴)
 │   │   ├── block-dangerous-commands.sh    # 위험 명령어 차단 (14개 패턴)
 │   │   ├── async-test.sh                  # 편집 후 백그라운드 테스트
+│   │   ├── compact-backup.sh              # compact 복원용 스냅샷 백업
 │   │   ├── protect-main-branch.sh         # main/master 직접 git 작업 차단
 │   │   ├── session-context.sh             # compact 대비용 컨텍스트 스냅샷
 │   │   └── team-webhook-notify.sh         # team profile 웹훅 알림
@@ -487,6 +490,7 @@ ai-setting/
 | **protect-files.sh** | 파일 편집 전 | .env, lock, .git, 인증키, 빌드산출물 편집 차단 |
 | **block-dangerous-commands.sh** | Bash 실행 전 | rm -rf, sudo, force push, DROP TABLE 등 차단 |
 | **async-test.sh** | PostToolUse(Edit/Write) | 코드 파일 편집 후 비동기 테스트를 best-effort로 실행 |
+| **compact-backup.sh** | Stop / SessionStart(compact) | compact 세션 복원용 최신/히스토리 스냅샷 보관 |
 | **session-context.sh** | Stop / SessionStart(compact) | compact 대비용 프로젝트 컨텍스트 스냅샷 갱신 및 복원 |
 | **team-webhook-notify.sh** | Stop(team) | 선택적으로 Slack/Discord 웹훅에 완료 알림 전송 |
 | **auto-format** | 파일 편집 후 | Python→ruff, TS/JS→prettier 자동 포맷 |
@@ -582,6 +586,13 @@ cat > .ai-setting/team-webhook.json <<'JSON'
 }
 JSON
 ```
+
+### Compact Backup (compact-backup.sh)
+
+- `standard`, `strict`, `team` profile에서만 활성화됩니다.
+- Stop 시점마다 `.claude/context/compact-latest.md`를 갱신하고, `.claude/context/compact-history/` 아래에 타임스탬프 히스토리를 남깁니다.
+- SessionStart에서 compact가 일어나면 `session-context.sh`가 최신 compact backup을 우선 복원합니다.
+- snapshot에는 session context, async test 상태, team webhook 상태, git status 요약이 함께 들어갑니다.
 
 ---
 

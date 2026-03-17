@@ -62,6 +62,10 @@
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/team-webhook-notify.sh stop team"
           },
           {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/compact-backup.sh write team"
+          },
+          {
             "type": "prompt",
             "prompt": "Check if the last task involved code changes. If so, verify: 1) Were tests run or clearly explained? 2) Were docs updated if behavior changed? 3) Should the PR template be updated with risks, rollout, or verification notes? If verification is missing, respond with {\"ok\": false, \"reason\": \"Please run the relevant tests, update the related docs, and prepare the PR context before finishing.\"}. Otherwise respond with {\"ok\": true}."
           }

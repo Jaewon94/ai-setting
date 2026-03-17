@@ -13,6 +13,8 @@
 - [ ] Phase 2: 동기화 시스템
 - [x] Phase 3: 프로필 시스템 고도화
 - [ ] Phase 4: 플러그인 마켓플레이스
+- [x] Phase 5: 고급 hooks 1차
+- [ ] Phase 6: 커뮤니티 & 배포
 
 ## Priority 0: 프로젝트 로컬 MCP 도입
 
@@ -512,7 +514,7 @@ init.sh --profile team /path/to/project
 - `standard` / `strict` / `team` 프로필에 compact 대응용 `session-context` hook 1차 적용
 - `standard` / `strict` / `team` 프로필에 async test hook 1차 적용
 - `team` 프로필에 optional webhook notify hook 1차 적용
-- 전용 PreCompact 백업은 아직 미구현
+- `standard` / `strict` / `team` 프로필에 compact backup hook 1차 적용
 
 ### 5-1. 브랜치 보호 hook
 ```bash
@@ -545,6 +547,11 @@ fi
 ### 5-4. 컴팩션 컨텍스트 주입 hook
 - PreCompact 시점에 핵심 컨텍스트를 별도 파일에 백업
 - SessionStart에서 복원
+
+현재 1차 구현:
+- Stop 시점에 `.claude/context/compact-latest.md`를 갱신하고 `.claude/context/compact-history/`에 타임스탬프 스냅샷 보관
+- SessionStart(compact)에서는 최신 compact backup을 우선 복원
+- async test / team webhook / git status 요약도 snapshot에 포함
 
 - **난이도**: 쉬움~중간
 - **참고**: claude-code-hooks-mastery, pixelmojo CI/CD 패턴

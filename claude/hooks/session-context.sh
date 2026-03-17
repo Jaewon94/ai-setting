@@ -9,6 +9,7 @@ MODE="${1:-read}"
 PROFILE="${2:-standard}"
 CONTEXT_DIR="$PROJECT_DIR/.claude/context"
 CONTEXT_FILE="$CONTEXT_DIR/session-context.md"
+LATEST_COMPACT_BACKUP="$CONTEXT_DIR/compact-latest.md"
 
 ensure_context_dir() {
   mkdir -p "$CONTEXT_DIR" 2>/dev/null || true
@@ -55,7 +56,11 @@ write_context() {
 }
 
 read_context() {
-  if [ -f "$CONTEXT_FILE" ]; then
+  if [ -f "$LATEST_COMPACT_BACKUP" ]; then
+    cat "$LATEST_COMPACT_BACKUP"
+    echo
+    echo "Reminder: 최신 compact backup 기준이므로 필요하면 CLAUDE.md, AGENTS.md, docs/decisions.md 원본도 함께 확인해."
+  elif [ -f "$CONTEXT_FILE" ]; then
     cat "$CONTEXT_FILE"
     echo
     echo "Reminder: 최신 변경이 있었다면 CLAUDE.md, AGENTS.md, docs/decisions.md도 함께 확인해."

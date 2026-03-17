@@ -357,6 +357,14 @@ run_doctor() {
   fi
 
   if [ "$DETECTED_CLAUDE_PROFILE" = "minimal" ]; then
+    doctor_ok "minimal 프로필 — compact-backup hook 비활성"
+  elif [ -x "$target/.claude/hooks/compact-backup.sh" ]; then
+    doctor_ok ".claude/hooks/compact-backup.sh 실행 가능"
+  else
+    doctor_error ".claude/hooks/compact-backup.sh 없음 또는 실행 권한 없음"
+  fi
+
+  if [ "$DETECTED_CLAUDE_PROFILE" = "minimal" ]; then
     doctor_ok "minimal 프로필 — async-test hook 비활성"
   elif [ -x "$target/.claude/hooks/async-test.sh" ]; then
     doctor_ok ".claude/hooks/async-test.sh 실행 가능"
@@ -865,13 +873,9 @@ cleanup_managed_claude_assets() {
     "$TARGET/.claude/hooks/block-dangerous-commands.sh"
     "$TARGET/.claude/hooks/protect-main-branch.sh"
     "$TARGET/.claude/hooks/session-context.sh"
+    "$TARGET/.claude/hooks/compact-backup.sh"
     "$TARGET/.claude/hooks/async-test.sh"
     "$TARGET/.claude/hooks/team-webhook-notify.sh"
-    "$TARGET/.claude/context/async-test-status.md"
-    "$TARGET/.claude/context/async-test.log"
-    "$TARGET/.claude/context/async-test.pid"
-    "$TARGET/.claude/context/session-context.md"
-    "$TARGET/.claude/context/team-webhook-status.md"
     "$TARGET/.claude/agents/security-reviewer.md"
     "$TARGET/.claude/agents/architect-reviewer.md"
     "$TARGET/.claude/agents/test-writer.md"
@@ -890,7 +894,6 @@ cleanup_managed_claude_assets() {
     "$TARGET/.claude/skills/gap-check"
     "$TARGET/.claude/skills/cross-validate"
     "$TARGET/.claude/skills"
-    "$TARGET/.claude/context"
     "$TARGET/.claude/hooks"
   )
 
@@ -915,6 +918,7 @@ copy_claude_profile_assets() {
   if [ "$CLAUDE_PROFILE" != "minimal" ]; then
     install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"
     install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/session-context.sh" "$TARGET/.claude/hooks/session-context.sh"
+    install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/compact-backup.sh" "$TARGET/.claude/hooks/compact-backup.sh"
     install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/async-test.sh" "$TARGET/.claude/hooks/async-test.sh"
   fi
 
@@ -1827,43 +1831,43 @@ if [ "$CLAUDE_PROFILE" = "minimal" ]; then
 elif [ "$CLAUDE_PROFILE" = "strict" ]; then
   if [ "$DRY_RUN" = true ]; then
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ strict profile 심링크 적용 예정 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "  ✅ strict profile 심링크 적용 예정 (settings 1개, hooks 6개, agents 4개, skills 5개)"
     else
-      echo "  ✅ strict profile 적용 예정 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "  ✅ strict profile 적용 예정 (settings 1개, hooks 6개, agents 4개, skills 5개)"
     fi
   else
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ strict profile 심링크 적용됨 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "  ✅ strict profile 심링크 적용됨 (settings 1개, hooks 6개, agents 4개, skills 5개)"
     else
-      echo "  ✅ strict profile 적용됨 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "  ✅ strict profile 적용됨 (settings 1개, hooks 6개, agents 4개, skills 5개)"
     fi
   fi
 elif [ "$CLAUDE_PROFILE" = "team" ]; then
   if [ "$DRY_RUN" = true ]; then
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ team profile 심링크 적용 예정 (settings 1개, hooks 6개, agents 4개, skills 5개)"
+      echo "  ✅ team profile 심링크 적용 예정 (settings 1개, hooks 7개, agents 4개, skills 5개)"
     else
-      echo "  ✅ team profile 적용 예정 (settings 1개, hooks 6개, agents 4개, skills 5개)"
+      echo "  ✅ team profile 적용 예정 (settings 1개, hooks 7개, agents 4개, skills 5개)"
     fi
   else
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ team profile 심링크 적용됨 (settings 1개, hooks 6개, agents 4개, skills 5개)"
+      echo "  ✅ team profile 심링크 적용됨 (settings 1개, hooks 7개, agents 4개, skills 5개)"
     else
-      echo "  ✅ team profile 적용됨 (settings 1개, hooks 6개, agents 4개, skills 5개)"
+      echo "  ✅ team profile 적용됨 (settings 1개, hooks 7개, agents 4개, skills 5개)"
     fi
   fi
 else
   if [ "$DRY_RUN" = true ]; then
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ standard profile 심링크 적용 예정 (settings 1개, hooks 4개, agents 4개, skills 5개)"
+      echo "  ✅ standard profile 심링크 적용 예정 (settings 1개, hooks 5개, agents 4개, skills 5개)"
     else
-      echo "  ✅ standard profile 적용 예정 (settings 1개, hooks 4개, agents 4개, skills 5개)"
+      echo "  ✅ standard profile 적용 예정 (settings 1개, hooks 5개, agents 4개, skills 5개)"
     fi
   else
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ standard profile 심링크 적용됨 (settings 1개, hooks 4개, agents 4개, skills 5개)"
+      echo "  ✅ standard profile 심링크 적용됨 (settings 1개, hooks 5개, agents 4개, skills 5개)"
     else
-      echo "  ✅ standard profile 적용됨 (settings 1개, hooks 4개, agents 4개, skills 5개)"
+      echo "  ✅ standard profile 적용됨 (settings 1개, hooks 5개, agents 4개, skills 5개)"
     fi
   fi
 fi
@@ -2263,7 +2267,7 @@ elif [ "$CLAUDE_PROFILE" = "strict" ]; then
   else
     echo "    .claude/settings.json     — strict workflow hooks + branch 보호"
   fi
-  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + compact 컨텍스트 + main/master 보호"
+  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + session context + compact backup + main/master 보호"
   echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
   echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
 elif [ "$CLAUDE_PROFILE" = "team" ]; then
@@ -2272,16 +2276,16 @@ elif [ "$CLAUDE_PROFILE" = "team" ]; then
   else
     echo "    .claude/settings.json     — team workflow hooks + branch 보호"
   fi
-  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + compact 컨텍스트 + main/master 보호 + team webhook"
+  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + session context + compact backup + main/master 보호 + team webhook"
   echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
   echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
 else
   if [ "$LINK_MODE" = true ]; then
     echo "    .claude/settings.json     — standard workflow hooks (심링크)"
   else
-    echo "    .claude/settings.json     — standard workflow hooks (포맷터, 파일보호, 명령차단, async test, 알림, 종료검사, compact 컨텍스트)"
+    echo "    .claude/settings.json     — standard workflow hooks (포맷터, 파일보호, 명령차단, async test, 알림, 종료검사, session context, compact backup)"
   fi
-  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + compact 컨텍스트"
+  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + session context + compact backup"
   echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
   echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
 fi
