@@ -205,6 +205,11 @@ AI 자동 채우기 시 아래 원칙을 명시한다.
 - hook 기본값
 - 추천 agents / skills
 
+현재 상태:
+- `init.sh`에서 1차 archetype 자동 감지(`frontend-web`, `backend-api`, `cli-tool`, `worker-batch`, `data-automation`, `library-sdk`, `infra-iac`, `general-app`)를 수행
+- Next.js/Vite/Node/Python/Go/Rust/Java-Kotlin/Ruby/PHP 기준의 주 스택 감지를 함께 수행
+- 감지 결과를 AI 자동 채우기 프롬프트에 주입해 프로젝트 유형에 맞는 명령어와 설명을 유도
+
 ### 구현 계획
 
 1. 프로젝트 archetype taxonomy를 정의한다.

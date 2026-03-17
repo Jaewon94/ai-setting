@@ -37,6 +37,8 @@ cd my-new-project
   ✅ AGENTS.md 생성됨
 [5/6] AI로 CLAUDE.md / AGENTS.md 자동 생성
   mode: hybrid (문서와 구현 신호가 모두 있어 함께 해석하는 편이 적합함)
+  archetype: frontend-web (웹 프론트엔드 구성 신호가 확인됨)
+  stack: Next.js (TypeScript/JavaScript) [next.config.ts]
   signals: docs=[README.md,docs] | impl=[package.json,src] | tests=[tests] | ops=[Dockerfile,.env.example]
   🔄 Claude Code로 프로젝트 분석 중...
   ✅ Claude Code가 CLAUDE.md / AGENTS.md를 자동 생성했습니다
@@ -124,6 +126,26 @@ claude "CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 채워줘"
 - 문서: `README.md`, `docs/`, `spec/`, `prd/`, `requirements/`
 - 구현: `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `src/`, `app/`, `backend/`, `frontend/`
 - 테스트/운영: `tests/`, `.github/workflows/`, `Dockerfile`, `compose.yaml`, `.env.example`
+
+### 프로젝트 유형과 스택 자동 감지
+
+`init.sh`는 해석 모드와 별개로 프로젝트 archetype과 주 스택도 함께 감지해서 AI 프롬프트에 전달합니다.
+
+지원 archetype:
+- `frontend-web`
+- `backend-api`
+- `cli-tool`
+- `worker-batch`
+- `data-automation`
+- `library-sdk`
+- `infra-iac`
+- `general-app` (애매한 경우의 안전한 fallback)
+
+스택 감지 예시:
+- `Next.js (TypeScript/JavaScript)`
+- `Vite (TypeScript/JavaScript)`
+- `Node.js / TypeScript`
+- `Python`, `Go`, `Rust`, `Java / Kotlin`, `Ruby`, `PHP`
 
 ### 프로젝트별 선택 추가
 

@@ -170,6 +170,179 @@ EOF
   esac
 }
 
+detect_project_stack() {
+  local base="$1"
+  local next_markers=("next.config.js" "next.config.mjs" "next.config.ts")
+  local vite_markers=("vite.config.js" "vite.config.mjs" "vite.config.ts")
+
+  if [ "$(count_existing_paths "$base" "${next_markers[@]}")" -ge 1 ]; then
+    PROJECT_STACK="Next.js (TypeScript/JavaScript)"
+    PROJECT_STACK_SIGNALS="$(join_existing_paths "$base" "${next_markers[@]}")"
+  elif [ "$(count_existing_paths "$base" "${vite_markers[@]}")" -ge 1 ]; then
+    PROJECT_STACK="Vite (TypeScript/JavaScript)"
+    PROJECT_STACK_SIGNALS="$(join_existing_paths "$base" "${vite_markers[@]}")"
+  elif [ -e "$base/package.json" ]; then
+    if [ -e "$base/tsconfig.json" ]; then
+      PROJECT_STACK="Node.js / TypeScript"
+      PROJECT_STACK_SIGNALS="package.json, tsconfig.json"
+    else
+      PROJECT_STACK="Node.js / JavaScript"
+      PROJECT_STACK_SIGNALS="package.json"
+    fi
+  elif [ -e "$base/pyproject.toml" ] || [ -e "$base/requirements.txt" ]; then
+    PROJECT_STACK="Python"
+    PROJECT_STACK_SIGNALS="$(join_existing_paths "$base" "pyproject.toml" "requirements.txt")"
+  elif [ -e "$base/go.mod" ]; then
+    PROJECT_STACK="Go"
+    PROJECT_STACK_SIGNALS="go.mod"
+  elif [ -e "$base/Cargo.toml" ]; then
+    PROJECT_STACK="Rust"
+    PROJECT_STACK_SIGNALS="Cargo.toml"
+  elif [ -e "$base/pom.xml" ] || [ -e "$base/build.gradle" ] || [ -e "$base/build.gradle.kts" ]; then
+    PROJECT_STACK="Java / Kotlin"
+    PROJECT_STACK_SIGNALS="$(join_existing_paths "$base" "pom.xml" "build.gradle" "build.gradle.kts")"
+  elif [ -e "$base/Gemfile" ]; then
+    PROJECT_STACK="Ruby"
+    PROJECT_STACK_SIGNALS="Gemfile"
+  elif [ -e "$base/composer.json" ]; then
+    PROJECT_STACK="PHP"
+    PROJECT_STACK_SIGNALS="composer.json"
+  else
+    PROJECT_STACK="미감지"
+    PROJECT_STACK_SIGNALS="없음"
+  fi
+}
+
+set_project_archetype_guidance() {
+  case "$PROJECT_ARCHETYPE" in
+    frontend-web)
+      PROJECT_ARCHETYPE_GUIDANCE="프론트엔드 중심 프로젝트로 보고 브라우저 실행, 프론트 테스트, 번들링/개발 서버 명령을 우선 채워."
+      ;;
+    backend-api)
+      PROJECT_ARCHETYPE_GUIDANCE="백엔드/API 중심 프로젝트로 보고 서버 실행, API 테스트, 마이그레이션/런타임 설정을 우선 채워."
+      ;;
+    cli-tool)
+      PROJECT_ARCHETYPE_GUIDANCE="CLI 도구로 보고 설치/실행 예시, 엔트리포인트, 인자 처리와 관련된 명령/설명을 우선 채워."
+      ;;
+    worker-batch)
+      PROJECT_ARCHETYPE_GUIDANCE="워커/배치 프로젝트로 보고 큐 소비, 스케줄러, 잡 실행 및 재시도 전략 관련 내용을 우선 반영해."
+      ;;
+    data-automation)
+      PROJECT_ARCHETYPE_GUIDANCE="데이터/자동화 프로젝트로 보고 파이프라인 실행, 스크립트 진입점, 데이터 의존성과 재현성 관련 내용을 우선 반영해."
+      ;;
+    library-sdk)
+      PROJECT_ARCHETYPE_GUIDANCE="라이브러리/SDK로 보고 공개 API, 사용 예시, 배포/버전 관리, 호환성 검증에 초점을 맞춰."
+      ;;
+    infra-iac)
+      PROJECT_ARCHETYPE_GUIDANCE="인프라/IaC 프로젝트로 보고 plan/apply, 검증, 환경 분리, 배포 안전장치 관련 내용을 우선 반영해."
+      ;;
+    *)
+      PROJECT_ARCHETYPE_GUIDANCE="일반 애플리케이션으로 보고 실제 코드 구조와 실행 명령을 우선 정리해."
+      ;;
+  esac
+}
+
+detect_project_archetype() {
+  local base="$1"
+  local frontend_markers=(
+    "next.config.js"
+    "next.config.mjs"
+    "next.config.ts"
+    "vite.config.js"
+    "vite.config.mjs"
+    "vite.config.ts"
+    "src/app"
+    "src/pages"
+    "frontend/src"
+  )
+  local backend_markers=(
+    "app/main.py"
+    "manage.py"
+    "main.go"
+    "backend"
+    "backend/app"
+    "backend/src"
+    "src/api"
+    "app/api"
+  )
+  local cli_markers=("cmd" "bin" "cli" "cli.py" "cli.ts")
+  local worker_markers=("worker" "workers" "jobs" "queue" "scheduler" "celery.py")
+  local data_markers=("notebooks" "pipelines" "airflow" "dbt_project.yml" "scripts")
+  local infra_markers=(
+    "terraform"
+    "ansible"
+    "helm"
+    "infra"
+    "k8s"
+    "docker-compose.yml"
+    "docker-compose.yaml"
+    "compose.yaml"
+    "compose.yml"
+    ".github/workflows"
+  )
+  local frontend_count
+  local backend_count
+  local cli_count
+  local worker_count
+  local data_count
+  local infra_count
+
+  frontend_count="$(count_existing_paths "$base" "${frontend_markers[@]}")"
+  backend_count="$(count_existing_paths "$base" "${backend_markers[@]}")"
+  cli_count="$(count_existing_paths "$base" "${cli_markers[@]}")"
+  worker_count="$(count_existing_paths "$base" "${worker_markers[@]}")"
+  data_count="$(count_existing_paths "$base" "${data_markers[@]}")"
+  infra_count="$(count_existing_paths "$base" "${infra_markers[@]}")"
+
+  if [ "$infra_count" -ge 2 ] && \
+     [ "$frontend_count" -eq 0 ] && \
+     [ "$backend_count" -eq 0 ] && \
+     [ "$cli_count" -eq 0 ] && \
+     [ "$worker_count" -eq 0 ] && \
+     [ "$data_count" -eq 0 ]; then
+    PROJECT_ARCHETYPE="infra-iac"
+    PROJECT_ARCHETYPE_SIGNALS="$(join_existing_paths "$base" "${infra_markers[@]}")"
+    PROJECT_ARCHETYPE_REASON="인프라/IaC 신호가 다수이고 앱 코드 신호가 거의 없음"
+  elif [ "$frontend_count" -ge 2 ] || { [ "$frontend_count" -ge 1 ] && [ -e "$base/package.json" ]; }; then
+    PROJECT_ARCHETYPE="frontend-web"
+    PROJECT_ARCHETYPE_SIGNALS="$(join_existing_paths "$base" "${frontend_markers[@]}")"
+    PROJECT_ARCHETYPE_REASON="웹 프론트엔드 구성 신호가 확인됨"
+  elif [ "$worker_count" -ge 2 ] || { [ "$worker_count" -ge 1 ] && [ "$backend_count" -ge 1 ]; }; then
+    PROJECT_ARCHETYPE="worker-batch"
+    PROJECT_ARCHETYPE_SIGNALS="$(join_existing_paths "$base" "${worker_markers[@]}" "${backend_markers[@]}")"
+    PROJECT_ARCHETYPE_REASON="워커/큐/잡 관련 신호가 백엔드 구조와 함께 확인됨"
+  elif [ "$cli_count" -ge 1 ] && [ "$frontend_count" -eq 0 ]; then
+    PROJECT_ARCHETYPE="cli-tool"
+    PROJECT_ARCHETYPE_SIGNALS="$(join_existing_paths "$base" "${cli_markers[@]}")"
+    PROJECT_ARCHETYPE_REASON="CLI 엔트리포인트 또는 실행용 디렉토리 신호가 확인됨"
+  elif [ "$data_count" -ge 2 ] || { [ "$data_count" -ge 1 ] && [ "$PROJECT_STACK" = "Python" ]; }; then
+    PROJECT_ARCHETYPE="data-automation"
+    PROJECT_ARCHETYPE_SIGNALS="$(join_existing_paths "$base" "${data_markers[@]}")"
+    PROJECT_ARCHETYPE_REASON="데이터 파이프라인/자동화 스크립트 관련 신호가 확인됨"
+  elif [ -e "$base/examples" ] && [ -e "$base/src" ] && [ "$frontend_count" -eq 0 ] && [ "$backend_count" -eq 0 ] && [ "$cli_count" -eq 0 ] && [ "$worker_count" -eq 0 ] && [ "$data_count" -eq 0 ]; then
+    PROJECT_ARCHETYPE="library-sdk"
+    PROJECT_ARCHETYPE_SIGNALS="src, examples"
+    PROJECT_ARCHETYPE_REASON="실행 앱보다 공개 API/예제 중심 구조로 보임"
+  elif [ "$backend_count" -ge 1 ] || { [ "$PROJECT_CONTEXT_MODE" = "code-first" ] && [ "$PROJECT_STACK" != "미감지" ] && [ "$frontend_count" -eq 0 ]; }; then
+    PROJECT_ARCHETYPE="backend-api"
+    PROJECT_ARCHETYPE_SIGNALS="$(join_existing_paths "$base" "${backend_markers[@]}")"
+    if [ "$PROJECT_ARCHETYPE_SIGNALS" = "없음" ]; then
+      PROJECT_ARCHETYPE_SIGNALS="$PROJECT_STACK_SIGNALS"
+    fi
+    PROJECT_ARCHETYPE_REASON="서버/API 실행 구조 또는 백엔드 중심 스택 신호가 확인됨"
+  elif [ "$infra_count" -ge 1 ] && [ "$IMPLEMENTATION_SIGNAL_COUNT" -le 2 ]; then
+    PROJECT_ARCHETYPE="infra-iac"
+    PROJECT_ARCHETYPE_SIGNALS="$(join_existing_paths "$base" "${infra_markers[@]}")"
+    PROJECT_ARCHETYPE_REASON="인프라 관련 구성은 있으나 애플리케이션 신호는 제한적임"
+  else
+    PROJECT_ARCHETYPE="general-app"
+    PROJECT_ARCHETYPE_SIGNALS="없음"
+    PROJECT_ARCHETYPE_REASON="지배적인 프로젝트 유형 신호가 부족해 일반 애플리케이션으로 처리"
+  fi
+
+  set_project_archetype_guidance
+}
+
 detect_project_context_mode() {
   local base="$1"
   local doc_markers=(
@@ -423,6 +596,8 @@ TARGET="${TARGET:-.}"
 TARGET="$(cd "$TARGET" && pwd)"
 normalize_mcp_presets
 detect_project_context_mode "$TARGET"
+detect_project_stack "$TARGET"
+detect_project_archetype "$TARGET"
 
 MCP_PRESET_LABEL="none"
 if [ "${#MCP_PRESETS[@]}" -gt 0 ]; then
@@ -434,6 +609,8 @@ echo -e "소스: ${SCRIPT_DIR}"
 echo -e "대상: ${TARGET}"
 echo -e "MCP preset: ${MCP_PRESET_LABEL}"
 echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
+echo -e "프로젝트 유형: ${PROJECT_ARCHETYPE}"
+echo -e "주 스택: ${PROJECT_STACK}"
 echo ""
 
 # jq 의존성 체크 (hooks가 jq로 JSON 파싱)
@@ -555,13 +732,20 @@ AI_PROMPT=$(cat <<EOF
 프로젝트 해석 모드: ${PROJECT_CONTEXT_MODE}
 선정 이유: ${PROJECT_CONTEXT_REASON}
 
+프로젝트 유형(archetype): ${PROJECT_ARCHETYPE}
+선정 이유: ${PROJECT_ARCHETYPE_REASON}
+주 스택: ${PROJECT_STACK}
+스택 신호: ${PROJECT_STACK_SIGNALS}
+
 감지 신호:
 - 문서: ${PROJECT_DOC_SIGNALS}
 - 구현: ${PROJECT_IMPLEMENTATION_SIGNALS}
 - 테스트: ${PROJECT_TEST_SIGNALS}
 - 운영: ${PROJECT_OPS_SIGNALS}
+- archetype: ${PROJECT_ARCHETYPE_SIGNALS}
 
 ${PROJECT_MODE_GUIDANCE}
+${PROJECT_ARCHETYPE_GUIDANCE}
 
 작업:
 1. CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 이 프로젝트에 맞게 전부 채워줘. 대괄호를 실제 내용으로 교체하고, 프로젝트에 해당하지 않는 섹션은 제거해. 기존 템플릿의 공통 규칙(Coding Rules, Forbidden 등)은 유지하되 프로젝트 스택에 맞게 보강해.
@@ -578,6 +762,8 @@ elif [ "$TEMPLATES_COPIED" = false ]; then
 else
   AI_SUCCESS=false
   echo "  mode: ${PROJECT_CONTEXT_MODE} (${PROJECT_CONTEXT_REASON})"
+  echo "  archetype: ${PROJECT_ARCHETYPE} (${PROJECT_ARCHETYPE_REASON})"
+  echo "  stack: ${PROJECT_STACK} [${PROJECT_STACK_SIGNALS}]"
   echo "  signals: docs=[${PROJECT_DOC_SIGNALS}] | impl=[${PROJECT_IMPLEMENTATION_SIGNALS}] | tests=[${PROJECT_TEST_SIGNALS}] | ops=[${PROJECT_OPS_SIGNALS}]"
 
   # 시도 1: Claude Code
