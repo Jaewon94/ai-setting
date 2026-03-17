@@ -24,6 +24,7 @@ usage() {
 
 옵션:
   --profile PROFILE        Claude Code 프로필 지정 (standard|minimal|strict|team)
+  --link                   공유 가능한 설정 자산을 복사 대신 심링크로 연결
   --doctor                 현재 프로젝트 설정 상태 진단
   --dry-run                실제 변경 없이 예정 작업만 출력
   --diff                   실제 변경 없이 관리 대상 파일 diff 출력
@@ -113,6 +114,34 @@ detect_claude_profile() {
   fi
 }
 
+detect_shared_asset_mode() {
+  local target="$1"
+  local symlink_count=0
+  local regular_count=0
+  local path
+  local paths=(
+    "$target/.claude/settings.json"
+    "$target/.cursor/rules/ai-setting.mdc"
+    "$target/.gemini/settings.json"
+  )
+
+  for path in "${paths[@]}"; do
+    if [ -L "$path" ]; then
+      symlink_count=$((symlink_count + 1))
+    elif [ -e "$path" ]; then
+      regular_count=$((regular_count + 1))
+    fi
+  done
+
+  if [ "$symlink_count" -gt 0 ] && [ "$regular_count" -gt 0 ]; then
+    DETECTED_SHARED_ASSET_MODE="mixed"
+  elif [ "$symlink_count" -gt 0 ]; then
+    DETECTED_SHARED_ASSET_MODE="symlink"
+  else
+    DETECTED_SHARED_ASSET_MODE="copy"
+  fi
+}
+
 doctor_ok() {
   DOCTOR_OK_COUNT=$((DOCTOR_OK_COUNT + 1))
   echo -e "${GREEN}[OK]${NC} $1"
@@ -137,10 +166,12 @@ run_doctor() {
   DOCTOR_WARN_COUNT=0
   DOCTOR_ERROR_COUNT=0
   detect_claude_profile "$target"
+  detect_shared_asset_mode "$target"
 
   echo -e "${CYAN}━━━ AI Setting Doctor ━━━${NC}"
   echo -e "대상: ${target}"
   echo -e "Claude 프로필: ${DETECTED_CLAUDE_PROFILE}"
+  echo -e "공유 자산 모드: ${DETECTED_SHARED_ASSET_MODE}"
   echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
   echo -e "프로젝트 유형: ${PROJECT_ARCHETYPE}"
   echo -e "주 스택: ${PROJECT_STACK}"
@@ -356,6 +387,9 @@ run_diff_preview() {
 
   internal_args=("--skip-ai")
   internal_args+=("--profile" "$CLAUDE_PROFILE")
+  if [ "$LINK_MODE" = true ]; then
+    internal_args+=("--link")
+  fi
   if [ "$MCP_ENABLED" = false ]; then
     internal_args+=("--no-mcp")
   else
@@ -559,6 +593,49 @@ run_copy() {
   fi
 }
 
+run_symlink() {
+  local src="$1"
+  local dst="$2"
+  local final_path
+
+  final_path="$(resolve_copy_destination "$src" "$dst")"
+
+  if [ "$DRY_RUN" = true ]; then
+    if [ -L "$final_path" ]; then
+      dry_run_note "심링크 갱신: ${final_path} -> ${src}"
+    else
+      dry_run_note "심링크 생성: ${final_path} -> ${src}"
+    fi
+    return
+  fi
+
+  mkdir -p "$(dirname "$final_path")"
+  ln -sfn "$src" "$final_path"
+}
+
+install_shared_asset() {
+  local src="$1"
+  local dst="$2"
+
+  if [ "$LINK_MODE" = true ]; then
+    run_symlink "$src" "$dst"
+  else
+    run_copy "$src" "$dst"
+  fi
+}
+
+install_shared_executable_asset() {
+  local src="$1"
+  local dst="$2"
+
+  if [ "$LINK_MODE" = true ]; then
+    run_symlink "$src" "$dst"
+  else
+    run_copy "$src" "$dst"
+    run_chmod_file "$(resolve_copy_destination "$src" "$dst")"
+  fi
+}
+
 run_chmod_file() {
   local path="$1"
 
@@ -713,37 +790,34 @@ copy_claude_profile_assets() {
   settings_template="$(get_profile_settings_template "$CLAUDE_PROFILE")"
 
   run_mkdir_p "$TARGET/.claude/hooks"
-  run_copy "$settings_template" "$TARGET/.claude/settings.json"
-  run_copy "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
-  run_chmod_file "$TARGET/.claude/hooks/protect-files.sh"
+  install_shared_asset "$settings_template" "$TARGET/.claude/settings.json"
+  install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
 
   if [ "$CLAUDE_PROFILE" != "minimal" ]; then
-    run_copy "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"
-    run_chmod_file "$TARGET/.claude/hooks/block-dangerous-commands.sh"
+    install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"
   fi
 
   if [ "$CLAUDE_PROFILE" = "strict" ] || [ "$CLAUDE_PROFILE" = "team" ]; then
-    run_copy "$SCRIPT_DIR/claude/hooks/protect-main-branch.sh" "$TARGET/.claude/hooks/protect-main-branch.sh"
-    run_chmod_file "$TARGET/.claude/hooks/protect-main-branch.sh"
+    install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/protect-main-branch.sh" "$TARGET/.claude/hooks/protect-main-branch.sh"
   fi
 
   if [ "$CLAUDE_PROFILE" != "minimal" ]; then
     run_mkdir_p "$TARGET/.claude/agents"
-    run_copy "$SCRIPT_DIR/claude/agents/security-reviewer.md" "$TARGET/.claude/agents/"
-    run_copy "$SCRIPT_DIR/claude/agents/architect-reviewer.md" "$TARGET/.claude/agents/"
-    run_copy "$SCRIPT_DIR/claude/agents/test-writer.md" "$TARGET/.claude/agents/"
-    run_copy "$SCRIPT_DIR/claude/agents/research.md" "$TARGET/.claude/agents/"
+    install_shared_asset "$SCRIPT_DIR/claude/agents/security-reviewer.md" "$TARGET/.claude/agents/"
+    install_shared_asset "$SCRIPT_DIR/claude/agents/architect-reviewer.md" "$TARGET/.claude/agents/"
+    install_shared_asset "$SCRIPT_DIR/claude/agents/test-writer.md" "$TARGET/.claude/agents/"
+    install_shared_asset "$SCRIPT_DIR/claude/agents/research.md" "$TARGET/.claude/agents/"
 
     run_mkdir_p "$TARGET/.claude/skills/deploy"
     run_mkdir_p "$TARGET/.claude/skills/review"
     run_mkdir_p "$TARGET/.claude/skills/fix-issue"
     run_mkdir_p "$TARGET/.claude/skills/gap-check"
     run_mkdir_p "$TARGET/.claude/skills/cross-validate"
-    run_copy "$SCRIPT_DIR/claude/skills/deploy/SKILL.md" "$TARGET/.claude/skills/deploy/"
-    run_copy "$SCRIPT_DIR/claude/skills/review/SKILL.md" "$TARGET/.claude/skills/review/"
-    run_copy "$SCRIPT_DIR/claude/skills/fix-issue/SKILL.md" "$TARGET/.claude/skills/fix-issue/"
-    run_copy "$SCRIPT_DIR/claude/skills/gap-check/SKILL.md" "$TARGET/.claude/skills/gap-check/"
-    run_copy "$SCRIPT_DIR/claude/skills/cross-validate/SKILL.md" "$TARGET/.claude/skills/cross-validate/"
+    install_shared_asset "$SCRIPT_DIR/claude/skills/deploy/SKILL.md" "$TARGET/.claude/skills/deploy/"
+    install_shared_asset "$SCRIPT_DIR/claude/skills/review/SKILL.md" "$TARGET/.claude/skills/review/"
+    install_shared_asset "$SCRIPT_DIR/claude/skills/fix-issue/SKILL.md" "$TARGET/.claude/skills/fix-issue/"
+    install_shared_asset "$SCRIPT_DIR/claude/skills/gap-check/SKILL.md" "$TARGET/.claude/skills/gap-check/"
+    install_shared_asset "$SCRIPT_DIR/claude/skills/cross-validate/SKILL.md" "$TARGET/.claude/skills/cross-validate/"
   fi
 }
 
@@ -752,7 +826,7 @@ copy_cursor_assets() {
   if [ -f "$TARGET/.cursor/rules/ai-setting.mdc" ]; then
     backup_existing_path "$TARGET/.cursor/rules/ai-setting.mdc" ".cursor/rules/ai-setting.mdc"
   fi
-  run_copy "$SCRIPT_DIR/cursor/rules/ai-setting.mdc" "$TARGET/.cursor/rules/ai-setting.mdc"
+  install_shared_asset "$SCRIPT_DIR/cursor/rules/ai-setting.mdc" "$TARGET/.cursor/rules/ai-setting.mdc"
 }
 
 copy_gemini_assets() {
@@ -760,7 +834,7 @@ copy_gemini_assets() {
   if [ -f "$TARGET/.gemini/settings.json" ]; then
     backup_existing_path "$TARGET/.gemini/settings.json" ".gemini/settings.json"
   fi
-  run_copy "$SCRIPT_DIR/gemini/settings.json" "$TARGET/.gemini/settings.json"
+  install_shared_asset "$SCRIPT_DIR/gemini/settings.json" "$TARGET/.gemini/settings.json"
 }
 
 backup_existing_path() {
@@ -1350,6 +1424,7 @@ DIFF_MODE=false
 BACKUP_ALL=false
 REAPPLY_MODE=false
 AUTO_MCP=false
+LINK_MODE=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
@@ -1374,6 +1449,9 @@ while [ "$#" -gt 0 ]; do
       ;;
     --doctor)
       DOCTOR_MODE=true
+      ;;
+    --link)
+      LINK_MODE=true
       ;;
     --dry-run)
       DRY_RUN=true
@@ -1526,6 +1604,11 @@ echo -e "${CYAN}━━━ AI Setting Init ━━━${NC}"
 echo -e "소스: ${SCRIPT_DIR}"
 echo -e "대상: ${TARGET}"
 echo -e "Claude 프로필: ${CLAUDE_PROFILE}"
+if [ "$LINK_MODE" = true ]; then
+  echo -e "공유 자산 모드: symlink"
+else
+  echo -e "공유 자산 모드: copy"
+fi
 echo -e "MCP preset: ${MCP_PRESET_LABEL}"
 echo -e "MCP 추천: ${RECOMMENDED_MCP_PRESET_LABEL}"
 echo -e "프로젝트명: ${PROJECT_NAME}"
@@ -1579,27 +1662,59 @@ copy_claude_profile_assets
 
 if [ "$CLAUDE_PROFILE" = "minimal" ]; then
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ minimal profile 적용 예정 (settings 1개, hooks 1개)"
+    if [ "$LINK_MODE" = true ]; then
+      echo "  ✅ minimal profile 심링크 적용 예정 (settings 1개, hooks 1개)"
+    else
+      echo "  ✅ minimal profile 적용 예정 (settings 1개, hooks 1개)"
+    fi
   else
-    echo "  ✅ minimal profile 적용됨 (settings 1개, hooks 1개)"
+    if [ "$LINK_MODE" = true ]; then
+      echo "  ✅ minimal profile 심링크 적용됨 (settings 1개, hooks 1개)"
+    else
+      echo "  ✅ minimal profile 적용됨 (settings 1개, hooks 1개)"
+    fi
   fi
 elif [ "$CLAUDE_PROFILE" = "strict" ]; then
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ strict profile 적용 예정 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    if [ "$LINK_MODE" = true ]; then
+      echo "  ✅ strict profile 심링크 적용 예정 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    else
+      echo "  ✅ strict profile 적용 예정 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    fi
   else
-    echo "  ✅ strict profile 적용됨 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    if [ "$LINK_MODE" = true ]; then
+      echo "  ✅ strict profile 심링크 적용됨 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    else
+      echo "  ✅ strict profile 적용됨 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    fi
   fi
 elif [ "$CLAUDE_PROFILE" = "team" ]; then
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ team profile 적용 예정 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    if [ "$LINK_MODE" = true ]; then
+      echo "  ✅ team profile 심링크 적용 예정 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    else
+      echo "  ✅ team profile 적용 예정 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    fi
   else
-    echo "  ✅ team profile 적용됨 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    if [ "$LINK_MODE" = true ]; then
+      echo "  ✅ team profile 심링크 적용됨 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    else
+      echo "  ✅ team profile 적용됨 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+    fi
   fi
 else
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ standard profile 적용 예정 (settings 1개, hooks 2개, agents 4개, skills 5개)"
+    if [ "$LINK_MODE" = true ]; then
+      echo "  ✅ standard profile 심링크 적용 예정 (settings 1개, hooks 2개, agents 4개, skills 5개)"
+    else
+      echo "  ✅ standard profile 적용 예정 (settings 1개, hooks 2개, agents 4개, skills 5개)"
+    fi
   else
-    echo "  ✅ standard profile 적용됨 (settings 1개, hooks 2개, agents 4개, skills 5개)"
+    if [ "$LINK_MODE" = true ]; then
+      echo "  ✅ standard profile 심링크 적용됨 (settings 1개, hooks 2개, agents 4개, skills 5개)"
+    else
+      echo "  ✅ standard profile 적용됨 (settings 1개, hooks 2개, agents 4개, skills 5개)"
+    fi
   fi
 fi
 
@@ -1612,11 +1727,21 @@ copy_cursor_assets
 copy_gemini_assets
 
 if [ "$DRY_RUN" = true ]; then
-  echo "  ✅ Cursor rule 복사 예정 (.cursor/rules/ai-setting.mdc)"
-  echo "  ✅ Gemini settings 복사 예정 (.gemini/settings.json)"
+  if [ "$LINK_MODE" = true ]; then
+    echo "  ✅ Cursor rule 심링크 예정 (.cursor/rules/ai-setting.mdc)"
+    echo "  ✅ Gemini settings 심링크 예정 (.gemini/settings.json)"
+  else
+    echo "  ✅ Cursor rule 복사 예정 (.cursor/rules/ai-setting.mdc)"
+    echo "  ✅ Gemini settings 복사 예정 (.gemini/settings.json)"
+  fi
 else
-  echo "  ✅ Cursor rule 적용됨 (.cursor/rules/ai-setting.mdc)"
-  echo "  ✅ Gemini settings 적용됨 (.gemini/settings.json)"
+  if [ "$LINK_MODE" = true ]; then
+    echo "  ✅ Cursor rule 심링크 적용됨 (.cursor/rules/ai-setting.mdc)"
+    echo "  ✅ Gemini settings 심링크 적용됨 (.gemini/settings.json)"
+  else
+    echo "  ✅ Cursor rule 적용됨 (.cursor/rules/ai-setting.mdc)"
+    echo "  ✅ Gemini settings 적용됨 (.gemini/settings.json)"
+  fi
 fi
 
 # ============================================================
@@ -1954,26 +2079,47 @@ echo -e "${CYAN}━━━ 적용된 설정 ━━━${NC}"
 echo ""
 echo "  바로 사용 가능:"
 if [ "$CLAUDE_PROFILE" = "minimal" ]; then
-  echo "    .claude/settings.json     — minimal hooks 2개 (파일보호, 포맷터)"
+  if [ "$LINK_MODE" = true ]; then
+    echo "    .claude/settings.json     — minimal hooks 2개 (심링크)"
+  else
+    echo "    .claude/settings.json     — minimal hooks 2개 (파일보호, 포맷터)"
+  fi
   echo "    .claude/hooks/            — 파일 보호"
 elif [ "$CLAUDE_PROFILE" = "strict" ]; then
-  echo "    .claude/settings.json     — strict hooks 6개 + branch 보호"
+  if [ "$LINK_MODE" = true ]; then
+    echo "    .claude/settings.json     — strict hooks + branch 보호 (심링크)"
+  else
+    echo "    .claude/settings.json     — strict hooks 6개 + branch 보호"
+  fi
   echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + main/master 보호"
   echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
   echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
 elif [ "$CLAUDE_PROFILE" = "team" ]; then
-  echo "    .claude/settings.json     — team hooks 6개 + branch 보호"
+  if [ "$LINK_MODE" = true ]; then
+    echo "    .claude/settings.json     — team hooks + branch 보호 (심링크)"
+  else
+    echo "    .claude/settings.json     — team hooks 6개 + branch 보호"
+  fi
   echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + main/master 보호"
   echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
   echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
 else
-  echo "    .claude/settings.json     — hooks 6개 (포맷터, 파일보호, 명령차단, 알림, 테스트체크, 리마인더)"
+  if [ "$LINK_MODE" = true ]; then
+    echo "    .claude/settings.json     — hooks 6개 (심링크)"
+  else
+    echo "    .claude/settings.json     — hooks 6개 (포맷터, 파일보호, 명령차단, 알림, 테스트체크, 리마인더)"
+  fi
   echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단"
   echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
   echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
 fi
-echo "    .cursor/rules/ai-setting.mdc — Cursor project rules"
-echo "    .gemini/settings.json     — Gemini CLI workspace settings"
+if [ "$LINK_MODE" = true ]; then
+  echo "    .cursor/rules/ai-setting.mdc — Cursor project rules (심링크)"
+  echo "    .gemini/settings.json     — Gemini CLI workspace settings (심링크)"
+else
+  echo "    .cursor/rules/ai-setting.mdc — Cursor project rules"
+  echo "    .gemini/settings.json     — Gemini CLI workspace settings"
+fi
 echo "    .codex/config.toml        — Codex CLI 설정 + 프로젝트 로컬 MCP"
 if [ "$MCP_ENABLED" = true ]; then
   echo "    .mcp.json                 — Claude Code 프로젝트 로컬 MCP"

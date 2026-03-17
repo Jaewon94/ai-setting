@@ -20,6 +20,9 @@
 # strict profile로 보호 장치 강화
 /path/to/ai-setting/init.sh --profile strict /path/to/my-new-project
 
+# 공유 자산은 심링크로, 프로젝트 문서는 로컬 파일로 유지
+/path/to/ai-setting/init.sh --link /path/to/my-new-project
+
 # 또는 현재 디렉토리에 적용
 cd my-new-project
 /path/to/ai-setting/init.sh .
@@ -85,6 +88,9 @@ init.sh 실행
 /path/to/ai-setting/init.sh --profile strict /path/to/my-new-project
 /path/to/ai-setting/init.sh --profile team /path/to/my-new-project
 
+# 공유 가능한 설정 자산을 심링크로 연결
+/path/to/ai-setting/init.sh --link /path/to/my-new-project
+
 # 웹 프로젝트: core + web
 /path/to/ai-setting/init.sh --mcp-preset web /path/to/my-new-project
 
@@ -137,6 +143,29 @@ init.sh 실행
 - 기존 `.claude/`는 먼저 백업
 - ai-setting이 관리하는 agents/skills/hooks만 정리 후 선택한 profile 기준으로 다시 복사
 - 사용자가 따로 만든 다른 `.claude` 파일은 그대로 둠
+
+### Link 모드
+
+`--link`를 주면 공유 가능한 설정 자산은 복사 대신 ai-setting 저장소 원본을 가리키는 심링크로 연결합니다.
+
+심링크 대상:
+- `.claude/settings.json`
+- `.claude/hooks/*`
+- `.claude/agents/*`
+- `.claude/skills/*`
+- `.cursor/rules/ai-setting.mdc`
+- `.gemini/settings.json`
+
+계속 로컬 파일로 유지되는 것:
+- `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`
+- `.github/copilot-instructions.md`, `.github/pull_request_template.md`
+- `.codex/config.toml`
+- `.mcp.json`
+- `docs/decisions.md`
+
+이렇게 나누는 이유:
+- 위 파일들은 프로젝트별로 내용이 달라지거나 init 과정에서 추가 생성/수정이 필요함
+- 반대로 hooks, agents, skills, tool settings는 원본과 동기화될수록 이점이 큼
 
 ### 멀티 도구 지원
 
@@ -287,6 +316,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 - `.mcp.json`이 이미 있으면 `.mcp.json.backup.TIMESTAMP`로 백업
 - `--profile minimal`로 전환하면 ai-setting이 관리하던 agents/skills는 정리되고 minimal 설정만 남음
 - `--profile strict` 또는 `--profile team`이면 branch 보호 hook이 함께 적용됨
+- `--link`를 주면 공유 자산은 심링크로 다시 연결됨
 
 ### Doctor 모드
 
@@ -297,6 +327,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 - 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`(team), `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
 - `.mcp.json` JSON 유효성
 - 템플릿/skill placeholder 잔존 여부
+- 공유 자산 모드가 `copy`인지 `symlink`인지
 
 참고:
 - `blank-start` 모드에서는 템플릿/skill placeholder가 남아 있어도 정상으로 취급
