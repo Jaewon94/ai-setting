@@ -23,6 +23,7 @@ usage() {
 사용법: init.sh [옵션] [프로젝트 경로]
 
 옵션:
+  --profile PROFILE        Claude Code 프로필 지정 (standard|minimal)
   --doctor                 현재 프로젝트 설정 상태 진단
   --dry-run                실제 변경 없이 예정 작업만 출력
   --diff                   실제 변경 없이 관리 대상 파일 diff 출력
@@ -48,6 +49,56 @@ Archetype:
 EOF
 }
 
+validate_profile() {
+  local profile="$1"
+
+  case "$profile" in
+    standard|minimal)
+      ;;
+    *)
+      echo -e "${RED}오류: 알 수 없는 profile '$profile'${NC}" >&2
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+get_profile_settings_template() {
+  local profile="$1"
+
+  case "$profile" in
+    standard)
+      printf '%s\n' "$SCRIPT_DIR/claude/settings.json"
+      ;;
+    minimal)
+      printf '%s\n' "$SCRIPT_DIR/claude/settings.minimal.json"
+      ;;
+  esac
+}
+
+detect_claude_profile() {
+  local target="$1"
+  local settings_path="$target/.claude/settings.json"
+  local standard_template
+  local minimal_template
+
+  standard_template="$SCRIPT_DIR/claude/settings.json"
+  minimal_template="$SCRIPT_DIR/claude/settings.minimal.json"
+
+  if [ ! -f "$settings_path" ]; then
+    DETECTED_CLAUDE_PROFILE="unknown"
+    return
+  fi
+
+  if cmp -s "$settings_path" "$minimal_template"; then
+    DETECTED_CLAUDE_PROFILE="minimal"
+  elif cmp -s "$settings_path" "$standard_template"; then
+    DETECTED_CLAUDE_PROFILE="standard"
+  else
+    DETECTED_CLAUDE_PROFILE="custom"
+  fi
+}
+
 doctor_ok() {
   DOCTOR_OK_COUNT=$((DOCTOR_OK_COUNT + 1))
   echo -e "${GREEN}[OK]${NC} $1"
@@ -71,9 +122,11 @@ run_doctor() {
   DOCTOR_OK_COUNT=0
   DOCTOR_WARN_COUNT=0
   DOCTOR_ERROR_COUNT=0
+  detect_claude_profile "$target"
 
   echo -e "${CYAN}━━━ AI Setting Doctor ━━━${NC}"
   echo -e "대상: ${target}"
+  echo -e "Claude 프로필: ${DETECTED_CLAUDE_PROFILE}"
   echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
   echo -e "프로젝트 유형: ${PROJECT_ARCHETYPE}"
   echo -e "주 스택: ${PROJECT_STACK}"
@@ -111,6 +164,11 @@ run_doctor() {
 
   if [ -f "$target/.claude/settings.json" ]; then
     doctor_ok ".claude/settings.json 존재"
+    if [ "$DETECTED_CLAUDE_PROFILE" = "custom" ]; then
+      doctor_warn ".claude/settings.json이 bundled standard/minimal 템플릿과 다름"
+    else
+      doctor_ok "Claude 프로필 감지: ${DETECTED_CLAUDE_PROFILE}"
+    fi
   else
     doctor_error ".claude/settings.json 없음"
   fi
@@ -121,7 +179,9 @@ run_doctor() {
     doctor_error ".claude/hooks/protect-files.sh 없음 또는 실행 권한 없음"
   fi
 
-  if [ -x "$target/.claude/hooks/block-dangerous-commands.sh" ]; then
+  if [ "$DETECTED_CLAUDE_PROFILE" = "minimal" ]; then
+    doctor_ok "minimal 프로필 — block-dangerous-commands hook 비활성"
+  elif [ -x "$target/.claude/hooks/block-dangerous-commands.sh" ]; then
     doctor_ok ".claude/hooks/block-dangerous-commands.sh 실행 가능"
   else
     doctor_error ".claude/hooks/block-dangerous-commands.sh 없음 또는 실행 권한 없음"
@@ -180,11 +240,15 @@ run_doctor() {
       doctor_warn "CLAUDE.md / AGENTS.md에 템플릿 플레이스홀더가 남아 있음"
     fi
 
-    skill_placeholder_count=$(rg -o '\{\{[A-Z0-9_]+\}\}' "$target/.claude/skills" 2>/dev/null | wc -l | tr -d ' ')
-    if [ "$skill_placeholder_count" -eq 0 ]; then
-      doctor_ok ".claude/skills 플레이스홀더 없음"
+    if [ "$DETECTED_CLAUDE_PROFILE" = "minimal" ]; then
+      doctor_ok "minimal 프로필 — managed skills 미사용"
     else
-      doctor_warn ".claude/skills에 치환되지 않은 {{PLACEHOLDER}}가 남아 있음"
+      skill_placeholder_count=$(rg -o '\{\{[A-Z0-9_]+\}\}' "$target/.claude/skills" 2>/dev/null | wc -l | tr -d ' ')
+      if [ "$skill_placeholder_count" -eq 0 ]; then
+        doctor_ok ".claude/skills 플레이스홀더 없음"
+      else
+        doctor_warn ".claude/skills에 치환되지 않은 {{PLACEHOLDER}}가 남아 있음"
+      fi
     fi
   fi
 
@@ -225,6 +289,7 @@ run_diff_preview() {
   cp -R "$target/." "$staging_dir/" 2>/dev/null || true
 
   internal_args=("--skip-ai")
+  internal_args+=("--profile" "$CLAUDE_PROFILE")
   if [ "$MCP_ENABLED" = false ]; then
     internal_args+=("--no-mcp")
   else
@@ -391,6 +456,20 @@ run_mkdir_p() {
   fi
 }
 
+run_remove_path() {
+  local path="$1"
+
+  if [ ! -e "$path" ]; then
+    return
+  fi
+
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "관리 경로 정리: ${path}"
+  else
+    rm -rf "$path"
+  fi
+}
+
 run_copy() {
   local src="$1"
   local dst="$2"
@@ -505,6 +584,88 @@ apply_auto_mcp_presets() {
   fi
 
   normalize_mcp_presets
+}
+
+cleanup_empty_parent_dir() {
+  local path="$1"
+
+  if [ "$DRY_RUN" = true ]; then
+    return
+  fi
+
+  if [ -d "$path" ]; then
+    rmdir "$path" 2>/dev/null || true
+  fi
+}
+
+cleanup_managed_claude_assets() {
+  local managed_file
+  local managed_dir
+  local managed_files=(
+    "$TARGET/.claude/settings.json"
+    "$TARGET/.claude/hooks/protect-files.sh"
+    "$TARGET/.claude/hooks/block-dangerous-commands.sh"
+    "$TARGET/.claude/agents/security-reviewer.md"
+    "$TARGET/.claude/agents/architect-reviewer.md"
+    "$TARGET/.claude/agents/test-writer.md"
+    "$TARGET/.claude/agents/research.md"
+    "$TARGET/.claude/skills/deploy/SKILL.md"
+    "$TARGET/.claude/skills/review/SKILL.md"
+    "$TARGET/.claude/skills/fix-issue/SKILL.md"
+    "$TARGET/.claude/skills/gap-check/SKILL.md"
+    "$TARGET/.claude/skills/cross-validate/SKILL.md"
+  )
+  local managed_dirs=(
+    "$TARGET/.claude/agents"
+    "$TARGET/.claude/skills/deploy"
+    "$TARGET/.claude/skills/review"
+    "$TARGET/.claude/skills/fix-issue"
+    "$TARGET/.claude/skills/gap-check"
+    "$TARGET/.claude/skills/cross-validate"
+    "$TARGET/.claude/skills"
+    "$TARGET/.claude/hooks"
+  )
+
+  for managed_file in "${managed_files[@]}"; do
+    run_remove_path "$managed_file"
+  done
+
+  for managed_dir in "${managed_dirs[@]}"; do
+    cleanup_empty_parent_dir "$managed_dir"
+  done
+}
+
+copy_claude_profile_assets() {
+  local settings_template
+
+  settings_template="$(get_profile_settings_template "$CLAUDE_PROFILE")"
+
+  run_mkdir_p "$TARGET/.claude/hooks"
+  run_copy "$settings_template" "$TARGET/.claude/settings.json"
+  run_copy "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
+  run_chmod_file "$TARGET/.claude/hooks/protect-files.sh"
+
+  if [ "$CLAUDE_PROFILE" = "standard" ]; then
+    run_copy "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"
+    run_chmod_file "$TARGET/.claude/hooks/block-dangerous-commands.sh"
+
+    run_mkdir_p "$TARGET/.claude/agents"
+    run_copy "$SCRIPT_DIR/claude/agents/security-reviewer.md" "$TARGET/.claude/agents/"
+    run_copy "$SCRIPT_DIR/claude/agents/architect-reviewer.md" "$TARGET/.claude/agents/"
+    run_copy "$SCRIPT_DIR/claude/agents/test-writer.md" "$TARGET/.claude/agents/"
+    run_copy "$SCRIPT_DIR/claude/agents/research.md" "$TARGET/.claude/agents/"
+
+    run_mkdir_p "$TARGET/.claude/skills/deploy"
+    run_mkdir_p "$TARGET/.claude/skills/review"
+    run_mkdir_p "$TARGET/.claude/skills/fix-issue"
+    run_mkdir_p "$TARGET/.claude/skills/gap-check"
+    run_mkdir_p "$TARGET/.claude/skills/cross-validate"
+    run_copy "$SCRIPT_DIR/claude/skills/deploy/SKILL.md" "$TARGET/.claude/skills/deploy/"
+    run_copy "$SCRIPT_DIR/claude/skills/review/SKILL.md" "$TARGET/.claude/skills/review/"
+    run_copy "$SCRIPT_DIR/claude/skills/fix-issue/SKILL.md" "$TARGET/.claude/skills/fix-issue/"
+    run_copy "$SCRIPT_DIR/claude/skills/gap-check/SKILL.md" "$TARGET/.claude/skills/gap-check/"
+    run_copy "$SCRIPT_DIR/claude/skills/cross-validate/SKILL.md" "$TARGET/.claude/skills/cross-validate/"
+  fi
 }
 
 backup_existing_path() {
@@ -1098,6 +1259,7 @@ SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
 TARGET=""
+CLAUDE_PROFILE="standard"
 USER_PROJECT_NAME_HINT=""
 USER_ARCHETYPE_HINT=""
 USER_STACK_HINT=""
@@ -1105,6 +1267,16 @@ USER_MCP_PRESET_SPECIFIED=false
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --profile)
+      if [ -z "${2:-}" ]; then
+        echo -e "${RED}오류: --profile 뒤에 값이 필요합니다${NC}" >&2
+        usage
+        exit 1
+      fi
+      validate_profile "$2"
+      CLAUDE_PROFILE="$2"
+      shift
+      ;;
     --doctor)
       DOCTOR_MODE=true
       ;;
@@ -1258,6 +1430,7 @@ fi
 echo -e "${CYAN}━━━ AI Setting Init ━━━${NC}"
 echo -e "소스: ${SCRIPT_DIR}"
 echo -e "대상: ${TARGET}"
+echo -e "Claude 프로필: ${CLAUDE_PROFILE}"
 echo -e "MCP preset: ${MCP_PRESET_LABEL}"
 echo -e "MCP 추천: ${RECOMMENDED_MCP_PRESET_LABEL}"
 echo -e "프로젝트명: ${PROJECT_NAME}"
@@ -1306,35 +1479,21 @@ if [ -d "$TARGET/.claude" ]; then
   backup_existing_path "$TARGET/.claude" ".claude/"
 fi
 
-run_mkdir_p "$TARGET/.claude/hooks"
-run_mkdir_p "$TARGET/.claude/agents"
-run_mkdir_p "$TARGET/.claude/skills/deploy"
-run_mkdir_p "$TARGET/.claude/skills/review"
-run_mkdir_p "$TARGET/.claude/skills/fix-issue"
-run_mkdir_p "$TARGET/.claude/skills/gap-check"
-run_mkdir_p "$TARGET/.claude/skills/cross-validate"
+cleanup_managed_claude_assets
+copy_claude_profile_assets
 
-run_copy "$SCRIPT_DIR/claude/settings.json" "$TARGET/.claude/settings.json"
-run_copy "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
-run_copy "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"
-run_chmod_file "$TARGET/.claude/hooks/protect-files.sh"
-run_chmod_file "$TARGET/.claude/hooks/block-dangerous-commands.sh"
-
-run_copy "$SCRIPT_DIR/claude/agents/security-reviewer.md" "$TARGET/.claude/agents/"
-run_copy "$SCRIPT_DIR/claude/agents/architect-reviewer.md" "$TARGET/.claude/agents/"
-run_copy "$SCRIPT_DIR/claude/agents/test-writer.md" "$TARGET/.claude/agents/"
-run_copy "$SCRIPT_DIR/claude/agents/research.md" "$TARGET/.claude/agents/"
-
-run_copy "$SCRIPT_DIR/claude/skills/deploy/SKILL.md" "$TARGET/.claude/skills/deploy/"
-run_copy "$SCRIPT_DIR/claude/skills/review/SKILL.md" "$TARGET/.claude/skills/review/"
-run_copy "$SCRIPT_DIR/claude/skills/fix-issue/SKILL.md" "$TARGET/.claude/skills/fix-issue/"
-run_copy "$SCRIPT_DIR/claude/skills/gap-check/SKILL.md" "$TARGET/.claude/skills/gap-check/"
-run_copy "$SCRIPT_DIR/claude/skills/cross-validate/SKILL.md" "$TARGET/.claude/skills/cross-validate/"
-
-if [ "$DRY_RUN" = true ]; then
-  echo "  ✅ settings.json, hooks 2개, agents 4개, skills 5개 복사 예정"
+if [ "$CLAUDE_PROFILE" = "minimal" ]; then
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ minimal profile 적용 예정 (settings 1개, hooks 1개)"
+  else
+    echo "  ✅ minimal profile 적용됨 (settings 1개, hooks 1개)"
+  fi
 else
-  echo "  ✅ settings.json, hooks 2개, agents 4개, skills 5개"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ standard profile 적용 예정 (settings 1개, hooks 2개, agents 4개, skills 5개)"
+  else
+    echo "  ✅ standard profile 적용됨 (settings 1개, hooks 2개, agents 4개, skills 5개)"
+  fi
 fi
 
 # ============================================================
@@ -1450,11 +1609,29 @@ fi
 # ============================================================
 echo -e "${GREEN}[5/6]${NC} AI로 CLAUDE.md / AGENTS.md 자동 생성"
 
+if [ "$CLAUDE_PROFILE" = "minimal" ]; then
+  AI_PROFILE_GUIDANCE=$(cat <<'EOF'
+Claude 프로필 지침:
+- 현재 프로젝트는 minimal profile을 사용하므로 managed agents/skills를 새로 만들거나 복원하지 마.
+- `.claude/skills`가 없으면 생성하지 말고, skills 전용 placeholder도 건드릴 수 없으면 그대로 둬.
+EOF
+)
+  AI_SKILL_TASK="2. minimal profile이므로 .claude/skills/ 관련 파일이 이미 없으면 새로 만들지 마. 존재하는 경우에만 {{중괄호}} 플레이스홀더를 프로젝트에 맞게 교체해."
+else
+  AI_PROFILE_GUIDANCE=$(cat <<'EOF'
+Claude 프로필 지침:
+- 현재 프로젝트는 standard profile을 사용하므로 managed skills placeholder도 함께 실제 명령어로 치환해.
+EOF
+)
+  AI_SKILL_TASK="2. .claude/skills/ 안의 SKILL.md 파일들에서 {{중괄호}} 플레이스홀더({{TEST_CMD}}, {{LINT_CMD}}, {{DEPLOY_BACKEND_CMD}} 등)를 프로젝트에 맞는 실제 명령어로 교체해줘."
+fi
+
 AI_PROMPT=$(cat <<EOF
 이 프로젝트를 아래 규칙으로 분석해.
 
 프로젝트 이름: ${PROJECT_NAME}
 프로젝트 이름 출처: ${PROJECT_NAME_SOURCE}
+Claude 프로필: ${CLAUDE_PROFILE}
 
 프로젝트 해석 모드: ${PROJECT_CONTEXT_MODE}
 선정 이유: ${PROJECT_CONTEXT_REASON}
@@ -1478,6 +1655,7 @@ AI_PROMPT=$(cat <<EOF
 
 ${PROJECT_MODE_GUIDANCE}
 ${PROJECT_ARCHETYPE_GUIDANCE}
+${AI_PROFILE_GUIDANCE}
 
 추가 지침:
 - 사용자 힌트가 있으면 자동 감지보다 우선하는 의도로 간주해.
@@ -1485,7 +1663,7 @@ ${PROJECT_ARCHETYPE_GUIDANCE}
 
 작업:
 1. CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 이 프로젝트에 맞게 전부 채워줘. 대괄호를 실제 내용으로 교체하고, 프로젝트에 해당하지 않는 섹션은 제거해. 기존 템플릿의 공통 규칙(Coding Rules, Forbidden 등)은 유지하되 프로젝트 스택에 맞게 보강해.
-2. .claude/skills/ 안의 SKILL.md 파일들에서 {{중괄호}} 플레이스홀더({{TEST_CMD}}, {{LINT_CMD}}, {{DEPLOY_BACKEND_CMD}} 등)를 프로젝트에 맞는 실제 명령어로 교체해줘.
+${AI_SKILL_TASK}
 3. 문서와 구현이 충돌하면 CLAUDE.md 끝에 '## Detected Mismatches' 섹션을 추가하고, 확인한 불일치를 짧게 정리해. 충돌이 없으면 이 섹션은 만들지 마.
 4. 확실하지 않은 내용은 사실처럼 단정하지 말고 TODO, 가정, 예정으로 표시해.
 EOF
@@ -1569,10 +1747,15 @@ echo ""
 echo -e "${CYAN}━━━ 적용된 설정 ━━━${NC}"
 echo ""
 echo "  바로 사용 가능:"
-echo "    .claude/settings.json     — hooks 6개 (포맷터, 파일보호, 명령차단, 알림, 테스트체크, 리마인더)"
-echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단"
-echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
-echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
+if [ "$CLAUDE_PROFILE" = "minimal" ]; then
+  echo "    .claude/settings.json     — minimal hooks 2개 (파일보호, 포맷터)"
+  echo "    .claude/hooks/            — 파일 보호"
+else
+  echo "    .claude/settings.json     — hooks 6개 (포맷터, 파일보호, 명령차단, 알림, 테스트체크, 리마인더)"
+  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단"
+  echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
+  echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
+fi
 echo "    .codex/config.toml        — Codex CLI 설정 + 프로젝트 로컬 MCP"
 if [ "$MCP_ENABLED" = true ]; then
   echo "    .mcp.json                 — Claude Code 프로젝트 로컬 MCP"

@@ -3,6 +3,17 @@
 > 현재 상태: init.sh로 Claude Code + Codex 설정 복사 + AI 자동 채우기
 > 목표: 프로젝트 로컬 MCP, 문서/구현 분기, 다양한 언어/프레임워크/프로젝트 유형 지원, 멀티 AI 도구 지원, 자동 동기화, 프로필 시스템
 
+## 완료 체크
+
+- [x] Priority 0: 프로젝트 로컬 MCP preset 도입
+- [x] Priority 1: `blank-start / docs-first / hybrid / code-first` 분기 도입
+- [x] Priority 2: archetype / stack 자동 감지 1차 도입
+- [x] Priority 3: `doctor / dry-run / diff / backup-all / reapply` 도입
+- [ ] Phase 1: 멀티 도구 지원
+- [ ] Phase 2: 동기화 시스템
+- [ ] Phase 3: 프로필 시스템 고도화
+- [ ] Phase 4: 플러그인 마켓플레이스
+
 ## Priority 0: 프로젝트 로컬 MCP 도입
 
 > "글로벌에만 있던 MCP를 새 프로젝트에서도 바로 쓴다"
@@ -307,16 +318,18 @@ AI 자동 채우기 시 아래 원칙을 명시한다.
 - 어떤 파일이 왜 바뀌는지 미리 확인할 수 있다
 - 문제 발생 시 "무엇이 빠졌는지"를 문서가 아니라 명령으로 확인할 수 있다
 
-## 현재 상태 (v0)
+## 현재 상태 (v1-alpha)
 
 ```
-init.sh 실행 → 파일 복사 → AI가 템플릿 채우기
+init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → AI가 템플릿 채우기
 ```
 
-- Claude Code: settings.json, hooks 2개, agents 4개, skills 5개
-- Codex: config.toml
-- Templates: CLAUDE.md, AGENTS.md, decisions.md
-- 한계: 복사 방식이라 원본 업데이트 시 재실행 필요, 프로젝트 로컬 MCP preset 부재, Claude/Codex만 지원
+- Claude Code: `standard` / `minimal` profile, hooks, agents 4개, skills 5개
+- Codex: `config.toml` + 프로젝트 로컬 MCP preset
+- Safety: `doctor`, `dry-run`, `diff`, `backup-all`, `reapply`
+- Detection: `blank-start / docs-first / hybrid / code-first`, archetype / stack 자동 감지, `--auto-mcp`
+- Templates: `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
+- 현재 한계: 멀티 도구 지원 미구현, 동기화 시스템 미구현, `strict/team` profile 미구현
 
 ---
 
@@ -396,6 +409,12 @@ cd ~/.ai-setting && git pull
 
 > "프로젝트 성격에 따라 다른 설정을 적용한다"
 
+현재 상태:
+- `init.sh --profile standard|minimal` 1차 지원
+- `standard`는 기존 전체 설정을 유지
+- `minimal`은 `protect-files + auto-format`만 활성화하고 managed agents/skills는 복사하지 않음
+- `strict`, `team`은 아직 로드맵 단계
+
 ### 프로필 구조
 ```
 ai-setting/
@@ -427,8 +446,11 @@ ai-setting/
 init.sh /path/to/project
 
 # 프로필 지정
-init.sh --profile strict /path/to/project
 init.sh --profile minimal /path/to/project
+init.sh --profile standard /path/to/project
+
+# 이후 확장 예정
+init.sh --profile strict /path/to/project
 ```
 
 - **난이도**: 중간

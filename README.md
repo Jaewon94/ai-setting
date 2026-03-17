@@ -12,6 +12,9 @@
 # 웹 프로젝트용 MCP까지 같이 넣기
 /path/to/ai-setting/init.sh --mcp-preset web /path/to/my-new-project
 
+# Claude minimal profile로 가볍게 시작
+/path/to/ai-setting/init.sh --profile minimal /path/to/my-new-project
+
 # 또는 현재 디렉토리에 적용
 cd my-new-project
 /path/to/ai-setting/init.sh .
@@ -22,7 +25,7 @@ cd my-new-project
 [1/6] Claude Code 설정 복사 (.claude/)
   ⚠ .claude/ 이미 존재 — 백업 후 덮어쓰기
   📦 백업: /path/to/project/.claude.backup.20260317120000
-  ✅ settings.json, hooks 2개, agents 4개, skills 5개
+  ✅ standard profile 적용됨 (settings 1개, hooks 2개, agents 4개, skills 5개)
 [2/6] Codex CLI 설정 복사 (.codex/)
   ⚠ .codex/config.toml 이미 존재 — 백업 후 덮어쓰기
   📦 백업: /path/to/project/.codex/config.toml.backup.20260317120000
@@ -65,6 +68,9 @@ init.sh 실행
 # 기본: core MCP preset 자동 포함
 /path/to/ai-setting/init.sh /path/to/my-new-project
 
+# Claude minimal profile 적용
+/path/to/ai-setting/init.sh --profile minimal /path/to/my-new-project
+
 # 웹 프로젝트: core + web
 /path/to/ai-setting/init.sh --mcp-preset web /path/to/my-new-project
 
@@ -102,7 +108,23 @@ init.sh 실행
 /path/to/ai-setting/init.sh --doctor /path/to/my-new-project
 ```
 
+### Claude 프로필
+
+기본값은 `standard`이며, 현재는 `standard`와 `minimal` 두 가지를 지원합니다.
+
+| profile | 포함 내용 |
+|---------|-----------|
+| `standard` | 파일 보호, 위험 명령 차단, 자동 포맷, 알림, Stop 체크, agents 4개, skills 5개 |
+| `minimal` | 파일 보호, 자동 포맷만 활성화. managed agents/skills는 복사하지 않음 |
+
+프로필 전환 시:
+- 기존 `.claude/`는 먼저 백업
+- ai-setting이 관리하는 agents/skills/hooks만 정리 후 선택한 profile 기준으로 다시 복사
+- 사용자가 따로 만든 다른 `.claude` 파일은 그대로 둠
+
 ## 적용 후 확인
+
+아래 설명은 기본값인 `standard` profile 기준입니다. `--profile minimal`을 사용했다면 hooks만 남고 managed agents/skills는 복사되지 않습니다.
 
 ### 그대로 사용 (수정 불필요)
 - `.claude/settings.json` — hooks, 포맷터, 알림 전부 포함
@@ -231,6 +253,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 - `.claude/`가 이미 있으면 디렉토리 전체를 `.claude.backup.TIMESTAMP`로 백업
 - `.codex/config.toml`이 이미 있으면 `.codex/config.toml.backup.TIMESTAMP`로 백업
 - `.mcp.json`이 이미 있으면 `.mcp.json.backup.TIMESTAMP`로 백업
+- `--profile minimal`로 전환하면 ai-setting이 관리하던 agents/skills는 정리되고 minimal 설정만 남음
 
 ### Doctor 모드
 
@@ -238,12 +261,13 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 진단 항목:
 - 필수 바이너리: `jq`, `npx`, `uvx`, `claude`, `codex`
-- 핵심 파일: `.claude/settings.json`, hooks, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
+- 핵심 파일: `.claude/settings.json`, profile별 hooks, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
 - `.mcp.json` JSON 유효성
 - 템플릿/skill placeholder 잔존 여부
 
 참고:
 - `blank-start` 모드에서는 템플릿/skill placeholder가 남아 있어도 정상으로 취급
+- `minimal` profile은 `block-dangerous-commands`와 managed skills 부재를 정상으로 취급
 - error가 있으면 종료 코드 `1`, error가 없으면 종료 코드 `0`
 
 ### Dry-run 모드
@@ -304,7 +328,8 @@ blank-start에서도 의도를 미리 줄 수 있음:
 ai-setting/
 ├── init.sh                               # 🚀 초기화 스크립트
 ├── claude/
-│   ├── settings.json                      # hooks 6개 (바로 사용)
+│   ├── settings.json                      # standard profile 템플릿
+│   ├── settings.minimal.json              # minimal profile 템플릿
 │   ├── hooks/
 │   │   ├── protect-files.sh               # 민감 파일 편집 차단 (20개 패턴)
 │   │   └── block-dangerous-commands.sh    # 위험 명령어 차단 (14개 패턴)
