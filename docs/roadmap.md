@@ -285,6 +285,7 @@ AI 자동 채우기 시 아래 원칙을 명시한다.
 - `init.sh --doctor`로 기본 진단 실행 가능
 - `init.sh --dry-run`으로 실제 변경 없는 작업 미리보기 가능
 - `init.sh --diff`로 관리 대상 파일의 변경 내용을 unified diff로 확인 가능
+- `init.sh --backup-all`로 관리 대상 전체 snapshot 백업 가능
 - 필수 바이너리, 핵심 파일 존재 여부, `.mcp.json` 형식, 플레이스홀더 잔존 여부를 점검
 - `blank-start` 모드는 doctor에서도 예외 처리하여 플레이스홀더 잔존을 정상으로 간주
 

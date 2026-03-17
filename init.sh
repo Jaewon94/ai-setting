@@ -26,6 +26,7 @@ usage() {
   --doctor                 현재 프로젝트 설정 상태 진단
   --dry-run                실제 변경 없이 예정 작업만 출력
   --diff                   실제 변경 없이 관리 대상 파일 diff 출력
+  --backup-all             적용 전 관리 대상 전체 스냅샷 백업
   --project-name NAME      프로젝트 이름 힌트 제공
   --archetype TYPE         프로젝트 archetype 힌트 제공
   --stack NAME             주 스택 힌트 제공
@@ -297,6 +298,68 @@ run_diff_preview() {
   return 0
 }
 
+build_backup_managed_paths() {
+  BACKUP_MANAGED_PATHS=(
+    ".claude"
+    ".codex/config.toml"
+    ".mcp.json"
+    "CLAUDE.md"
+    "AGENTS.md"
+    "docs/decisions.md"
+  )
+}
+
+snapshot_managed_path() {
+  local rel_path="$1"
+  local source_path="$TARGET/$rel_path"
+  local backup_path="$BACKUP_SNAPSHOT_DIR/$rel_path"
+
+  if [ ! -e "$source_path" ]; then
+    return
+  fi
+
+  BACKUP_ALL_CREATED=true
+
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "backup-all 스냅샷: ${source_path} -> ${backup_path}"
+    return
+  fi
+
+  mkdir -p "$(dirname "$backup_path")"
+  if [ -d "$source_path" ]; then
+    cp -R "$source_path" "$backup_path"
+  else
+    cp "$source_path" "$backup_path"
+  fi
+}
+
+perform_backup_all() {
+  local rel_path
+
+  build_backup_managed_paths
+  BACKUP_ALL_CREATED=false
+  BACKUP_SNAPSHOT_DIR="$TARGET/.ai-setting.backup.$RUN_TIMESTAMP"
+
+  echo -e "${CYAN}backup-all:${NC} 관리 대상 전체 스냅샷 생성"
+  echo "  📦 경로: ${BACKUP_SNAPSHOT_DIR}"
+
+  for rel_path in "${BACKUP_MANAGED_PATHS[@]}"; do
+    snapshot_managed_path "$rel_path"
+  done
+
+  if [ "$BACKUP_ALL_CREATED" = true ]; then
+    if [ "$DRY_RUN" = true ]; then
+      echo "  ✅ backup-all 스냅샷 생성 예정"
+    else
+      echo "  ✅ backup-all 스냅샷 생성됨"
+    fi
+  else
+    echo -e "  ${YELLOW}관리 대상 기존 파일이 없어 백업할 내용이 없습니다${NC}"
+  fi
+
+  echo ""
+}
+
 dry_run_note() {
   echo -e "  ${CYAN}[dry-run]${NC} $1"
 }
@@ -405,6 +468,12 @@ backup_existing_path() {
   local backup_path
 
   if [ ! -e "$path" ]; then
+    return
+  fi
+
+  if [ "$BACKUP_ALL" = true ] && [ "$BACKUP_ALL_CREATED" = true ]; then
+    echo -e "${YELLOW}  ⚠ ${label} 이미 존재 — backup-all snapshot에 포함됨${NC}"
+    echo -e "  📦 snapshot: ${BACKUP_SNAPSHOT_DIR}"
     return
   fi
 
@@ -977,6 +1046,7 @@ EOF
 DOCTOR_MODE=false
 DRY_RUN=false
 DIFF_MODE=false
+BACKUP_ALL=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
@@ -995,6 +1065,9 @@ while [ "$#" -gt 0 ]; do
       ;;
     --diff)
       DIFF_MODE=true
+      ;;
+    --backup-all)
+      BACKUP_ALL=true
       ;;
     --project-name)
       if [ -z "${2:-}" ]; then
@@ -1081,6 +1154,11 @@ if [ "$MODE_COUNT" -gt 1 ]; then
   usage
   exit 1
 fi
+if [ "$BACKUP_ALL" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = true ]; }; then
+  echo -e "${RED}오류: --backup-all은 --doctor 또는 --diff와 함께 사용할 수 없습니다${NC}" >&2
+  usage
+  exit 1
+fi
 
 # ai-setting 디렉토리 (이 스크립트가 있는 곳)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -1129,6 +1207,9 @@ fi
 if [ "$DRY_RUN" = true ]; then
   echo -e "실행 모드: dry-run"
 fi
+if [ "$BACKUP_ALL" = true ]; then
+  echo -e "백업 모드: backup-all"
+fi
 echo ""
 
 # jq 의존성 체크 (hooks가 jq로 JSON 파싱)
@@ -1137,6 +1218,10 @@ if ! command -v jq &> /dev/null; then
   echo -e "  hooks(protect-files, block-dangerous-commands)가 정상 동작하려면 jq가 필요합니다."
   echo -e "  설치: brew install jq (macOS) / sudo apt install jq (Linux)"
   echo ""
+fi
+
+if [ "$BACKUP_ALL" = true ]; then
+  perform_backup_all
 fi
 
 # ============================================================

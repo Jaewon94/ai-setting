@@ -86,6 +86,9 @@ init.sh 실행
 # 실제 변경 없이 관리 대상 diff 확인
 /path/to/ai-setting/init.sh --diff /path/to/my-new-project
 
+# 적용 전 관리 대상 전체 스냅샷 백업
+/path/to/ai-setting/init.sh --backup-all /path/to/my-new-project
+
 # 빈 프로젝트에서 의도 힌트와 함께 시작
 /path/to/ai-setting/init.sh --project-name my-api --archetype backend-api --stack Python /path/to/my-new-project
 
@@ -250,6 +253,18 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 참고:
 - `--doctor`, `--dry-run`, `--diff`는 동시에 사용할 수 없음
+
+### Backup-all 모드
+
+`init.sh --backup-all /path/to/project`로 적용 전에 관리 대상 전체를 한 번에 스냅샷 백업할 수 있습니다.
+
+동작:
+- `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`를 대상 프로젝트 아래 `.ai-setting.backup.TIMESTAMP/`로 백업
+- 이후 overwrite 단계에서는 개별 `.backup.*`를 중복 생성하지 않고 snapshot 포함 안내만 출력
+- `--dry-run`과 함께 쓰면 snapshot 생성 예정만 출력
+
+참고:
+- `--backup-all`은 `--doctor`, `--diff`와 함께 사용할 수 없음
 
 ---
 
