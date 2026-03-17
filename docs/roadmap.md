@@ -510,7 +510,8 @@ init.sh --profile team /path/to/project
 현재 상태:
 - `strict` / `team` 프로필에 branch 보호 hook 적용 완료
 - `standard` / `strict` / `team` 프로필에 compact 대응용 `session-context` hook 1차 적용
-- 비동기 테스트, 팀 알림, 전용 PreCompact 백업은 아직 미구현
+- `standard` / `strict` / `team` 프로필에 async test hook 1차 적용
+- 팀 알림, 전용 PreCompact 백업은 아직 미구현
 
 ### 5-1. 브랜치 보호 hook
 ```bash
@@ -525,6 +526,11 @@ fi
 ### 5-2. 비동기 테스트 실행 hook
 - PostToolUse에서 코드 변경 감지 시 백그라운드로 테스트 실행
 - 결과를 다음 프롬프트에 주입
+
+현재 1차 구현:
+- `.ai-setting/test-command` 또는 `AI_SETTING_ASYNC_TEST_CMD`가 있으면 해당 명령을 백그라운드 실행
+- 명령이 없을 때는 Python/Go/Rust만 보수적으로 auto-detect
+- 상태/로그는 `.claude/context/async-test-status.md`, `.claude/context/async-test.log`에 기록
 
 ### 5-3. Slack/Discord 알림 hook
 - HTTP hook으로 작업 완료/실패 시 팀 채널에 알림
