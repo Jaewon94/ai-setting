@@ -17,12 +17,13 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 RUN_TIMESTAMP="$(date +%Y%m%d%H%M%S)"
+USAGE_NAME="${AI_SETTING_USAGE_NAME:-init.sh}"
 
 usage() {
-  cat <<'EOF'
+  cat <<EOF
 사용법:
-  init.sh [옵션] [프로젝트 경로]
-  init.sh update [옵션] [프로젝트 경로]
+  $USAGE_NAME [옵션] [프로젝트 경로]
+  $USAGE_NAME update [옵션] [프로젝트 경로]
 
 옵션:
   --profile PROFILE        Claude Code 프로필 지정 (standard|minimal|strict|team)

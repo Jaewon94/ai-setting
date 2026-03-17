@@ -541,12 +541,24 @@ fi
 현재 상태:
 - `CONTRIBUTING.md` 추가
 - 기능 추가 시 검증/문서/커밋 규칙을 저장소 내부 기준으로 문서화
-- public 전환, 패키지화, 커뮤니티 배포는 아직 미진행
+- `bin/ai-setting` 로컬 CLI wrapper 추가
+- `package.json` 1차 scaffold 추가 (`private`, `bin.ai-setting`, `npm pack --dry-run` 검증 가능)
+- public registry publish, brew formula, sync-conf.dev 등록은 아직 미진행
 
 ### 6-1. sync-conf.dev 등록
 - 커뮤니티 디렉토리에 등록하여 `npx sync-conf install jaewon/ai-setting`으로 설치 가능
 
 ### 6-2. npm/brew 패키지화
+1차 기준:
+
+```bash
+cd /path/to/ai-setting
+./bin/ai-setting init /path/to/project
+./bin/ai-setting update /path/to/project
+```
+
+2차 목표:
+
 ```bash
 # npm
 npx ai-setting init /path/to/project

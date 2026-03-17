@@ -1,0 +1,26 @@
+{
+  "name": "ai-setting",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bootstrap Claude Code, Codex, Cursor, Gemini CLI, and Copilot project settings.",
+  "bin": {
+    "ai-setting": "./bin/ai-setting"
+  },
+  "files": [
+    "bin/",
+    "claude/",
+    "codex/",
+    "cursor/",
+    "gemini/",
+    "templates/",
+    "CONTRIBUTING.md",
+    "README.md",
+    "init.sh"
+  ],
+  "scripts": {
+    "doctor": "./init.sh --doctor .",
+    "help": "./bin/ai-setting --help",
+    "pack:check": "npm pack --dry-run"
+  },
+  "license": "UNLICENSED"
+}

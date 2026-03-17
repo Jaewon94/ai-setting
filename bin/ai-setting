@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
+
+export AI_SETTING_USAGE_NAME="ai-setting"
+exec "$REPO_ROOT/init.sh" "$@"

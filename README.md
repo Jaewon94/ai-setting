@@ -8,27 +8,31 @@
 ## 빠른 시작
 
 ```bash
-# init 스크립트 한 줄이면 끝
-/path/to/ai-setting/init.sh /path/to/my-new-project
+# 저장소 안에서 바로 ai-setting 커맨드 형태로 실행
+cd /path/to/ai-setting
+./bin/ai-setting /path/to/my-new-project
 
 # 웹 프로젝트용 MCP까지 같이 넣기
-/path/to/ai-setting/init.sh --mcp-preset web /path/to/my-new-project
+./bin/ai-setting --mcp-preset web /path/to/my-new-project
 
 # Claude minimal profile로 가볍게 시작
-/path/to/ai-setting/init.sh --profile minimal /path/to/my-new-project
+./bin/ai-setting --profile minimal /path/to/my-new-project
 
 # strict profile로 보호 장치 강화
-/path/to/ai-setting/init.sh --profile strict /path/to/my-new-project
+./bin/ai-setting --profile strict /path/to/my-new-project
 
 # 공유 자산은 심링크로, 프로젝트 문서는 로컬 파일로 유지
-/path/to/ai-setting/init.sh --link /path/to/my-new-project
+./bin/ai-setting --link /path/to/my-new-project
 
 # 기존 프로젝트의 공유 자산/MCP만 빠르게 업데이트
-/path/to/ai-setting/init.sh update /path/to/my-new-project
+./bin/ai-setting update /path/to/my-new-project
+
+# 기존처럼 init.sh를 직접 실행해도 동일
+/path/to/ai-setting/init.sh /path/to/my-new-project
 
 # 또는 현재 디렉토리에 적용
 cd my-new-project
-/path/to/ai-setting/init.sh .
+../ai-setting/bin/ai-setting .
 ```
 
 실행하면:
@@ -77,6 +81,15 @@ init.sh 실행
        ├─ 없으면 Codex 있으면 → Codex가 처리
        └─ 둘 다 없으면 → 수동 안내 메시지 출력
 ```
+
+### 로컬 CLI 래퍼
+
+`bin/ai-setting`은 저장소 루트의 `init.sh`를 감싸는 얇은 래퍼입니다. 덕분에 저장소 안에서는 `./bin/ai-setting ...` 형태로 일관되게 실행할 수 있고, 이후 npm/brew 같은 배포 채널로 확장할 때도 같은 커맨드 이름을 유지할 수 있습니다.
+
+같이 추가된 [package.json](/Users/jaewon/my-project/ai-setting/package.json)은 아직 공개 배포용이 아니라 로컬 스캐폴드입니다.
+- 기본값은 `private: true`
+- `bin.ai-setting` 엔트리만 정의
+- `npm run pack:check`로 패키지 메타데이터를 dry-run 검증 가능
 
 ### 옵션
 
@@ -415,7 +428,10 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 ```
 ai-setting/
+├── bin/
+│   └── ai-setting                         # 로컬 CLI 래퍼 (`init.sh` 실행)
 ├── init.sh                               # 🚀 초기화 스크립트
+├── package.json                          # 로컬 npm 패키지 scaffold (`private`)
 ├── claude/
 │   ├── settings.json                      # standard profile 템플릿
 │   ├── settings.minimal.json              # minimal profile 템플릿
