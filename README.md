@@ -27,6 +27,9 @@ cd /path/to/ai-setting
 # 기존 프로젝트의 공유 자산/MCP만 빠르게 업데이트
 ./bin/ai-setting update /path/to/my-new-project
 
+# 여러 프로젝트를 manifest 기준으로 한 번에 동기화
+./bin/ai-setting sync ./projects.manifest
+
 # 기존처럼 init.sh를 직접 실행해도 동일
 /path/to/ai-setting/init.sh /path/to/my-new-project
 
@@ -109,6 +112,12 @@ init.sh 실행
 
 # AI 자동 채우기 없이 shared assets / MCP만 갱신
 /path/to/ai-setting/init.sh update /path/to/my-new-project
+
+# 여러 프로젝트를 manifest 기준으로 update 모드로 동기화
+/path/to/ai-setting/init.sh sync ./projects.manifest
+
+# 여러 프로젝트를 init 흐름으로 다시 적용
+/path/to/ai-setting/init.sh sync --sync-mode init ./projects.manifest
 
 # 웹 프로젝트: core + web
 /path/to/ai-setting/init.sh --mcp-preset web /path/to/my-new-project
@@ -200,6 +209,38 @@ init.sh 실행
 - ai-setting 저장소를 pull 한 뒤 기존 프로젝트 설정만 다시 맞추고 싶을 때
 - 프로젝트별 문서는 건드리지 않고 공통 규칙/훅/에이전트만 갱신하고 싶을 때
 - `--link` 모드와 함께 써서 링크 + 로컬 설정 갱신을 같이 맞추고 싶을 때
+
+### Sync 모드
+
+`init.sh sync [옵션] [manifest 경로]`는 여러 프로젝트를 한 번에 맞추기 위한 배치 동기화 모드입니다.
+
+기본 동작:
+- `sync`는 manifest에 적힌 각 프로젝트에 순서대로 `update` 또는 `init` 흐름을 적용
+- 기본 `sync mode`는 `update`
+- `--sync-mode init`을 주면 일반 init 흐름을 각 프로젝트에 순차 적용
+- `--link`, `--profile`, `--auto-mcp`, `--mcp-preset`, `--no-mcp`, `--dry-run`, `--backup-all`, `--reapply` 옵션을 함께 전달 가능
+
+manifest 형식:
+- 한 줄에 프로젝트 경로 하나씩 작성
+- 빈 줄과 `#` 주석은 무시
+- 상대 경로는 manifest 파일 위치 기준으로 해석
+
+manifest 예시:
+
+```text
+# projects.manifest
+../storyforge
+../taskrelay
+/Users/jaewon/workspace/internal-tool
+```
+
+시작 방법:
+- `templates/projects.manifest.template`를 복사해 `projects.manifest`를 만든 뒤 경로를 채우면 됨
+
+추천 상황:
+- ai-setting 저장소를 업데이트한 뒤 여러 프로젝트에 공통 자산을 한 번에 반영하고 싶을 때
+- 팀/개인 프로젝트 셋업을 한 파일로 관리하고 싶을 때
+- 먼저 `--dry-run`으로 전체 예정 작업을 확인한 뒤 실제 적용하고 싶을 때
 
 ### 멀티 도구 지원
 
@@ -395,6 +436,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 참고:
 - `--doctor`, `--dry-run`, `--diff`는 동시에 사용할 수 없음
+- `sync` 명령은 `--doctor`, `--diff`와 함께 사용할 수 없음
 
 ### Backup-all 모드
 
@@ -473,6 +515,7 @@ ai-setting/
 │   ├── AGENTS.md.template                 # [대괄호]만 채우면 됨
 │   ├── GEMINI.md.template                 # Gemini CLI 컨텍스트 템플릿
 │   ├── copilot-instructions.md.template   # Copilot 저장소 지침 템플릿
+│   ├── projects.manifest.template         # 다중 프로젝트 sync manifest 예시
 │   ├── pull_request_template.md.template  # team profile용 PR 템플릿
 │   ├── team-webhook.json.template         # team profile 웹훅 메타설정 템플릿
 │   └── decisions.md.template              # 기술 의사결정 기록

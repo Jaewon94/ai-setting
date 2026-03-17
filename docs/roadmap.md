@@ -385,9 +385,10 @@ init.sh 실행 후:
 현재 상태:
 - `init.sh --link` 1차 지원
 - `init.sh update /path/to/project` 1차 지원
+- `init.sh sync [manifest]` 1차 지원
 - `.claude/settings.json`, hooks, agents, skills, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`은 심링크로 연결 가능
 - 프로젝트별 문서(`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Copilot 문서), `.codex/config.toml`, `.mcp.json`은 계속 로컬 파일로 유지
-- 전체 디렉토리 단위 심링크와 별도 독립 CLI `update` 명령은 아직 미구현
+- manifest 기반 다중 프로젝트 배치 sync는 가능하지만, 전체 디렉토리 단위 심링크와 로컬 override merge는 아직 미구현
 
 ### 2-1. Symlink 기반 동기화 (stow 패턴)
 현재 방식 (복사):
@@ -419,6 +420,11 @@ init.sh update /path/to/project
 # 또는 심링크 모드에서는 git pull만 하면 됨
 cd ~/.ai-setting && git pull
 ```
+
+현재 1차 구현:
+- `init.sh sync ./projects.manifest`로 여러 프로젝트에 순차 적용 가능
+- manifest는 한 줄에 프로젝트 경로 하나씩 기록하는 단순 텍스트 형식
+- 기본은 `update`, `--sync-mode init`으로 init 흐름도 배치 적용 가능
 
 ---
 

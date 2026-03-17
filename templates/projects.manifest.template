@@ -1,0 +1,9 @@
+# AI Setting sync manifest
+# - 한 줄에 프로젝트 경로 하나씩 작성
+# - 빈 줄과 '#' 주석은 무시됩니다
+# - 상대 경로는 이 manifest 파일 위치를 기준으로 해석됩니다
+
+# 예시:
+# ../storyforge
+# ../taskrelay
+# /Users/jaewon/workspace/internal-tool

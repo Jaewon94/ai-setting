@@ -24,11 +24,13 @@ usage() {
 사용법:
   $USAGE_NAME [옵션] [프로젝트 경로]
   $USAGE_NAME update [옵션] [프로젝트 경로]
+  $USAGE_NAME sync [옵션] [manifest 경로]
 
 옵션:
   --profile PROFILE        Claude Code 프로필 지정 (standard|minimal|strict|team)
   --link                   공유 가능한 설정 자산을 복사 대신 심링크로 연결
   --update                 AI 자동 채우기 없이 공유 자산/MCP를 최신 상태로 갱신
+  --sync-mode MODE         sync 명령에서 각 프로젝트에 적용할 방식 (update|init)
   --doctor                 현재 프로젝트 설정 상태 진단
   --dry-run                실제 변경 없이 예정 작업만 출력
   --diff                   실제 변경 없이 관리 대상 파일 diff 출력
@@ -51,6 +53,11 @@ MCP preset:
 Archetype:
   frontend-web | backend-api | cli-tool | worker-batch
   data-automation | library-sdk | infra-iac | general-app
+
+sync manifest 형식:
+  - 한 줄에 프로젝트 경로 하나씩 작성
+  - 빈 줄과 '#'으로 시작하는 주석은 무시
+  - 상대 경로는 manifest 파일 기준으로 해석
 EOF
 }
 
@@ -62,6 +69,20 @@ validate_profile() {
       ;;
     *)
       echo -e "${RED}오류: 알 수 없는 profile '$profile'${NC}" >&2
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+validate_sync_mode() {
+  local sync_mode="$1"
+
+  case "$sync_mode" in
+    update|init)
+      ;;
+    *)
+      echo -e "${RED}오류: 알 수 없는 sync mode '$sync_mode'${NC}" >&2
       usage
       exit 1
       ;;
@@ -85,6 +106,159 @@ get_profile_settings_template() {
       printf '%s\n' "$SCRIPT_DIR/claude/settings.team.json"
       ;;
   esac
+}
+
+trim_whitespace() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s\n' "$value"
+}
+
+resolve_manifest_target_path() {
+  local manifest_dir="$1"
+  local raw_path="$2"
+
+  case "$raw_path" in
+    ~/*)
+      printf '%s/%s\n' "$HOME" "${raw_path#~/}"
+      ;;
+    /*)
+      printf '%s\n' "$raw_path"
+      ;;
+    *)
+      printf '%s/%s\n' "$manifest_dir" "$raw_path"
+      ;;
+  esac
+}
+
+run_sync_manifest() {
+  local manifest_path="$1"
+  local raw_line=""
+  local line=""
+  local manifest_dir=""
+  local target_path=""
+  local total=0
+  local success_count=0
+  local failure_count=0
+  local skipped_count=0
+  local child_command=()
+  local child_mode_label=""
+
+  if [ ! -f "$manifest_path" ]; then
+    echo -e "${RED}오류: sync manifest를 찾을 수 없습니다: ${manifest_path}${NC}" >&2
+    echo -e "힌트: templates/projects.manifest.template 을 복사해 manifest를 만든 뒤 다시 실행하세요." >&2
+    return 1
+  fi
+
+  manifest_path="$(cd "$(dirname "$manifest_path")" && pwd)/$(basename "$manifest_path")"
+  manifest_dir="$(dirname "$manifest_path")"
+
+  echo -e "${CYAN}━━━ AI Setting Sync ━━━${NC}"
+  echo -e "소스: ${SCRIPT_DIR}"
+  echo -e "manifest: ${manifest_path}"
+  echo -e "sync mode: ${SYNC_MODE_KIND}"
+  echo -e "Claude 프로필: ${CLAUDE_PROFILE}"
+  if [ "$LINK_MODE" = true ]; then
+    echo -e "공유 자산 모드: symlink"
+  else
+    echo -e "공유 자산 모드: copy"
+  fi
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "실행 모드: dry-run"
+  fi
+  if [ "$BACKUP_ALL" = true ]; then
+    echo -e "백업 모드: backup-all"
+  fi
+  if [ "$REAPPLY_MODE" = true ]; then
+    echo -e "재적용 모드: reapply"
+  fi
+  echo ""
+
+  while IFS= read -r raw_line || [ -n "$raw_line" ]; do
+    line="${raw_line%$'\r'}"
+    line="$(trim_whitespace "$line")"
+
+    if [ -z "$line" ] || [[ "$line" == \#* ]]; then
+      continue
+    fi
+
+    total=$((total + 1))
+    target_path="$(resolve_manifest_target_path "$manifest_dir" "$line")"
+
+    echo -e "${GREEN}[${total}]${NC} ${target_path}"
+
+    if [ ! -d "$target_path" ]; then
+      echo -e "  ${YELLOW}⚠ 대상 디렉토리가 없어 건너뜁니다${NC}"
+      skipped_count=$((skipped_count + 1))
+      echo ""
+      continue
+    fi
+
+    child_command=("$SCRIPT_DIR/init.sh")
+    if [ "$SYNC_MODE_KIND" = "update" ]; then
+      child_command+=("update")
+      child_mode_label="update"
+    else
+      child_mode_label="init"
+    fi
+
+    child_command+=("--profile" "$CLAUDE_PROFILE")
+
+    if [ "$LINK_MODE" = true ]; then
+      child_command+=("--link")
+    fi
+    if [ "$AUTO_MCP" = true ]; then
+      child_command+=("--auto-mcp")
+    fi
+    if [ "$SKIP_AI" = true ]; then
+      child_command+=("--skip-ai")
+    fi
+    if [ "$DRY_RUN" = true ]; then
+      child_command+=("--dry-run")
+    fi
+    if [ "$BACKUP_ALL" = true ]; then
+      child_command+=("--backup-all")
+    fi
+    if [ "$REAPPLY_MODE" = true ]; then
+      child_command+=("--reapply")
+    fi
+    if [ "$MCP_ENABLED" = false ]; then
+      child_command+=("--no-mcp")
+    elif [ "$USER_MCP_PRESET_SPECIFIED" = true ] && [ "${#MCP_PRESETS[@]}" -gt 0 ]; then
+      child_command+=("--mcp-preset" "$(IFS=,; echo "${MCP_PRESETS[*]}")")
+    fi
+    if [ -n "$USER_ARCHETYPE_HINT" ]; then
+      child_command+=("--archetype" "$USER_ARCHETYPE_HINT")
+    fi
+    if [ -n "$USER_STACK_HINT" ]; then
+      child_command+=("--stack" "$USER_STACK_HINT")
+    fi
+
+    child_command+=("$target_path")
+
+    echo "  → ${child_mode_label} 적용 시작"
+    if "${child_command[@]}"; then
+      success_count=$((success_count + 1))
+      echo "  ✅ 완료"
+    else
+      failure_count=$((failure_count + 1))
+      echo -e "  ${RED}✗ 실패${NC}"
+    fi
+    echo ""
+  done < "$manifest_path"
+
+  echo -e "${CYAN}━━━ Sync Summary ━━━${NC}"
+  echo "  manifest entries: ${total}"
+  echo "  success: ${success_count}"
+  echo "  skipped: ${skipped_count}"
+  echo "  failed: ${failure_count}"
+
+  if [ "$failure_count" -gt 0 ]; then
+    return 1
+  fi
+
+  return 0
 }
 
 detect_claude_profile() {
@@ -1548,8 +1722,12 @@ EOF
 
 # 서브커맨드 전처리
 UPDATE_MODE=false
+SYNC_MODE=false
 if [ "${1:-}" = "update" ]; then
   UPDATE_MODE=true
+  shift
+elif [ "${1:-}" = "sync" ]; then
+  SYNC_MODE=true
   shift
 elif [ "${1:-}" = "init" ]; then
   shift
@@ -1572,6 +1750,8 @@ USER_PROJECT_NAME_HINT=""
 USER_ARCHETYPE_HINT=""
 USER_STACK_HINT=""
 USER_MCP_PRESET_SPECIFIED=false
+SYNC_MODE_KIND="update"
+SYNC_MANIFEST=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -1593,6 +1773,16 @@ while [ "$#" -gt 0 ]; do
       ;;
     --update)
       UPDATE_MODE=true
+      ;;
+    --sync-mode)
+      if [ -z "${2:-}" ]; then
+        echo -e "${RED}오류: --sync-mode 뒤에 값이 필요합니다${NC}" >&2
+        usage
+        exit 1
+      fi
+      validate_sync_mode "$2"
+      SYNC_MODE_KIND="$2"
+      shift
       ;;
     --dry-run)
       DRY_RUN=true
@@ -1670,12 +1860,21 @@ while [ "$#" -gt 0 ]; do
       exit 1
       ;;
     *)
-      if [ -n "$TARGET" ]; then
-        echo -e "${RED}오류: 프로젝트 경로는 하나만 지정할 수 있습니다${NC}" >&2
-        usage
-        exit 1
+      if [ "$SYNC_MODE" = true ]; then
+        if [ -n "$SYNC_MANIFEST" ]; then
+          echo -e "${RED}오류: sync manifest 경로는 하나만 지정할 수 있습니다${NC}" >&2
+          usage
+          exit 1
+        fi
+        SYNC_MANIFEST="$1"
+      else
+        if [ -n "$TARGET" ]; then
+          echo -e "${RED}오류: 프로젝트 경로는 하나만 지정할 수 있습니다${NC}" >&2
+          usage
+          exit 1
+        fi
+        TARGET="$1"
       fi
-      TARGET="$1"
       ;;
   esac
   shift
@@ -1693,6 +1892,11 @@ if [ "$DIFF_MODE" = true ]; then
 fi
 if [ "$MODE_COUNT" -gt 1 ]; then
   echo -e "${RED}오류: --doctor, --dry-run, --diff 중 하나만 사용할 수 있습니다${NC}" >&2
+  usage
+  exit 1
+fi
+if [ "$SYNC_MODE" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = true ]; }; then
+  echo -e "${RED}오류: sync 명령은 --doctor 또는 --diff와 함께 사용할 수 없습니다${NC}" >&2
   usage
   exit 1
 fi
@@ -1714,6 +1918,15 @@ fi
 
 # ai-setting 디렉토리 (이 스크립트가 있는 곳)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+if [ "$SYNC_MODE" = true ]; then
+  SYNC_MANIFEST="${SYNC_MANIFEST:-$SCRIPT_DIR/projects.manifest}"
+  if run_sync_manifest "$SYNC_MANIFEST"; then
+    exit 0
+  else
+    exit 1
+  fi
+fi
 
 TARGET="${TARGET:-.}"
 TARGET="$(cd "$TARGET" && pwd)"
