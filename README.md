@@ -80,6 +80,9 @@ init.sh 실행
 # 프로젝트 로컬 MCP 생성 건너뛰기
 /path/to/ai-setting/init.sh --no-mcp /path/to/my-new-project
 
+# 실제 변경 없이 예정 작업만 확인
+/path/to/ai-setting/init.sh --dry-run /path/to/my-new-project
+
 # 현재 프로젝트 상태 진단
 /path/to/ai-setting/init.sh --doctor /path/to/my-new-project
 ```
@@ -198,6 +201,15 @@ claude "CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 채워줘"
 참고:
 - `blank-start` 모드에서는 템플릿/skill placeholder가 남아 있어도 정상으로 취급
 - error가 있으면 종료 코드 `1`, error가 없으면 종료 코드 `0`
+
+### Dry-run 모드
+
+`init.sh --dry-run /path/to/project`로 실제 변경 없이 예정 작업만 볼 수 있습니다.
+
+동작:
+- 생성/덮어쓰기/백업 예정 파일과 디렉토리를 출력
+- AI 자동 채우기는 실행하지 않음
+- 종료 후 실제 파일은 전혀 변경되지 않음
 
 ---
 

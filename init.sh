@@ -24,6 +24,7 @@ usage() {
 
 옵션:
   --doctor                 현재 프로젝트 설정 상태 진단
+  --dry-run                실제 변경 없이 예정 작업만 출력
   --skip-ai                AI 자동 채우기 건너뛰기
   --mcp-preset PRESETS     프로젝트 로컬 MCP preset 지정 (예: core,web)
   --no-mcp                 프로젝트 로컬 MCP 생성 건너뛰기
@@ -189,6 +190,63 @@ run_doctor() {
   return 0
 }
 
+dry_run_note() {
+  echo -e "  ${CYAN}[dry-run]${NC} $1"
+}
+
+resolve_copy_destination() {
+  local src="$1"
+  local dst="$2"
+
+  if [ -d "$dst" ] || [[ "$dst" == */ ]]; then
+    printf '%s%s\n' "$dst" "$(basename "$src")"
+  else
+    printf '%s\n' "$dst"
+  fi
+}
+
+run_mkdir_p() {
+  local path="$1"
+
+  if [ "$DRY_RUN" = true ]; then
+    if [ -d "$path" ]; then
+      dry_run_note "디렉토리 유지: ${path}"
+    else
+      dry_run_note "디렉토리 생성: ${path}"
+    fi
+  else
+    mkdir -p "$path"
+  fi
+}
+
+run_copy() {
+  local src="$1"
+  local dst="$2"
+  local final_path
+
+  final_path="$(resolve_copy_destination "$src" "$dst")"
+
+  if [ "$DRY_RUN" = true ]; then
+    if [ -e "$final_path" ]; then
+      dry_run_note "파일 덮어쓰기: ${final_path}"
+    else
+      dry_run_note "파일 생성: ${final_path}"
+    fi
+  else
+    cp "$src" "$dst"
+  fi
+}
+
+run_chmod_file() {
+  local path="$1"
+
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "권한 변경: chmod +x ${path}"
+  else
+    chmod +x "$path"
+  fi
+}
+
 contains_value() {
   local needle="$1"
   shift
@@ -247,7 +305,9 @@ backup_existing_path() {
   echo -e "${YELLOW}  ⚠ ${label} 이미 존재 — 백업 후 덮어쓰기${NC}"
   echo -e "  📦 백업: ${backup_path}"
 
-  if [ -d "$path" ]; then
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "백업 생성: ${backup_path}"
+  elif [ -d "$path" ]; then
     cp -r "$path" "$backup_path"
   else
     cp "$path" "$backup_path"
@@ -659,6 +719,11 @@ append_codex_mcp_preset() {
   local preset="$1"
   local file="$2"
 
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "Codex MCP preset 추가: ${preset} -> ${file}"
+    return
+  fi
+
   case "$preset" in
     core)
       cat <<'EOF' >> "$file"
@@ -722,6 +787,11 @@ write_claude_mcp_config() {
   local file="$1"
   local preset
 
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "Claude MCP config 생성: ${file}"
+    return
+  fi
+
   cat <<'EOF' > "$file"
 {
   "mcpServers": {
@@ -756,6 +826,7 @@ EOF
 
 # 옵션 파싱
 DOCTOR_MODE=false
+DRY_RUN=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
@@ -765,6 +836,9 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --doctor)
       DOCTOR_MODE=true
+      ;;
+    --dry-run)
+      DRY_RUN=true
       ;;
     --skip-ai)
       SKIP_AI=true
@@ -839,6 +913,9 @@ echo -e "MCP preset: ${MCP_PRESET_LABEL}"
 echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
 echo -e "프로젝트 유형: ${PROJECT_ARCHETYPE}"
 echo -e "주 스택: ${PROJECT_STACK}"
+if [ "$DRY_RUN" = true ]; then
+  echo -e "실행 모드: dry-run"
+fi
 echo ""
 
 # jq 의존성 체크 (hooks가 jq로 JSON 파싱)
@@ -858,44 +935,53 @@ if [ -d "$TARGET/.claude" ]; then
   backup_existing_path "$TARGET/.claude" ".claude/"
 fi
 
-mkdir -p "$TARGET/.claude/hooks"
-mkdir -p "$TARGET/.claude/agents"
-mkdir -p "$TARGET/.claude/skills/deploy"
-mkdir -p "$TARGET/.claude/skills/review"
-mkdir -p "$TARGET/.claude/skills/fix-issue"
-mkdir -p "$TARGET/.claude/skills/gap-check"
-mkdir -p "$TARGET/.claude/skills/cross-validate"
+run_mkdir_p "$TARGET/.claude/hooks"
+run_mkdir_p "$TARGET/.claude/agents"
+run_mkdir_p "$TARGET/.claude/skills/deploy"
+run_mkdir_p "$TARGET/.claude/skills/review"
+run_mkdir_p "$TARGET/.claude/skills/fix-issue"
+run_mkdir_p "$TARGET/.claude/skills/gap-check"
+run_mkdir_p "$TARGET/.claude/skills/cross-validate"
 
-cp "$SCRIPT_DIR/claude/settings.json" "$TARGET/.claude/settings.json"
-cp "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
-cp "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"
-chmod +x "$TARGET/.claude/hooks/"*.sh
+run_copy "$SCRIPT_DIR/claude/settings.json" "$TARGET/.claude/settings.json"
+run_copy "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
+run_copy "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"
+run_chmod_file "$TARGET/.claude/hooks/protect-files.sh"
+run_chmod_file "$TARGET/.claude/hooks/block-dangerous-commands.sh"
 
-cp "$SCRIPT_DIR/claude/agents/security-reviewer.md" "$TARGET/.claude/agents/"
-cp "$SCRIPT_DIR/claude/agents/architect-reviewer.md" "$TARGET/.claude/agents/"
-cp "$SCRIPT_DIR/claude/agents/test-writer.md" "$TARGET/.claude/agents/"
-cp "$SCRIPT_DIR/claude/agents/research.md" "$TARGET/.claude/agents/"
+run_copy "$SCRIPT_DIR/claude/agents/security-reviewer.md" "$TARGET/.claude/agents/"
+run_copy "$SCRIPT_DIR/claude/agents/architect-reviewer.md" "$TARGET/.claude/agents/"
+run_copy "$SCRIPT_DIR/claude/agents/test-writer.md" "$TARGET/.claude/agents/"
+run_copy "$SCRIPT_DIR/claude/agents/research.md" "$TARGET/.claude/agents/"
 
-cp "$SCRIPT_DIR/claude/skills/deploy/SKILL.md" "$TARGET/.claude/skills/deploy/"
-cp "$SCRIPT_DIR/claude/skills/review/SKILL.md" "$TARGET/.claude/skills/review/"
-cp "$SCRIPT_DIR/claude/skills/fix-issue/SKILL.md" "$TARGET/.claude/skills/fix-issue/"
-cp "$SCRIPT_DIR/claude/skills/gap-check/SKILL.md" "$TARGET/.claude/skills/gap-check/"
-cp "$SCRIPT_DIR/claude/skills/cross-validate/SKILL.md" "$TARGET/.claude/skills/cross-validate/"
+run_copy "$SCRIPT_DIR/claude/skills/deploy/SKILL.md" "$TARGET/.claude/skills/deploy/"
+run_copy "$SCRIPT_DIR/claude/skills/review/SKILL.md" "$TARGET/.claude/skills/review/"
+run_copy "$SCRIPT_DIR/claude/skills/fix-issue/SKILL.md" "$TARGET/.claude/skills/fix-issue/"
+run_copy "$SCRIPT_DIR/claude/skills/gap-check/SKILL.md" "$TARGET/.claude/skills/gap-check/"
+run_copy "$SCRIPT_DIR/claude/skills/cross-validate/SKILL.md" "$TARGET/.claude/skills/cross-validate/"
 
-echo "  ✅ settings.json, hooks 2개, agents 4개, skills 5개"
+if [ "$DRY_RUN" = true ]; then
+  echo "  ✅ settings.json, hooks 2개, agents 4개, skills 5개 복사 예정"
+else
+  echo "  ✅ settings.json, hooks 2개, agents 4개, skills 5개"
+fi
 
 # ============================================================
 # 2단계: Codex 설정 복사
 # ============================================================
 echo -e "${GREEN}[2/6]${NC} Codex CLI 설정 복사 (.codex/)"
 
-mkdir -p "$TARGET/.codex"
+run_mkdir_p "$TARGET/.codex"
 if [ -f "$TARGET/.codex/config.toml" ]; then
   backup_existing_path "$TARGET/.codex/config.toml" ".codex/config.toml"
 fi
-cp "$SCRIPT_DIR/codex/config.toml" "$TARGET/.codex/config.toml"
+run_copy "$SCRIPT_DIR/codex/config.toml" "$TARGET/.codex/config.toml"
 
-echo "  ✅ config.toml"
+if [ "$DRY_RUN" = true ]; then
+  echo "  ✅ config.toml 복사 예정"
+else
+  echo "  ✅ config.toml"
+fi
 
 # ============================================================
 # 3단계: 프로젝트 로컬 MCP preset 생성
@@ -914,8 +1000,13 @@ else
   done
   write_claude_mcp_config "$TARGET/.mcp.json"
 
-  echo "  ✅ Codex MCP preset 적용됨 ($MCP_PRESET_LABEL)"
-  echo "  ✅ Claude MCP config 생성됨 (.mcp.json)"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ Codex MCP preset 적용 예정 ($MCP_PRESET_LABEL)"
+    echo "  ✅ Claude MCP config 생성 예정 (.mcp.json)"
+  else
+    echo "  ✅ Codex MCP preset 적용됨 ($MCP_PRESET_LABEL)"
+    echo "  ✅ Claude MCP config 생성됨 (.mcp.json)"
+  fi
 fi
 
 # ============================================================
@@ -926,25 +1017,37 @@ echo -e "${GREEN}[4/6]${NC} 템플릿 복사"
 TEMPLATES_COPIED=false
 
 if [ ! -f "$TARGET/CLAUDE.md" ]; then
-  cp "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"
-  echo "  ✅ CLAUDE.md 생성됨"
+  run_copy "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ CLAUDE.md 생성 예정"
+  else
+    echo "  ✅ CLAUDE.md 생성됨"
+  fi
   TEMPLATES_COPIED=true
 else
   echo -e "  ${YELLOW}⚠ CLAUDE.md 이미 존재 — 건너뜀${NC}"
 fi
 
 if [ ! -f "$TARGET/AGENTS.md" ]; then
-  cp "$SCRIPT_DIR/templates/AGENTS.md.template" "$TARGET/AGENTS.md"
-  echo "  ✅ AGENTS.md 생성됨"
+  run_copy "$SCRIPT_DIR/templates/AGENTS.md.template" "$TARGET/AGENTS.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ AGENTS.md 생성 예정"
+  else
+    echo "  ✅ AGENTS.md 생성됨"
+  fi
   TEMPLATES_COPIED=true
 else
   echo -e "  ${YELLOW}⚠ AGENTS.md 이미 존재 — 건너뜀${NC}"
 fi
 
-mkdir -p "$TARGET/docs"
+run_mkdir_p "$TARGET/docs"
 if [ ! -f "$TARGET/docs/decisions.md" ]; then
-  cp "$SCRIPT_DIR/templates/decisions.md.template" "$TARGET/docs/decisions.md"
-  echo "  ✅ docs/decisions.md 생성됨"
+  run_copy "$SCRIPT_DIR/templates/decisions.md.template" "$TARGET/docs/decisions.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ docs/decisions.md 생성 예정"
+  else
+    echo "  ✅ docs/decisions.md 생성됨"
+  fi
 else
   echo -e "  ${YELLOW}⚠ docs/decisions.md 이미 존재 — 건너뜀${NC}"
 fi
@@ -985,6 +1088,8 @@ EOF
 
 if [ "$SKIP_AI" = true ]; then
   echo -e "  ${YELLOW}--skip-ai 옵션으로 건너뜀${NC}"
+elif [ "$DRY_RUN" = true ]; then
+  echo -e "  ${YELLOW}--dry-run 모드에서는 AI 자동 채우기를 실행하지 않습니다${NC}"
 elif [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then
   echo "  mode: ${PROJECT_CONTEXT_MODE} (${PROJECT_CONTEXT_REASON})"
   echo -e "  ${YELLOW}프로젝트 근거가 거의 없어 AI 자동 채우기를 건너뜁니다${NC}"
@@ -1044,7 +1149,11 @@ fi
 # 6단계: 완료 요약
 # ============================================================
 echo ""
-echo -e "${GREEN}[6/6]${NC} 완료!"
+if [ "$DRY_RUN" = true ]; then
+  echo -e "${GREEN}[6/6]${NC} dry-run 완료!"
+else
+  echo -e "${GREEN}[6/6]${NC} 완료!"
+fi
 echo ""
 echo -e "${CYAN}━━━ 적용된 설정 ━━━${NC}"
 echo ""
@@ -1069,5 +1178,9 @@ if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then
   echo ""
   echo "  다음 단계 추천:"
   echo "    README.md 또는 프로젝트 manifest/package 파일을 추가한 뒤 init.sh를 다시 실행"
+fi
+if [ "$DRY_RUN" = true ]; then
+  echo ""
+  echo "  dry-run: 실제 파일 변경은 적용되지 않았습니다"
 fi
 echo ""
