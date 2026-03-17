@@ -27,6 +27,7 @@ usage() {
   --dry-run                실제 변경 없이 예정 작업만 출력
   --diff                   실제 변경 없이 관리 대상 파일 diff 출력
   --backup-all             적용 전 관리 대상 전체 스냅샷 백업
+  --reapply                CLAUDE.md/AGENTS.md를 다시 생성하고 AI 채우기 재실행
   --project-name NAME      프로젝트 이름 힌트 제공
   --archetype TYPE         프로젝트 archetype 힌트 제공
   --stack NAME             주 스택 힌트 제공
@@ -1047,6 +1048,7 @@ DOCTOR_MODE=false
 DRY_RUN=false
 DIFF_MODE=false
 BACKUP_ALL=false
+REAPPLY_MODE=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
@@ -1068,6 +1070,9 @@ while [ "$#" -gt 0 ]; do
       ;;
     --backup-all)
       BACKUP_ALL=true
+      ;;
+    --reapply)
+      REAPPLY_MODE=true
       ;;
     --project-name)
       if [ -z "${2:-}" ]; then
@@ -1159,6 +1164,11 @@ if [ "$BACKUP_ALL" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = t
   usage
   exit 1
 fi
+if [ "$REAPPLY_MODE" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = true ]; }; then
+  echo -e "${RED}오류: --reapply는 --doctor 또는 --diff와 함께 사용할 수 없습니다${NC}" >&2
+  usage
+  exit 1
+fi
 
 # ai-setting 디렉토리 (이 스크립트가 있는 곳)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -1209,6 +1219,9 @@ if [ "$DRY_RUN" = true ]; then
 fi
 if [ "$BACKUP_ALL" = true ]; then
   echo -e "백업 모드: backup-all"
+fi
+if [ "$REAPPLY_MODE" = true ]; then
+  echo -e "재적용 모드: reapply"
 fi
 echo ""
 
@@ -1314,7 +1327,16 @@ echo -e "${GREEN}[4/6]${NC} 템플릿 복사"
 
 TEMPLATES_COPIED=false
 
-if [ ! -f "$TARGET/CLAUDE.md" ]; then
+if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/CLAUDE.md" ]; then
+  backup_existing_path "$TARGET/CLAUDE.md" "CLAUDE.md"
+  run_copy "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ CLAUDE.md 재생성 예정"
+  else
+    echo "  ✅ CLAUDE.md 재생성됨"
+  fi
+  TEMPLATES_COPIED=true
+elif [ ! -f "$TARGET/CLAUDE.md" ]; then
   run_copy "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"
   if [ "$DRY_RUN" = true ]; then
     echo "  ✅ CLAUDE.md 생성 예정"
@@ -1326,7 +1348,16 @@ else
   echo -e "  ${YELLOW}⚠ CLAUDE.md 이미 존재 — 건너뜀${NC}"
 fi
 
-if [ ! -f "$TARGET/AGENTS.md" ]; then
+if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/AGENTS.md" ]; then
+  backup_existing_path "$TARGET/AGENTS.md" "AGENTS.md"
+  run_copy "$SCRIPT_DIR/templates/AGENTS.md.template" "$TARGET/AGENTS.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ AGENTS.md 재생성 예정"
+  else
+    echo "  ✅ AGENTS.md 재생성됨"
+  fi
+  TEMPLATES_COPIED=true
+elif [ ! -f "$TARGET/AGENTS.md" ]; then
   run_copy "$SCRIPT_DIR/templates/AGENTS.md.template" "$TARGET/AGENTS.md"
   if [ "$DRY_RUN" = true ]; then
     echo "  ✅ AGENTS.md 생성 예정"
@@ -1347,7 +1378,11 @@ if [ ! -f "$TARGET/docs/decisions.md" ]; then
     echo "  ✅ docs/decisions.md 생성됨"
   fi
 else
-  echo -e "  ${YELLOW}⚠ docs/decisions.md 이미 존재 — 건너뜀${NC}"
+  if [ "$REAPPLY_MODE" = true ]; then
+    echo -e "  ${YELLOW}⚠ docs/decisions.md는 사용자 기록 파일로 간주되어 유지합니다${NC}"
+  else
+    echo -e "  ${YELLOW}⚠ docs/decisions.md 이미 존재 — 건너뜀${NC}"
+  fi
 fi
 
 # ============================================================

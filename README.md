@@ -89,6 +89,9 @@ init.sh 실행
 # 적용 전 관리 대상 전체 스냅샷 백업
 /path/to/ai-setting/init.sh --backup-all /path/to/my-new-project
 
+# CLAUDE.md / AGENTS.md를 fresh template로 다시 생성
+/path/to/ai-setting/init.sh --reapply /path/to/my-new-project
+
 # 빈 프로젝트에서 의도 힌트와 함께 시작
 /path/to/ai-setting/init.sh --project-name my-api --archetype backend-api --stack Python /path/to/my-new-project
 
@@ -265,6 +268,23 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 참고:
 - `--backup-all`은 `--doctor`, `--diff`와 함께 사용할 수 없음
+
+### Reapply 모드
+
+`init.sh --reapply /path/to/project`로 `CLAUDE.md`와 `AGENTS.md`를 fresh template 기준으로 다시 생성하고 AI 자동 채우기를 다시 실행할 수 있습니다.
+
+동작:
+- 기존 `CLAUDE.md`, `AGENTS.md`는 backup 후 새 템플릿으로 재생성
+- 이후 AI 자동 채우기 단계가 다시 실행됨
+- `.claude`, `.codex`, `.mcp.json`은 기존처럼 최신 설정으로 다시 적용
+- `docs/decisions.md`는 사용자 기록 파일로 보고 유지
+
+추천 조합:
+- 안전하게 하려면 `--backup-all --reapply`
+- 먼저 확인만 하려면 `--dry-run --reapply`
+
+참고:
+- `--reapply`는 `--doctor`, `--diff`와 함께 사용할 수 없음
 
 ---
 
