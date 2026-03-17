@@ -23,7 +23,7 @@ usage() {
 사용법: init.sh [옵션] [프로젝트 경로]
 
 옵션:
-  --profile PROFILE        Claude Code 프로필 지정 (standard|minimal)
+  --profile PROFILE        Claude Code 프로필 지정 (standard|minimal|strict|team)
   --doctor                 현재 프로젝트 설정 상태 진단
   --dry-run                실제 변경 없이 예정 작업만 출력
   --diff                   실제 변경 없이 관리 대상 파일 diff 출력
@@ -53,7 +53,7 @@ validate_profile() {
   local profile="$1"
 
   case "$profile" in
-    standard|minimal)
+    standard|minimal|strict|team)
       ;;
     *)
       echo -e "${RED}오류: 알 수 없는 profile '$profile'${NC}" >&2
@@ -73,6 +73,12 @@ get_profile_settings_template() {
     minimal)
       printf '%s\n' "$SCRIPT_DIR/claude/settings.minimal.json"
       ;;
+    strict)
+      printf '%s\n' "$SCRIPT_DIR/claude/settings.strict.json"
+      ;;
+    team)
+      printf '%s\n' "$SCRIPT_DIR/claude/settings.team.json"
+      ;;
   esac
 }
 
@@ -81,9 +87,13 @@ detect_claude_profile() {
   local settings_path="$target/.claude/settings.json"
   local standard_template
   local minimal_template
+  local strict_template
+  local team_template
 
   standard_template="$SCRIPT_DIR/claude/settings.json"
   minimal_template="$SCRIPT_DIR/claude/settings.minimal.json"
+  strict_template="$SCRIPT_DIR/claude/settings.strict.json"
+  team_template="$SCRIPT_DIR/claude/settings.team.json"
 
   if [ ! -f "$settings_path" ]; then
     DETECTED_CLAUDE_PROFILE="unknown"
@@ -94,6 +104,10 @@ detect_claude_profile() {
     DETECTED_CLAUDE_PROFILE="minimal"
   elif cmp -s "$settings_path" "$standard_template"; then
     DETECTED_CLAUDE_PROFILE="standard"
+  elif cmp -s "$settings_path" "$strict_template"; then
+    DETECTED_CLAUDE_PROFILE="strict"
+  elif cmp -s "$settings_path" "$team_template"; then
+    DETECTED_CLAUDE_PROFILE="team"
   else
     DETECTED_CLAUDE_PROFILE="custom"
   fi
@@ -171,7 +185,7 @@ run_doctor() {
   if [ -f "$target/.claude/settings.json" ]; then
     doctor_ok ".claude/settings.json 존재"
     if [ "$DETECTED_CLAUDE_PROFILE" = "custom" ]; then
-      doctor_warn ".claude/settings.json이 bundled standard/minimal 템플릿과 다름"
+      doctor_warn ".claude/settings.json이 bundled profile 템플릿과 다름"
     else
       doctor_ok "Claude 프로필 감지: ${DETECTED_CLAUDE_PROFILE}"
     fi
@@ -203,6 +217,14 @@ run_doctor() {
     doctor_warn ".github/copilot-instructions.md 없음 — GitHub Copilot 지원 파일이 아직 생성되지 않았을 수 있음"
   fi
 
+  if [ "$DETECTED_CLAUDE_PROFILE" = "team" ]; then
+    if [ -f "$target/.github/pull_request_template.md" ]; then
+      doctor_ok ".github/pull_request_template.md 존재"
+    else
+      doctor_error ".github/pull_request_template.md 없음"
+    fi
+  fi
+
   if [ -x "$target/.claude/hooks/protect-files.sh" ]; then
     doctor_ok ".claude/hooks/protect-files.sh 실행 가능"
   else
@@ -215,6 +237,14 @@ run_doctor() {
     doctor_ok ".claude/hooks/block-dangerous-commands.sh 실행 가능"
   else
     doctor_error ".claude/hooks/block-dangerous-commands.sh 없음 또는 실행 권한 없음"
+  fi
+
+  if [ "$DETECTED_CLAUDE_PROFILE" = "strict" ] || [ "$DETECTED_CLAUDE_PROFILE" = "team" ]; then
+    if [ -x "$target/.claude/hooks/protect-main-branch.sh" ]; then
+      doctor_ok ".claude/hooks/protect-main-branch.sh 실행 가능"
+    else
+      doctor_error ".claude/hooks/protect-main-branch.sh 없음 또는 실행 권한 없음"
+    fi
   fi
 
   if [ -f "$target/.codex/config.toml" ]; then
@@ -269,7 +299,6 @@ run_doctor() {
     if [ -f "$target/.github/copilot-instructions.md" ]; then
       placeholder_count=$((placeholder_count + $(rg -o '\[(프로젝트 한 줄 설명|프로젝트별 build 또는 run 명령|프로젝트별 테스트 명령어|프로젝트별 린트 또는 포맷 명령|프로젝트별 추가 검증 또는 협업 규칙)\]' "$target/.github/copilot-instructions.md" 2>/dev/null | wc -l | tr -d ' ')))
     fi
-
     if [ "$placeholder_count" -eq 0 ]; then
       doctor_ok "문서 템플릿 플레이스홀더 없음"
     else
@@ -315,7 +344,7 @@ run_diff_preview() {
   local -a internal_args
 
   managed_paths=(".claude" ".codex/config.toml" "CLAUDE.md" "AGENTS.md" "docs/decisions.md")
-  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" ".github/copilot-instructions.md")
+  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" ".github/copilot-instructions.md" ".github/pull_request_template.md")
   if [ "$MCP_ENABLED" = true ]; then
     managed_paths+=(".mcp.json")
   fi
@@ -413,6 +442,7 @@ build_backup_managed_paths() {
     "AGENTS.md"
     "GEMINI.md"
     ".github/copilot-instructions.md"
+    ".github/pull_request_template.md"
     "docs/decisions.md"
   )
 }
@@ -646,6 +676,7 @@ cleanup_managed_claude_assets() {
     "$TARGET/.claude/settings.json"
     "$TARGET/.claude/hooks/protect-files.sh"
     "$TARGET/.claude/hooks/block-dangerous-commands.sh"
+    "$TARGET/.claude/hooks/protect-main-branch.sh"
     "$TARGET/.claude/agents/security-reviewer.md"
     "$TARGET/.claude/agents/architect-reviewer.md"
     "$TARGET/.claude/agents/test-writer.md"
@@ -686,10 +717,17 @@ copy_claude_profile_assets() {
   run_copy "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
   run_chmod_file "$TARGET/.claude/hooks/protect-files.sh"
 
-  if [ "$CLAUDE_PROFILE" = "standard" ]; then
+  if [ "$CLAUDE_PROFILE" != "minimal" ]; then
     run_copy "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"
     run_chmod_file "$TARGET/.claude/hooks/block-dangerous-commands.sh"
+  fi
 
+  if [ "$CLAUDE_PROFILE" = "strict" ] || [ "$CLAUDE_PROFILE" = "team" ]; then
+    run_copy "$SCRIPT_DIR/claude/hooks/protect-main-branch.sh" "$TARGET/.claude/hooks/protect-main-branch.sh"
+    run_chmod_file "$TARGET/.claude/hooks/protect-main-branch.sh"
+  fi
+
+  if [ "$CLAUDE_PROFILE" != "minimal" ]; then
     run_mkdir_p "$TARGET/.claude/agents"
     run_copy "$SCRIPT_DIR/claude/agents/security-reviewer.md" "$TARGET/.claude/agents/"
     run_copy "$SCRIPT_DIR/claude/agents/architect-reviewer.md" "$TARGET/.claude/agents/"
@@ -1545,6 +1583,18 @@ if [ "$CLAUDE_PROFILE" = "minimal" ]; then
   else
     echo "  ✅ minimal profile 적용됨 (settings 1개, hooks 1개)"
   fi
+elif [ "$CLAUDE_PROFILE" = "strict" ]; then
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ strict profile 적용 예정 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+  else
+    echo "  ✅ strict profile 적용됨 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+  fi
+elif [ "$CLAUDE_PROFILE" = "team" ]; then
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ team profile 적용 예정 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+  else
+    echo "  ✅ team profile 적용됨 (settings 1개, hooks 3개, agents 4개, skills 5개)"
+  fi
 else
   if [ "$DRY_RUN" = true ]; then
     echo "  ✅ standard profile 적용 예정 (settings 1개, hooks 2개, agents 4개, skills 5개)"
@@ -1704,6 +1754,27 @@ else
   echo -e "  ${YELLOW}⚠ .github/copilot-instructions.md 이미 존재 — 건너뜀${NC}"
 fi
 
+if [ "$CLAUDE_PROFILE" = "team" ]; then
+  if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.github/pull_request_template.md" ]; then
+    backup_existing_path "$TARGET/.github/pull_request_template.md" ".github/pull_request_template.md"
+    run_copy "$SCRIPT_DIR/templates/pull_request_template.md.template" "$TARGET/.github/pull_request_template.md"
+    if [ "$DRY_RUN" = true ]; then
+      echo "  ✅ .github/pull_request_template.md 재생성 예정"
+    else
+      echo "  ✅ .github/pull_request_template.md 재생성됨"
+    fi
+  elif [ ! -f "$TARGET/.github/pull_request_template.md" ]; then
+    run_copy "$SCRIPT_DIR/templates/pull_request_template.md.template" "$TARGET/.github/pull_request_template.md"
+    if [ "$DRY_RUN" = true ]; then
+      echo "  ✅ .github/pull_request_template.md 생성 예정"
+    else
+      echo "  ✅ .github/pull_request_template.md 생성됨"
+    fi
+  else
+    echo -e "  ${YELLOW}⚠ .github/pull_request_template.md 이미 존재 — 건너뜀${NC}"
+  fi
+fi
+
 run_mkdir_p "$TARGET/docs"
 if [ ! -f "$TARGET/docs/decisions.md" ]; then
   run_copy "$SCRIPT_DIR/templates/decisions.md.template" "$TARGET/docs/decisions.md"
@@ -1733,6 +1804,22 @@ Claude 프로필 지침:
 EOF
 )
   AI_SKILL_TASK="4. minimal profile이므로 .claude/skills/ 관련 파일이 이미 없으면 새로 만들지 마. 존재하는 경우에만 {{중괄호}} 플레이스홀더를 프로젝트에 맞게 교체해."
+elif [ "$CLAUDE_PROFILE" = "strict" ]; then
+  AI_PROFILE_GUIDANCE=$(cat <<'EOF'
+Claude 프로필 지침:
+- 현재 프로젝트는 strict profile을 사용하므로 검증, 문서 동기화, feature branch 사용 원칙을 더 엄격하게 반영해.
+- main/master 직접 작업 대신 feature branch + PR 흐름을 자연스럽게 유도해.
+EOF
+)
+  AI_SKILL_TASK="4. .claude/skills/ 안의 SKILL.md 파일들에서 {{중괄호}} 플레이스홀더({{TEST_CMD}}, {{LINT_CMD}}, {{DEPLOY_BACKEND_CMD}} 등)를 프로젝트에 맞는 실제 명령어로 교체해줘."
+elif [ "$CLAUDE_PROFILE" = "team" ]; then
+  AI_PROFILE_GUIDANCE=$(cat <<'EOF'
+Claude 프로필 지침:
+- 현재 프로젝트는 team profile을 사용하므로 협업, PR 설명, 검증 기록이 드러나도록 문서를 정리해.
+- main/master 직접 작업 대신 feature branch + PR 흐름을 자연스럽게 유도해.
+EOF
+)
+  AI_SKILL_TASK="4. .claude/skills/ 안의 SKILL.md 파일들에서 {{중괄호}} 플레이스홀더({{TEST_CMD}}, {{LINT_CMD}}, {{DEPLOY_BACKEND_CMD}} 등)를 프로젝트에 맞는 실제 명령어로 교체해줘."
 else
   AI_PROFILE_GUIDANCE=$(cat <<'EOF'
 Claude 프로필 지침:
@@ -1782,8 +1869,9 @@ ${AI_PROFILE_GUIDANCE}
 2. GEMINI.md가 있으면 [대괄호] 부분을 채우고, Gemini CLI에서 참고할 핵심 지침이 CLAUDE.md / AGENTS.md와 모순되지 않게 정리해줘.
 3. .github/copilot-instructions.md가 있으면 GitHub Copilot이 바로 참고할 수 있도록 프로젝트 요약, build/test/lint 명령, 핵심 협업 규칙을 간결하게 정리해줘.
 ${AI_SKILL_TASK}
-5. 문서와 구현이 충돌하면 CLAUDE.md 끝에 '## Detected Mismatches' 섹션을 추가하고, 확인한 불일치를 짧게 정리해. 충돌이 없으면 이 섹션은 만들지 마.
-6. 확실하지 않은 내용은 사실처럼 단정하지 말고 TODO, 가정, 예정으로 표시해.
+5. .github/pull_request_template.md가 있으면 팀이 바로 쓸 수 있도록 유지하고, placeholder가 있다면 실제 검증/리스크 항목에 맞게 다듬어줘.
+6. 문서와 구현이 충돌하면 CLAUDE.md 끝에 '## Detected Mismatches' 섹션을 추가하고, 확인한 불일치를 짧게 정리해. 충돌이 없으면 이 섹션은 만들지 마.
+7. 확실하지 않은 내용은 사실처럼 단정하지 말고 TODO, 가정, 예정으로 표시해.
 EOF
 )
 
@@ -1868,6 +1956,16 @@ echo "  바로 사용 가능:"
 if [ "$CLAUDE_PROFILE" = "minimal" ]; then
   echo "    .claude/settings.json     — minimal hooks 2개 (파일보호, 포맷터)"
   echo "    .claude/hooks/            — 파일 보호"
+elif [ "$CLAUDE_PROFILE" = "strict" ]; then
+  echo "    .claude/settings.json     — strict hooks 6개 + branch 보호"
+  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + main/master 보호"
+  echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
+  echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
+elif [ "$CLAUDE_PROFILE" = "team" ]; then
+  echo "    .claude/settings.json     — team hooks 6개 + branch 보호"
+  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + main/master 보호"
+  echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
+  echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
 else
   echo "    .claude/settings.json     — hooks 6개 (포맷터, 파일보호, 명령차단, 알림, 테스트체크, 리마인더)"
   echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단"
@@ -1888,6 +1986,9 @@ if [ "$TEMPLATES_COPIED" = true ]; then
   echo "    AGENTS.md                 — 아키텍처/스택/코딩 규칙"
   echo "    GEMINI.md                 — Gemini CLI 프로젝트 컨텍스트"
   echo "    .github/copilot-instructions.md — GitHub Copilot 저장소 지침"
+  if [ "$CLAUDE_PROFILE" = "team" ]; then
+    echo "    .github/pull_request_template.md — 팀용 PR 템플릿"
+  fi
   echo "    docs/decisions.md         — 기술 의사결정 기록"
 fi
 if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then

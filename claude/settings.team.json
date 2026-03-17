@@ -1,0 +1,71 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-dangerous-commands.sh"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-main-branch.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(cat | jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ]; then case \"$FILE\" in *.py) cd \"$CLAUDE_PROJECT_DIR\" && uv run ruff format \"$FILE\" 2>/dev/null && uv run ruff check --fix \"$FILE\" 2>/dev/null ;; *.ts|*.tsx|*.js|*.jsx) cd \"$CLAUDE_PROJECT_DIR\" && npx prettier --write \"$FILE\" 2>/dev/null ;; esac; fi"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Check if the last task involved code changes. If so, verify: 1) Were tests run or clearly explained? 2) Were docs updated if behavior changed? 3) Should the PR template be updated with risks, rollout, or verification notes? If verification is missing, respond with {\"ok\": false, \"reason\": \"Please run the relevant tests, update the related docs, and prepare the PR context before finishing.\"}. Otherwise respond with {\"ok\": true}."
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Reminder: Read CLAUDE.md and AGENTS.md for project context. Work on a feature branch, use the PR template, run tests, and update docs before committing.\""
+          }
+        ]
+      }
+    ]
+  }
+}

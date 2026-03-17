@@ -15,6 +15,9 @@
 # Claude minimal profile로 가볍게 시작
 /path/to/ai-setting/init.sh --profile minimal /path/to/my-new-project
 
+# strict profile로 보호 장치 강화
+/path/to/ai-setting/init.sh --profile strict /path/to/my-new-project
+
 # 또는 현재 디렉토리에 적용
 cd my-new-project
 /path/to/ai-setting/init.sh .
@@ -76,6 +79,10 @@ init.sh 실행
 # Claude minimal profile 적용
 /path/to/ai-setting/init.sh --profile minimal /path/to/my-new-project
 
+# strict 또는 team profile 적용
+/path/to/ai-setting/init.sh --profile strict /path/to/my-new-project
+/path/to/ai-setting/init.sh --profile team /path/to/my-new-project
+
 # 웹 프로젝트: core + web
 /path/to/ai-setting/init.sh --mcp-preset web /path/to/my-new-project
 
@@ -115,12 +122,14 @@ init.sh 실행
 
 ### Claude 프로필
 
-기본값은 `standard`이며, 현재는 `standard`와 `minimal` 두 가지를 지원합니다.
+기본값은 `standard`이며, 현재는 `standard`, `minimal`, `strict`, `team` 네 가지를 지원합니다.
 
 | profile | 포함 내용 |
 |---------|-----------|
 | `standard` | 파일 보호, 위험 명령 차단, 자동 포맷, 알림, Stop 체크, agents 4개, skills 5개 |
 | `minimal` | 파일 보호, 자동 포맷만 활성화. managed agents/skills는 복사하지 않음 |
+| `strict` | `standard` + main/master 직접 git 작업 차단 hook |
+| `team` | `strict` + `.github/pull_request_template.md` 생성 |
 
 프로필 전환 시:
 - 기존 `.claude/`는 먼저 백업
@@ -146,6 +155,7 @@ init.sh 실행
 - `.claude/hooks/*` — 보호 파일 차단 + 위험 명령 차단
 - `.claude/agents/*` — 보안 리뷰, 설계 검증, 테스트 작성, 리서치
 - `.claude/skills/*` — 배포, 코드 리뷰, 이슈 수정, Gap 체크, 교차검증
+- `.claude/hooks/protect-main-branch.sh` — strict/team에서 main/master 직접 git 작업 차단
 - `.cursor/rules/ai-setting.mdc` — Cursor project-wide rule
 - `.gemini/settings.json` / `GEMINI.md` — Gemini CLI 컨텍스트
 - `.github/copilot-instructions.md` — GitHub Copilot 저장소 지침
@@ -274,6 +284,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 - `.codex/config.toml`이 이미 있으면 `.codex/config.toml.backup.TIMESTAMP`로 백업
 - `.mcp.json`이 이미 있으면 `.mcp.json.backup.TIMESTAMP`로 백업
 - `--profile minimal`로 전환하면 ai-setting이 관리하던 agents/skills는 정리되고 minimal 설정만 남음
+- `--profile strict` 또는 `--profile team`이면 branch 보호 hook이 함께 적용됨
 
 ### Doctor 모드
 
@@ -281,13 +292,14 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 진단 항목:
 - 필수 바이너리: `jq`, `npx`, `uvx`, `claude`, `codex`, `gemini`
-- 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
+- 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`(team), `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
 - `.mcp.json` JSON 유효성
 - 템플릿/skill placeholder 잔존 여부
 
 참고:
 - `blank-start` 모드에서는 템플릿/skill placeholder가 남아 있어도 정상으로 취급
 - `minimal` profile은 `block-dangerous-commands`와 managed skills 부재를 정상으로 취급
+- `strict/team` profile은 `protect-main-branch.sh`가 없으면 error
 - error가 있으면 종료 코드 `1`, error가 없으면 종료 코드 `0`
 
 ### Dry-run 모드
@@ -305,7 +317,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 동작:
 - `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md` 기준으로 비교
-- `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`도 포함
+- `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`도 포함
 - 실제 파일은 변경하지 않음
 - AI 자동 채우기 결과는 포함하지 않음
 
@@ -318,7 +330,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 동작:
 - `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`를 대상 프로젝트 아래 `.ai-setting.backup.TIMESTAMP/`로 백업
-- `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`도 함께 백업
+- `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`도 함께 백업
 - 이후 overwrite 단계에서는 개별 `.backup.*`를 중복 생성하지 않고 snapshot 포함 안내만 출력
 - `--dry-run`과 함께 쓰면 snapshot 생성 예정만 출력
 
@@ -327,11 +339,11 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 ### Reapply 모드
 
-`init.sh --reapply /path/to/project`로 `CLAUDE.md`와 `AGENTS.md`를 fresh template 기준으로 다시 생성하고 AI 자동 채우기를 다시 실행할 수 있습니다.
+`init.sh --reapply /path/to/project`로 프로젝트 문서 템플릿을 fresh template 기준으로 다시 생성하고 AI 자동 채우기를 다시 실행할 수 있습니다.
 
 동작:
 - 기존 `CLAUDE.md`, `AGENTS.md`는 backup 후 새 템플릿으로 재생성
-- 기존 `GEMINI.md`, `.github/copilot-instructions.md`도 backup 후 새 템플릿으로 재생성
+- 기존 `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`(team)도 backup 후 새 템플릿으로 재생성
 - 이후 AI 자동 채우기 단계가 다시 실행됨
 - `.claude`, `.codex`, `.mcp.json`은 기존처럼 최신 설정으로 다시 적용
 - `docs/decisions.md`는 사용자 기록 파일로 보고 유지
@@ -353,9 +365,12 @@ ai-setting/
 ├── claude/
 │   ├── settings.json                      # standard profile 템플릿
 │   ├── settings.minimal.json              # minimal profile 템플릿
+│   ├── settings.strict.json               # strict profile 템플릿
+│   ├── settings.team.json                 # team profile 템플릿
 │   ├── hooks/
 │   │   ├── protect-files.sh               # 민감 파일 편집 차단 (20개 패턴)
-│   │   └── block-dangerous-commands.sh    # 위험 명령어 차단 (14개 패턴)
+│   │   ├── block-dangerous-commands.sh    # 위험 명령어 차단 (14개 패턴)
+│   │   └── protect-main-branch.sh         # main/master 직접 git 작업 차단
 │   ├── agents/
 │   │   ├── security-reviewer.md           # 보안 리뷰 (읽기 전용, opus)
 │   │   ├── architect-reviewer.md          # 설계 검증 (읽기 전용, opus)
@@ -379,6 +394,7 @@ ai-setting/
 │   ├── AGENTS.md.template                 # [대괄호]만 채우면 됨
 │   ├── GEMINI.md.template                 # Gemini CLI 컨텍스트 템플릿
 │   ├── copilot-instructions.md.template   # Copilot 저장소 지침 템플릿
+│   ├── pull_request_template.md.template  # team profile용 PR 템플릿
 │   └── decisions.md.template              # 기술 의사결정 기록
 └── README.md
 ```

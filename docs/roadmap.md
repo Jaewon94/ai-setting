@@ -11,7 +11,7 @@
 - [x] Priority 3: `doctor / dry-run / diff / backup-all / reapply` 도입
 - [x] Phase 1: 멀티 도구 지원
 - [ ] Phase 2: 동기화 시스템
-- [ ] Phase 3: 프로필 시스템 고도화
+- [x] Phase 3: 프로필 시스템 고도화
 - [ ] Phase 4: 플러그인 마켓플레이스
 
 ## Priority 0: 프로젝트 로컬 MCP 도입
@@ -330,7 +330,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - Safety: `doctor`, `dry-run`, `diff`, `backup-all`, `reapply`
 - Detection: `blank-start / docs-first / hybrid / code-first`, archetype / stack 자동 감지, `--auto-mcp`
 - Templates: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `docs/decisions.md`
-- 현재 한계: 동기화 시스템 미구현, `strict/team` profile 미구현, 플러그인/배포 경로 미구현
+- 현재 한계: 동기화 시스템 미구현, 플러그인/배포 경로 미구현
 
 ---
 
@@ -417,10 +417,11 @@ cd ~/.ai-setting && git pull
 > "프로젝트 성격에 따라 다른 설정을 적용한다"
 
 현재 상태:
-- `init.sh --profile standard|minimal` 1차 지원
+- `init.sh --profile standard|minimal|strict|team` 지원
 - `standard`는 기존 전체 설정을 유지
 - `minimal`은 `protect-files + auto-format`만 활성화하고 managed agents/skills는 복사하지 않음
-- `strict`, `team`은 아직 로드맵 단계
+- `strict`는 branch 보호 hook을 추가
+- `team`은 `strict` 기반 + PR 템플릿 생성
 
 ### 프로필 구조
 ```
@@ -439,11 +440,9 @@ ai-setting/
 | protect-files hook | ✅ | ✅ | ✅ | ✅ |
 | block-commands hook | — | ✅ | ✅ | ✅ |
 | auto-format hook | ✅ | ✅ | ✅ | ✅ |
-| test-check (Stop) | — | ✅ | ✅ | ✅ |
-| security-reviewer | — | ✅ | ✅ | ✅ |
-| architect-reviewer | — | ✅ | ✅ | ✅ |
-| gap-check skill | — | ✅ | ✅ | ✅ |
-| cross-validate skill | — | — | ✅ | ✅ |
+| notification / stop / reminder | — | ✅ | ✅ | ✅ |
+| agents 4개 | — | ✅ | ✅ | ✅ |
+| skills 5개 | — | ✅ | ✅ | ✅ |
 | branch 보호 hook | — | — | ✅ | ✅ |
 | PR 템플릿 | — | — | — | ✅ |
 
@@ -455,9 +454,8 @@ init.sh /path/to/project
 # 프로필 지정
 init.sh --profile minimal /path/to/project
 init.sh --profile standard /path/to/project
-
-# 이후 확장 예정
 init.sh --profile strict /path/to/project
+init.sh --profile team /path/to/project
 ```
 
 - **난이도**: 중간
