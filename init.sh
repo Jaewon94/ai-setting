@@ -20,11 +20,14 @@ RUN_TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 
 usage() {
   cat <<'EOF'
-사용법: init.sh [옵션] [프로젝트 경로]
+사용법:
+  init.sh [옵션] [프로젝트 경로]
+  init.sh update [옵션] [프로젝트 경로]
 
 옵션:
   --profile PROFILE        Claude Code 프로필 지정 (standard|minimal|strict|team)
   --link                   공유 가능한 설정 자산을 복사 대신 심링크로 연결
+  --update                 AI 자동 채우기 없이 공유 자산/MCP를 최신 상태로 갱신
   --doctor                 현재 프로젝트 설정 상태 진단
   --dry-run                실제 변경 없이 예정 작업만 출력
   --diff                   실제 변경 없이 관리 대상 파일 diff 출력
@@ -1417,6 +1420,15 @@ EOF
 EOF
 }
 
+# 서브커맨드 전처리
+UPDATE_MODE=false
+if [ "${1:-}" = "update" ]; then
+  UPDATE_MODE=true
+  shift
+elif [ "${1:-}" = "init" ]; then
+  shift
+fi
+
 # 옵션 파싱
 DOCTOR_MODE=false
 DRY_RUN=false
@@ -1452,6 +1464,9 @@ while [ "$#" -gt 0 ]; do
       ;;
     --link)
       LINK_MODE=true
+      ;;
+    --update)
+      UPDATE_MODE=true
       ;;
     --dry-run)
       DRY_RUN=true
@@ -1555,6 +1570,11 @@ if [ "$MODE_COUNT" -gt 1 ]; then
   usage
   exit 1
 fi
+if [ "$UPDATE_MODE" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = true ]; }; then
+  echo -e "${RED}오류: update 모드는 --doctor 또는 --diff와 함께 사용할 수 없습니다${NC}" >&2
+  usage
+  exit 1
+fi
 if [ "$BACKUP_ALL" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = true ]; }; then
   echo -e "${RED}오류: --backup-all은 --doctor 또는 --diff와 함께 사용할 수 없습니다${NC}" >&2
   usage
@@ -1572,6 +1592,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TARGET="${TARGET:-.}"
 TARGET="$(cd "$TARGET" && pwd)"
 TARGET_BASENAME="$(basename "$TARGET")"
+
+if [ "$UPDATE_MODE" = true ]; then
+  SKIP_AI=true
+fi
+
 detect_project_context_mode "$TARGET"
 detect_project_stack "$TARGET"
 detect_project_archetype "$TARGET"
@@ -1624,6 +1649,9 @@ if [ "$AUTO_MCP" = true ]; then
   else
     echo -e "MCP 자동 추천 적용: 요청됨 (명시 preset 또는 --no-mcp 우선)"
   fi
+fi
+if [ "$UPDATE_MODE" = true ]; then
+  echo -e "명령 모드: update"
 fi
 if [ "$DRY_RUN" = true ]; then
   echo -e "실행 모드: dry-run"
@@ -2000,7 +2028,9 @@ ${AI_SKILL_TASK}
 EOF
 )
 
-if [ "$SKIP_AI" = true ]; then
+if [ "$UPDATE_MODE" = true ]; then
+  echo -e "  ${YELLOW}update 모드에서는 AI 자동 채우기를 건너뜁니다${NC}"
+elif [ "$SKIP_AI" = true ]; then
   echo -e "  ${YELLOW}--skip-ai 옵션으로 건너뜀${NC}"
 elif [ "$DRY_RUN" = true ]; then
   echo -e "  ${YELLOW}--dry-run 모드에서는 AI 자동 채우기를 실행하지 않습니다${NC}"
@@ -2145,5 +2175,9 @@ fi
 if [ "$DRY_RUN" = true ]; then
   echo ""
   echo "  dry-run: 실제 파일 변경은 적용되지 않았습니다"
+fi
+if [ "$UPDATE_MODE" = true ]; then
+  echo ""
+  echo "  update: 공유 자산, Codex 설정, 로컬 MCP만 최신 상태로 갱신했습니다"
 fi
 echo ""

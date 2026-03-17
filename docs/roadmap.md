@@ -327,7 +327,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - Claude Code: `standard` / `minimal` profile, hooks, agents 4개, skills 5개
 - Multi-tool: Cursor, Gemini CLI, GitHub Copilot 1차 지원
 - Codex: `config.toml` + 프로젝트 로컬 MCP preset
-- Sync: `--link`로 공유 가능한 자산 심링크 연결 1차 지원
+- Sync: `--link` 공유 자산 심링크 + `update` 갱신 모드 1차 지원
 - Safety: `doctor`, `dry-run`, `diff`, `backup-all`, `reapply`
 - Detection: `blank-start / docs-first / hybrid / code-first`, archetype / stack 자동 감지, `--auto-mcp`
 - Templates: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `docs/decisions.md`
@@ -382,9 +382,10 @@ init.sh 실행 후:
 
 현재 상태:
 - `init.sh --link` 1차 지원
+- `init.sh update /path/to/project` 1차 지원
 - `.claude/settings.json`, hooks, agents, skills, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`은 심링크로 연결 가능
 - 프로젝트별 문서(`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Copilot 문서), `.codex/config.toml`, `.mcp.json`은 계속 로컬 파일로 유지
-- 전체 디렉토리 단위 심링크와 `update` 명령은 아직 미구현
+- 전체 디렉토리 단위 심링크와 별도 독립 CLI `update` 명령은 아직 미구현
 
 ### 2-1. Symlink 기반 동기화 (stow 패턴)
 현재 방식 (복사):
@@ -411,7 +412,7 @@ ai-setting/ --cp--> project-a/.claude/
 ### 2-2. 업데이트 명령
 ```bash
 # 원본이 업데이트된 후 프로젝트에 반영
-ai-setting update /path/to/project
+init.sh update /path/to/project
 
 # 또는 심링크 모드에서는 git pull만 하면 됨
 cd ~/.ai-setting && git pull

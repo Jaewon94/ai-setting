@@ -23,6 +23,9 @@
 # 공유 자산은 심링크로, 프로젝트 문서는 로컬 파일로 유지
 /path/to/ai-setting/init.sh --link /path/to/my-new-project
 
+# 기존 프로젝트의 공유 자산/MCP만 빠르게 업데이트
+/path/to/ai-setting/init.sh update /path/to/my-new-project
+
 # 또는 현재 디렉토리에 적용
 cd my-new-project
 /path/to/ai-setting/init.sh .
@@ -90,6 +93,9 @@ init.sh 실행
 
 # 공유 가능한 설정 자산을 심링크로 연결
 /path/to/ai-setting/init.sh --link /path/to/my-new-project
+
+# AI 자동 채우기 없이 shared assets / MCP만 갱신
+/path/to/ai-setting/init.sh update /path/to/my-new-project
 
 # 웹 프로젝트: core + web
 /path/to/ai-setting/init.sh --mcp-preset web /path/to/my-new-project
@@ -166,6 +172,21 @@ init.sh 실행
 이렇게 나누는 이유:
 - 위 파일들은 프로젝트별로 내용이 달라지거나 init 과정에서 추가 생성/수정이 필요함
 - 반대로 hooks, agents, skills, tool settings는 원본과 동기화될수록 이점이 큼
+
+### Update 모드
+
+`init.sh update /path/to/project`는 기존 프로젝트를 안전하게 최신 설정으로 맞추기 위한 명시적 갱신 모드입니다.
+
+동작:
+- 공유 자산(`.claude`, `.cursor`, `.gemini`) 최신화
+- `.codex/config.toml`, `.mcp.json` 최신화
+- 기존 `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Copilot 문서는 그대로 유지
+- AI 자동 채우기는 실행하지 않음
+
+추천 상황:
+- ai-setting 저장소를 pull 한 뒤 기존 프로젝트 설정만 다시 맞추고 싶을 때
+- 프로젝트별 문서는 건드리지 않고 공통 규칙/훅/에이전트만 갱신하고 싶을 때
+- `--link` 모드와 함께 써서 링크 + 로컬 설정 갱신을 같이 맞추고 싶을 때
 
 ### 멀티 도구 지원
 
