@@ -140,6 +140,15 @@ join_existing_paths() {
 
 set_project_mode_guidance() {
   case "$PROJECT_CONTEXT_MODE" in
+    blank-start)
+      PROJECT_MODE_GUIDANCE=$(cat <<'EOF'
+blank-start 모드 지침:
+- 프로젝트 근거가 거의 없으므로 확인 가능한 사실만 남겨.
+- 스택, 실행 명령, 도메인 규칙은 추정해서 채우지 마.
+- 자동 채우기보다 안전한 초기화가 우선이며, 실제 문서나 코드가 생긴 뒤 재실행을 전제로 안내해.
+EOF
+)
+      ;;
     docs-first)
       PROJECT_MODE_GUIDANCE=$(cat <<'EOF'
 docs-first 모드 지침:
@@ -345,6 +354,53 @@ detect_project_archetype() {
 
 detect_project_context_mode() {
   local base="$1"
+  local blank_start_markers=(
+    "README.md"
+    "spec"
+    "specs"
+    "prd"
+    "requirements"
+    "docs/architecture.md"
+    "docs/requirements.md"
+    "docs/product.md"
+    "docs/specs"
+    "docs/prd.md"
+    "package.json"
+    "pyproject.toml"
+    "go.mod"
+    "Cargo.toml"
+    "pom.xml"
+    "build.gradle"
+    "build.gradle.kts"
+    "requirements.txt"
+    "Gemfile"
+    "composer.json"
+    "src"
+    "app"
+    "backend"
+    "frontend"
+    "server"
+    "client"
+    "cmd"
+    "bin"
+    "lib"
+    "internal"
+    "tests"
+    "test"
+    "__tests__"
+    ".github/workflows"
+    "Dockerfile"
+    "docker-compose.yml"
+    "docker-compose.yaml"
+    "compose.yaml"
+    "compose.yml"
+    ".env.example"
+    "deploy"
+    "infra"
+    "terraform"
+    "ansible"
+    "helm"
+  )
   local doc_markers=(
     "README.md"
     "docs"
@@ -402,6 +458,9 @@ detect_project_context_mode() {
   )
   local manifest_count
   local code_dir_count
+  local blank_start_signal_count
+
+  blank_start_signal_count="$(count_existing_paths "$base" "${blank_start_markers[@]}")"
 
   DOC_SIGNAL_COUNT="$(count_existing_paths "$base" "${doc_markers[@]}")"
   PROJECT_DOC_SIGNALS="$(join_existing_paths "$base" "${doc_markers[@]}")"
@@ -417,7 +476,10 @@ detect_project_context_mode() {
   OPS_SIGNAL_COUNT="$(count_existing_paths "$base" "${ops_markers[@]}")"
   PROJECT_OPS_SIGNALS="$(join_existing_paths "$base" "${ops_markers[@]}")"
 
-  if [ "$IMPLEMENTATION_SIGNAL_COUNT" -le 1 ] && [ "$DOC_SIGNAL_COUNT" -ge 2 ]; then
+  if [ "$blank_start_signal_count" -eq 0 ]; then
+    PROJECT_CONTEXT_MODE="blank-start"
+    PROJECT_CONTEXT_REASON="프로젝트 폴더에 의미 있는 문서/구현 신호가 거의 없음"
+  elif [ "$IMPLEMENTATION_SIGNAL_COUNT" -le 1 ] && [ "$DOC_SIGNAL_COUNT" -ge 2 ]; then
     PROJECT_CONTEXT_MODE="docs-first"
     PROJECT_CONTEXT_REASON="문서 신호가 충분하고 실행 가능한 구현 신호가 적음"
   elif [ "$IMPLEMENTATION_SIGNAL_COUNT" -ge 4 ] || \
@@ -757,6 +819,10 @@ EOF
 
 if [ "$SKIP_AI" = true ]; then
   echo -e "  ${YELLOW}--skip-ai 옵션으로 건너뜀${NC}"
+elif [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then
+  echo "  mode: ${PROJECT_CONTEXT_MODE} (${PROJECT_CONTEXT_REASON})"
+  echo -e "  ${YELLOW}프로젝트 근거가 거의 없어 AI 자동 채우기를 건너뜁니다${NC}"
+  echo "  README, package.json, pyproject.toml, src/ 같은 신호가 생긴 뒤 다시 실행하세요"
 elif [ "$TEMPLATES_COPIED" = false ]; then
   echo -e "  ${YELLOW}새 템플릿이 없음 (이미 존재) — 건너뜀${NC}"
 else
@@ -832,5 +898,10 @@ if [ "$TEMPLATES_COPIED" = true ]; then
   echo "    CLAUDE.md                 — 프로젝트 빌드/실행/도메인 설정"
   echo "    AGENTS.md                 — 아키텍처/스택/코딩 규칙"
   echo "    docs/decisions.md         — 기술 의사결정 기록"
+fi
+if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then
+  echo ""
+  echo "  다음 단계 추천:"
+  echo "    README.md 또는 프로젝트 manifest/package 파일을 추가한 뒤 init.sh를 다시 실행"
 fi
 echo ""

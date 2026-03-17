@@ -114,10 +114,11 @@ claude "CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 채워줘"
 
 ### 프로젝트 해석 모드 자동 감지
 
-`init.sh`는 AI 자동 채우기 전에 프로젝트 상태를 아래 3가지 중 하나로 분류합니다.
+`init.sh`는 AI 자동 채우기 전에 프로젝트 상태를 아래 4가지 중 하나로 분류합니다.
 
 | 모드 | 기준 | 동작 |
 |------|------|------|
+| `blank-start` | 문서/구현/테스트 신호가 거의 없음 | 템플릿과 설정만 안전하게 생성하고 AI 자동 채우기는 건너뜀 |
 | `docs-first` | 문서 신호가 충분하고 구현 신호가 적음 | 문서를 우선 근거로 사용하고 미구현 내용은 TODO/가정으로 남김 |
 | `hybrid` | 문서와 구현 신호가 모두 있음 | 코드/설정을 먼저 보고 문서는 의도 보완용으로 사용 |
 | `code-first` | 코드/설정/테스트 신호가 풍부함 | 실제 구현 상태를 우선으로 해석하고 문서와 충돌 시 차이를 드러냄 |
@@ -126,6 +127,12 @@ claude "CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 채워줘"
 - 문서: `README.md`, `docs/`, `spec/`, `prd/`, `requirements/`
 - 구현: `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `src/`, `app/`, `backend/`, `frontend/`
 - 테스트/운영: `tests/`, `.github/workflows/`, `Dockerfile`, `compose.yaml`, `.env.example`
+
+빈 폴더에서 먼저 실행하면:
+- `blank-start`로 감지
+- `.claude`, `.codex`, `.mcp.json`, 템플릿은 생성
+- `CLAUDE.md`, `AGENTS.md`는 과추론 없이 그대로 두고 AI 자동 채우기는 건너뜀
+- 이후 `README.md`, `package.json`, `pyproject.toml`, `src/` 같은 신호가 생긴 뒤 다시 실행하면 됨
 
 ### 프로젝트 유형과 스택 자동 감지
 
