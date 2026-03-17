@@ -25,6 +25,7 @@ usage() {
 옵션:
   --doctor                 현재 프로젝트 설정 상태 진단
   --dry-run                실제 변경 없이 예정 작업만 출력
+  --diff                   실제 변경 없이 관리 대상 파일 diff 출력
   --project-name NAME      프로젝트 이름 힌트 제공
   --archetype TYPE         프로젝트 archetype 힌트 제공
   --stack NAME             주 스택 힌트 제공
@@ -194,6 +195,105 @@ run_doctor() {
     return 1
   fi
 
+  return 0
+}
+
+run_diff_preview() {
+  local target="$1"
+  local staging_dir
+  local diff_found=false
+  local managed_path
+  local left_path
+  local right_path
+  local diff_output
+  local status
+  local internal_log
+  local -a managed_paths
+  local -a internal_args
+
+  managed_paths=(".claude" ".codex/config.toml" "CLAUDE.md" "AGENTS.md" "docs/decisions.md")
+  if [ "$MCP_ENABLED" = true ]; then
+    managed_paths+=(".mcp.json")
+  fi
+
+  staging_dir="$(mktemp -d)"
+  internal_log="$(mktemp)"
+
+  cp -R "$target/." "$staging_dir/" 2>/dev/null || true
+
+  internal_args=("--skip-ai")
+  if [ "$MCP_ENABLED" = false ]; then
+    internal_args+=("--no-mcp")
+  else
+    internal_args+=("--mcp-preset" "$MCP_PRESET_LABEL")
+  fi
+
+  if [ -n "$USER_PROJECT_NAME_HINT" ]; then
+    internal_args+=("--project-name" "$USER_PROJECT_NAME_HINT")
+  fi
+  if [ -n "$USER_ARCHETYPE_HINT" ]; then
+    internal_args+=("--archetype" "$USER_ARCHETYPE_HINT")
+  fi
+  if [ -n "$USER_STACK_HINT" ]; then
+    internal_args+=("--stack" "$USER_STACK_HINT")
+  fi
+  internal_args+=("$staging_dir")
+
+  if ! "$SCRIPT_DIR/init.sh" "${internal_args[@]}" >"$internal_log" 2>&1; then
+    echo -e "${RED}diff preview 생성 실패${NC}" >&2
+    cat "$internal_log" >&2
+    rm -rf "$staging_dir"
+    rm -f "$internal_log"
+    return 1
+  fi
+
+  echo -e "${CYAN}━━━ AI Setting Diff ━━━${NC}"
+  echo -e "대상: ${target}"
+  echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
+  echo -e "프로젝트 유형: ${PROJECT_ARCHETYPE}"
+  echo -e "주 스택: ${PROJECT_STACK}"
+  echo ""
+
+  for managed_path in "${managed_paths[@]}"; do
+    left_path="$target/$managed_path"
+    right_path="$staging_dir/$managed_path"
+
+    if [ ! -e "$left_path" ] && [ ! -e "$right_path" ]; then
+      continue
+    fi
+
+    set +e
+    diff_output="$(diff -ruN "$left_path" "$right_path" 2>&1)"
+    status=$?
+    set -e
+
+    if [ "$status" -eq 0 ]; then
+      continue
+    fi
+
+    if [ "$status" -ne 1 ]; then
+      echo -e "${RED}diff 출력 실패: ${managed_path}${NC}" >&2
+      echo "$diff_output" >&2
+      rm -rf "$staging_dir"
+      rm -f "$internal_log"
+      return 1
+    fi
+
+    diff_found=true
+    echo ""
+    echo "### ${managed_path}"
+    echo "$diff_output" | sed "s|$target/|current/|g; s|$target$|current|g; s|$staging_dir/|preview/|g; s|$staging_dir$|preview|g"
+  done
+
+  if [ "$diff_found" = false ]; then
+    echo "변경될 관리 대상 파일이 없습니다."
+  fi
+
+  echo ""
+  echo "참고: diff preview는 AI 자동 채우기 결과를 포함하지 않습니다."
+
+  rm -rf "$staging_dir"
+  rm -f "$internal_log"
   return 0
 }
 
@@ -876,6 +976,7 @@ EOF
 # 옵션 파싱
 DOCTOR_MODE=false
 DRY_RUN=false
+DIFF_MODE=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
@@ -891,6 +992,9 @@ while [ "$#" -gt 0 ]; do
       ;;
     --dry-run)
       DRY_RUN=true
+      ;;
+    --diff)
+      DIFF_MODE=true
       ;;
     --project-name)
       if [ -z "${2:-}" ]; then
@@ -962,6 +1066,22 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
+MODE_COUNT=0
+if [ "$DOCTOR_MODE" = true ]; then
+  MODE_COUNT=$((MODE_COUNT + 1))
+fi
+if [ "$DRY_RUN" = true ]; then
+  MODE_COUNT=$((MODE_COUNT + 1))
+fi
+if [ "$DIFF_MODE" = true ]; then
+  MODE_COUNT=$((MODE_COUNT + 1))
+fi
+if [ "$MODE_COUNT" -gt 1 ]; then
+  echo -e "${RED}오류: --doctor, --dry-run, --diff 중 하나만 사용할 수 있습니다${NC}" >&2
+  usage
+  exit 1
+fi
+
 # ai-setting 디렉토리 (이 스크립트가 있는 곳)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -981,6 +1101,14 @@ fi
 
 if [ "$DOCTOR_MODE" = true ]; then
   if run_doctor "$TARGET"; then
+    exit 0
+  else
+    exit 1
+  fi
+fi
+
+if [ "$DIFF_MODE" = true ]; then
+  if run_diff_preview "$TARGET"; then
     exit 0
   else
     exit 1

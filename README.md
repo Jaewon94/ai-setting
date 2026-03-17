@@ -83,6 +83,9 @@ init.sh 실행
 # 실제 변경 없이 예정 작업만 확인
 /path/to/ai-setting/init.sh --dry-run /path/to/my-new-project
 
+# 실제 변경 없이 관리 대상 diff 확인
+/path/to/ai-setting/init.sh --diff /path/to/my-new-project
+
 # 빈 프로젝트에서 의도 힌트와 함께 시작
 /path/to/ai-setting/init.sh --project-name my-api --archetype backend-api --stack Python /path/to/my-new-project
 
@@ -235,6 +238,18 @@ blank-start에서도 의도를 미리 줄 수 있음:
 - 생성/덮어쓰기/백업 예정 파일과 디렉토리를 출력
 - AI 자동 채우기는 실행하지 않음
 - 종료 후 실제 파일은 전혀 변경되지 않음
+
+### Diff 모드
+
+`init.sh --diff /path/to/project`로 현재 상태와 init 적용 결과의 차이를 unified diff 형태로 볼 수 있습니다.
+
+동작:
+- `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md` 기준으로 비교
+- 실제 파일은 변경하지 않음
+- AI 자동 채우기 결과는 포함하지 않음
+
+참고:
+- `--doctor`, `--dry-run`, `--diff`는 동시에 사용할 수 없음
 
 ---
 
