@@ -507,6 +507,11 @@ init.sh --profile team /path/to/project
 
 > "더 똑똑한 자동화"
 
+현재 상태:
+- `strict` / `team` 프로필에 branch 보호 hook 적용 완료
+- `standard` / `strict` / `team` 프로필에 compact 대응용 `session-context` hook 1차 적용
+- 비동기 테스트, 팀 알림, 전용 PreCompact 백업은 아직 미구현
+
 ### 5-1. 브랜치 보호 hook
 ```bash
 # main/master 브랜치에 직접 커밋 차단

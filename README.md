@@ -40,7 +40,7 @@ cd my-new-project
 [1/7] Claude Code 설정 복사 (.claude/)
   ⚠ .claude/ 이미 존재 — 백업 후 덮어쓰기
   📦 백업: /path/to/project/.claude.backup.20260317120000
-  ✅ standard profile 적용됨 (settings 1개, hooks 2개, agents 4개, skills 5개)
+  ✅ standard profile 적용됨 (settings 1개, hooks 3개, agents 4개, skills 5개)
 [2/7] Cursor / Gemini / Copilot 설정 복사
   ✅ Cursor rule 적용됨 (.cursor/rules/ai-setting.mdc)
   ✅ Gemini settings 적용됨 (.gemini/settings.json)
@@ -440,7 +440,8 @@ ai-setting/
 │   ├── hooks/
 │   │   ├── protect-files.sh               # 민감 파일 편집 차단 (20개 패턴)
 │   │   ├── block-dangerous-commands.sh    # 위험 명령어 차단 (14개 패턴)
-│   │   └── protect-main-branch.sh         # main/master 직접 git 작업 차단
+│   │   ├── protect-main-branch.sh         # main/master 직접 git 작업 차단
+│   │   └── session-context.sh             # compact 대비용 컨텍스트 스냅샷
 │   ├── agents/
 │   │   ├── security-reviewer.md           # 보안 리뷰 (읽기 전용, opus)
 │   │   ├── architect-reviewer.md          # 설계 검증 (읽기 전용, opus)
@@ -479,6 +480,7 @@ ai-setting/
 |------|------|------|
 | **protect-files.sh** | 파일 편집 전 | .env, lock, .git, 인증키, 빌드산출물 편집 차단 |
 | **block-dangerous-commands.sh** | Bash 실행 전 | rm -rf, sudo, force push, DROP TABLE 등 차단 |
+| **session-context.sh** | Stop / SessionStart(compact) | compact 대비용 프로젝트 컨텍스트 스냅샷 갱신 및 복원 |
 | **auto-format** | 파일 편집 후 | Python→ruff, TS/JS→prettier 자동 포맷 |
 | **test-check** | 작업 완료 시 | 코드 변경 후 테스트 실행 여부 확인 |
 | **notification** | 입력 필요 시 | macOS 데스크톱 알림 |
