@@ -1,662 +1,322 @@
 # ai-setting 고도화 로드맵
 
-> 현재 상태: init.sh로 Claude Code + Codex 설정 복사 + AI 자동 채우기
-> 목표: 프로젝트 로컬 MCP, 문서/구현 분기, 다양한 언어/프레임워크/프로젝트 유형 지원, 멀티 AI 도구 지원, 자동 동기화, 프로필 시스템
+---
 
-## 완료 체크
+## 1차 고도화 (✅ 완료)
+
+> v0.1.0 → v1.0.0
+> 기본 부트스트랩 도구에서 멀티 도구 · 프로필 · 동기화 · 플러그인 · 배포까지 갖춘 완성된 설정 자동화 도구로 확장
+
+### 완료 체크
 
 - [x] Priority 0: 프로젝트 로컬 MCP preset 도입
 - [x] Priority 1: `blank-start / docs-first / hybrid / code-first` 분기 도입
-- [x] Priority 2: archetype / stack 자동 감지 1차 도입
+- [x] Priority 2: archetype / stack 자동 감지
 - [x] Priority 3: `doctor / dry-run / diff / backup-all / reapply` 도입
-- [x] Phase 1: 멀티 도구 지원
-- [x] Phase 2: 동기화 시스템
-- [x] Phase 3: 프로필 시스템 고도화
-- [x] Phase 4: 플러그인 마켓플레이스
-- [x] Phase 5: 고급 hooks 1차
-- [x] Phase 6: 커뮤니티 & 배포
-
-## Priority 0: 프로젝트 로컬 MCP 도입
-
-> "글로벌에만 있던 MCP를 새 프로젝트에서도 바로 쓴다"
-
-### 왜 이걸 먼저 하나
-
-현재 `ai-setting`은 Claude/Codex 기본 설정 파일은 프로젝트에 복사하지만, MCP는 사용자 글로벌 환경에 남아 있어 새 프로젝트마다 재현성이 떨어진다.
-
-- 같은 저장소를 받아도 사람마다 쓸 수 있는 MCP 구성이 달라질 수 있음
-- "이 프로젝트에서는 어떤 MCP를 기본으로 쓰는지"가 문서/설정에 남지 않음
-- 매번 글로벌 설정을 수동으로 맞춰야 해서 온보딩 비용이 큼
-
-따라서 고도화 1순위는 "이 프로젝트가 기본 제공하는 로컬 MCP preset"을 도입하는 것이다.
-
-### 설계 결론 (1차)
-
-- `init.sh`가 프로젝트 로컬 MCP 설정도 함께 생성한다
-- 사용자 글로벌 설정을 읽어 복사하지 않고, 이 저장소가 소유한 템플릿/preset을 기준으로 생성한다
-- Codex는 `.codex/config.toml`의 `mcp_servers.*`를 통해 관리한다
-- Claude Code는 프로젝트 루트의 `.mcp.json`을 통해 팀 공유 가능한 project-scoped MCP 구성을 제공하는 방향으로 간다
-- 1차는 "API 키 없이 바로 사용할 수 있는 MCP"만 포함한다
-
-이 원칙으로 가면 결과가 항상 동일하고, 새 프로젝트를 만든 뒤 바로 재현 가능한 기본 환경을 제공할 수 있다.
-
-### 1차 포함 범위
-
-| preset | 서버 | 기본 포함 | 메모 |
-|--------|------|-----------|------|
-| `core` | `sequential-thinking` | ✅ | 거의 모든 프로젝트에 공통으로 유용 |
-| `core` | `serena` | ✅ | 코드 심볼 탐색/리팩토링에 유용 |
-| `core` | `upstash-context-7-mcp` | ✅ | 공식 문서 조회용 |
-| `web` | `playwright` | 선택 | 웹/프론트 프로젝트에만 기본 추천 |
-| `infra` | `docker` | 선택 | Docker 기반 프로젝트에서만 추천 |
-
-기본 동작은 `core` 자동 포함, 필요 시 `web`, `infra`를 추가 선택하는 구조를 목표로 한다.
-
-### 제외 / 보류
-
-- 제외: `brave-search`
-  - 이유: 현재 글로벌 설정에서 API 키가 필요하므로 1차 원칙과 맞지 않음
-- 보류: `filesystem`
-  - 이유: 키는 없지만 허용 루트/경로 스코프 설계를 같이 해야 해서 1차 범위로 넣기에는 보안/운영 판단이 더 필요함
-
-### 후보 옵션 MCP (프로젝트 특화)
-
-기본 preset과 별도로, 프로젝트 성격이 맞을 때만 붙일 후보 옵션은 아래처럼 관리한다.
-
-| 분류 | MCP | 상태 | 메모 |
-|------|-----|------|------|
-| `frontend-addon` | `Agentation` | 후보 | React 18+ 앱 코드에 개발용 컴포넌트를 직접 심어야 하므로 공통 preset이 아니라 React/Next 전용 addon이 적합 |
-| `web-debug` | `Chrome DevTools MCP` | 후보 | 브라우저 디버깅/네트워크/퍼포먼스 점검에 유용, Playwright와 성격이 다름 |
-| `next-addon` | `Next.js DevTools MCP` | 후보 | Next.js 프로젝트 한정으로 가치가 높음 |
-| `local-tools` | `git` | 후보 | 로컬 repo 분석/조작에 유용하지만 권한 정책을 먼저 정해야 함 |
-| `local-tools` | `fetch` | 후보 | 단순 문서/웹 페이지 수집용, 기존 검색/브라우저 도구와 역할 중복 가능 |
-| `local-tools` | `filesystem` | 보류 | 가장 유용할 수 있지만 허용 루트 정책 설계가 선행되어야 함 |
-| `low-priority` | `memory`, `time` | 보류 | 무키/재현성은 좋지만 대부분 프로젝트에서 체감 가치가 낮음 |
-
-### 구현 계획
-
-1. Codex/Claude의 프로젝트 로컬 MCP 설정 방식과 공유 범위를 공식 문서 기준으로 확정한다.
-2. 이 저장소 내부에 MCP preset 템플릿 구조를 만든다.
-3. `init.sh`에 MCP 생성 단계를 추가한다.
-4. 기본값은 `core` 자동 포함으로 두고, `web`, `infra`는 선택 옵션으로 연동한다.
-5. README와 로드맵에 preset, 제외 항목, 선행 조건(`npx`, `uvx`, Docker 등)을 문서화한다.
-6. 임시 프로젝트에서 초기화 후 Codex/Claude 양쪽 모두에서 설정 파일이 기대한 위치에 생성되는지 검증한다.
-
-### 완료 기준
-
-- 새 프로젝트 초기화 후, 글로벌 MCP 없이도 프로젝트 로컬 설정만으로 기본 MCP 구성이 재현된다
-- 어떤 MCP가 기본/선택/제외인지 문서만 보고 이해할 수 있다
-- 키가 필요한 MCP는 기본 포함되지 않는다
-- 웹/인프라 성격에 따라 preset을 분리할 수 있다
-
----
-
-## Priority 1: 문서/구현 기준 분기
-
-> "문서만 있으면 문서를 따르고, 구현이 있으면 실제 상태를 먼저 보며, 아무 근거가 없으면 과추론하지 않는다"
-
-### 왜 필요한가
-
-현재 `init.sh`의 AI 자동 채우기는 프로젝트 구조와 주요 파일을 분석해 `CLAUDE.md`, `AGENTS.md`를 채우는 방식이다. 하지만 실제 프로젝트는 성숙도가 제각각이라, 항상 같은 기준으로 해석하면 아래 문제가 생긴다.
-
-- 문서만 먼저 있는 초기 프로젝트에서 구현이 없다는 이유로 중요한 기획 맥락을 놓칠 수 있음
-- 구현이 이미 많이 진행된 프로젝트에서 오래된 문서를 그대로 따르면 실제 상태와 어긋난 설정이 만들어질 수 있음
-- 문서와 구현이 둘 다 있는 프로젝트에서 무엇을 우선해야 하는지 기준이 없으면 AI 출력 일관성이 떨어짐
-
-따라서 프로젝트 상태에 따라 소스 오브 트루스를 다르게 보는 분기 전략이 필요하다.
-
-### 설계 결론
-
-`ai-setting`은 프로젝트를 아래 4가지 모드 중 하나로 분류해서 처리한다.
-
-| 모드 | 언제 쓰나 | 우선 기준 | 처리 방식 |
-|------|-----------|-----------|-----------|
-| `blank-start` | 폴더만 있고 문서/구현 신호가 거의 없을 때 | 확인 가능한 사실만 | MCP, hooks, 템플릿만 안전하게 깔고 AI 자동 채우기는 보수적으로 처리하거나 건너뛴다 |
-| `docs-first` | 문서/기획은 있지만 구현이 거의 없을 때 | 문서 | PRD, README, 설계 문서, 요구사항 문서를 기준으로 템플릿을 채우고 미구현 항목은 계획/가정으로 표시 |
-| `hybrid` | 문서와 구현이 둘 다 의미 있게 있을 때 | 코드 + 문서 | 실행 가능한 코드/설정/테스트를 먼저 보고, 문서는 빈칸 보완 및 의도 확인용으로 사용 |
-| `code-first` | 구현이 많이 진행되어 있고 문서는 참고 수준일 때 | 코드 | 실제 디렉토리 구조, 실행 명령, 테스트, 설정 파일을 기준으로 작성하고 문서와 다르면 차이를 명시 |
-
-현재 상태:
-- `init.sh`에서 기본 휴리스틱으로 `blank-start / docs-first / hybrid / code-first` 자동 감지를 수행
-- AI 자동 채우기 프롬프트에 감지 모드와 근거 신호를 함께 주입
-- 문서/구현 충돌 시 `CLAUDE.md`에 짧은 mismatch 섹션을 남기도록 1차 반영
-- `blank-start`에서는 과추론을 피하기 위해 AI 자동 채우기를 기본적으로 건너뛰고 재실행을 안내
-- `--project-name`, `--archetype`, `--stack` 힌트로 blank-start에서도 guided bootstrap 가능
-
-### 공통 규칙
-
-- 프로젝트 근거가 거의 없으면 추정 기반 자동 생성보다 안전한 초기화가 우선이다
-- 실행 가능한 코드, 설정, 테스트가 있으면 그것이 1차 근거다
-- 문서만 있고 구현이 약하면 문서를 1차 근거로 본다
-- 문서와 구현이 충돌하면 조용히 한쪽을 무시하지 말고 불일치를 드러낸다
-- 추정으로 채운 내용은 확정 사실처럼 쓰지 않고, 가정 또는 TODO로 표시한다
-
-### 구현 계획
-
-1. 프로젝트 성숙도를 판단하는 휴리스틱을 정의한다.
-2. `init.sh`의 AI 프롬프트를 분기형으로 바꾼다.
-3. 문서 탐색 우선순위를 정한다.
-4. 구현 탐색 우선순위를 정한다.
-5. 문서/구현 불일치 보고 형식을 템플릿에 반영한다.
-6. 샘플 프로젝트를 만들어 3개 모드를 각각 검증한다.
-
-### 프로젝트 성숙도 판단 휴리스틱
-
-다음 신호를 조합해 `blank-start / docs-first / hybrid / code-first`를 정한다.
-
-- 문서 신호
-  - `README.md`, `docs/`, `spec/`, `prd/`, `requirements/` 존재 여부
-  - 요구사항/아키텍처/와이어프레임 문서의 밀도
-- 구현 신호
-  - `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml` 존재 여부
-  - `src/`, `app/`, `backend/`, `frontend/` 등 실제 코드 디렉토리 존재 여부
-  - 테스트 디렉토리 및 CI 설정 존재 여부
-- 운영 신호
-  - Docker, env example, deploy/workflow 파일 존재 여부
-
-초기안:
-- 의미 있는 문서/구현/테스트/운영 신호가 모두 거의 없으면 `blank-start`
-- 문서는 충분하지만 실행 가능한 코드가 거의 없으면 `docs-first`
-- 문서와 구현이 모두 있으면 `hybrid`
-- 실행 가능한 코드/테스트/설정이 풍부하면 `code-first`
-
-### 프롬프트 반영 방향
-
-AI 자동 채우기 시 아래 원칙을 명시한다.
-
-- `blank-start`: 확인 가능한 사실만 반영하고, 스택/명령어/도메인은 추정하지 않는다. 필요 시 AI 자동 채우기를 건너뛰고 재실행을 안내할 것
-- `docs-first`: 문서를 기준으로 작성하되, 아직 구현되지 않은 내용은 "예정", "가정", "TODO"로 드러낼 것
-- `hybrid`: 코드/설정을 먼저 검증하고, 문서는 설계 의도와 누락 보완용으로 사용할 것
-- `code-first`: 실제 코드 상태를 우선하며, 문서와 다르면 불일치 항목을 짧게 남길 것
-
-추가 확장 후보:
-- `--archetype`, `--stack`, `--project-name` 같은 힌트 옵션을 받아 blank-start에서도 의도 기반 초안 생성
-- blank-start에서 최소 플레이스홀더만 채운 lightweight bootstrap 모드
-
-### 완료 기준
-
-- 초기 프로젝트와 진행 중 프로젝트에 서로 다른 기준이 안정적으로 적용된다
-- 빈 폴더에서 init을 먼저 실행해도 과추론 없이 안전하게 초기화된다
-- `CLAUDE.md`, `AGENTS.md`가 실제 프로젝트 성숙도에 맞는 내용으로 채워진다
-- 문서와 구현이 어긋날 때 그 차이가 기록된다
-- 같은 프로젝트를 다시 실행해도 해석 기준이 크게 흔들리지 않는다
-
----
-
-## Priority 2: 다언어/프레임워크/비웹 프로젝트 확장
-
-> "웹 프로젝트에만 맞춘 설정이 아니라, 프로젝트 유형 전반을 커버한다"
-
-### 왜 필요한가
-
-현재 로드맵과 실제 예시는 웹/프론트엔드 문맥이 강하다. 하지만 `ai-setting`의 장기 방향은 특정 UI 스택용 스타터가 아니라, 다양한 언어와 프레임워크, 그리고 비웹 프로젝트까지 커버하는 공통 부트스트랩이어야 한다.
-
-- 백엔드 API 프로젝트는 프론트엔드와 필요한 명령어/검증 방식이 다름
-- CLI, 배치, 워커, 라이브러리 프로젝트는 브라우저 계열 MCP나 웹 기준 템플릿이 중요하지 않을 수 있음
-- 데이터/ML, 인프라, 모바일, 데스크톱 프로젝트는 구조와 문서 기준이 완전히 다를 수 있음
-- 언어/프레임워크별로 테스트/린트/실행 명령어와 안전장치가 달라 placeholder, hook, template가 달라져야 함
-
-따라서 이후 고도화는 "웹도 잘 되게"가 아니라 "웹을 포함한 다양한 프로젝트를 공통 구조로 지원"하는 방향이어야 한다.
-
-### 지원 목표 범위
-
-초기 지원 목표는 아래처럼 프로젝트 유형과 언어/프레임워크를 분리해서 본다.
-
-| 축 | 1차 목표 |
-|----|----------|
-| 프로젝트 유형 | 웹 프론트엔드, 백엔드 API, CLI, 워커/배치, 라이브러리/SDK, 데이터/자동화 스크립트, 인프라/IaC |
-| 언어 | TypeScript/JavaScript, Python, Go, Rust |
-| 확장 후보 | Java/Kotlin, C#, Ruby, PHP, Swift |
-| 프레임워크 예시 | Next.js, React, FastAPI, Django, Flask, Express/Nest, Gin/Fiber, Axum/Actix, Terraform/Ansible |
-
-### 설계 결론
-
-앞으로는 "웹인지 아닌지"보다 먼저 "프로젝트 archetype"을 식별하고, 그 archetype에 맞는 설정을 주입한다.
-
-예시 archetype:
-- `frontend-web`
-- `backend-api`
-- `cli-tool`
-- `worker-batch`
-- `library-sdk`
-- `data-automation`
-- `infra-iac`
-
-각 archetype은 아래를 다르게 가진다.
-- 기본 명령어 placeholder
-- 권장 MCP preset
-- 템플릿 문구와 예시
-- hook 기본값
-- 추천 agents / skills
-
-현재 상태:
-- `init.sh`에서 1차 archetype 자동 감지(`frontend-web`, `backend-api`, `cli-tool`, `worker-batch`, `data-automation`, `library-sdk`, `infra-iac`, `general-app`)를 수행
-- Next.js/Vite/Node/Python/Go/Rust/Java-Kotlin/Ruby/PHP 기준의 주 스택 감지를 함께 수행
-- 감지 결과를 AI 자동 채우기 프롬프트에 주입해 프로젝트 유형에 맞는 명령어와 설명을 유도
-- `--auto-mcp`로 감지된 archetype 기반 MCP 추천 preset(`web`, `infra`)을 자동 적용 가능
-
-### 구현 계획
-
-1. 프로젝트 archetype taxonomy를 정의한다.
-2. 언어/프레임워크 감지 규칙을 만든다.
-3. archetype별 placeholder 표준 세트를 만든다.
-4. MCP preset도 archetype 기준으로 재구성한다.
-5. 비웹 프로젝트 샘플 fixture를 추가한다.
-6. 각 archetype에서 `init.sh --skip-ai`와 AI 자동 채우기를 모두 검증한다.
-
-### 자동 감지 신호 예시
-
-- 웹 프론트엔드
-  - `next.config.*`, `vite.config.*`, `src/app`, `src/pages`, `package.json`
-- 백엔드 API
-  - `app/main.py`, `manage.py`, `pom.xml`, `build.gradle`, `main.go`
-- CLI / 워커
-  - `cmd/`, `bin/`, `click`, `typer`, `cobra`, `cron`, `queue`, `worker`
-- 라이브러리 / SDK
-  - 배포용 package metadata와 예제/문서 비중, 실행 entry보다 export/public API 중심 구조
-- 인프라 / 자동화
-  - `terraform/`, `ansible/`, `helm/`, `docker-compose.yml`, `.github/workflows/`
-
-### 완료 기준
-
-- 웹 프로젝트 외에도 백엔드, CLI, 워커, 라이브러리, 인프라 프로젝트에 맞는 기본 설정을 생성할 수 있다
-- 특정 웹 전용 가정 없이 placeholder와 템플릿이 채워진다
-- archetype 판단 결과를 사용자가 확인할 수 있다
-- 새로운 언어/프레임워크 지원을 추가할 때 구조적으로 확장 가능하다
-
----
-
-## Priority 3: Doctor / Safe Reapply / Diff Preview
-
-> "반복 실행해도 안전하고, 무엇이 문제인지 바로 진단할 수 있다"
-
-### 왜 필요한가
-
-프로젝트 초기화 도구는 "한 번 설치"보다 "다시 실행해도 안전한가"와 "문제 발생 시 바로 원인을 찾을 수 있는가"가 중요하다.
-
-- 의존성 누락(`jq`, `npx`, `uvx`, `docker`) 때문에 일부 기능만 동작할 수 있음
-- 사용자가 이미 수정한 `.claude/`, `.codex/`, `.mcp.json`을 덮어쓸 수 있음
-- MCP preset이나 hooks가 생성됐더라도 실제로 쓸 수 있는 상태인지 바로 알기 어려움
-- diff 없이 재적용하면 어떤 파일이 바뀌는지 파악하기 힘듦
-
-### 설계 결론
-
-향후 `ai-setting`은 설치 도구가 아니라 "설치 + 진단 + 안전 재적용" 도구가 되어야 한다.
-
-핵심 기능:
-- `doctor`
-  - 필수 바이너리, 설정 파일, hook 실행 가능 여부, placeholder 미치환 여부 점검
-- `--dry-run`
-  - 실제 파일 변경 없이 무엇이 생성/수정될지 출력
-- `--backup-all`
-  - `.claude`, `.codex`, `.mcp.json` 등 관리 대상 전체 백업
-- `--reapply`
-  - 기존 파일과 비교 후 안전하게 재적용
-- `--diff`
-  - 변경 전/후 차이를 미리 보여주기
-
-현재 상태:
-- `init.sh --doctor`로 기본 진단 실행 가능
-- `init.sh --dry-run`으로 실제 변경 없는 작업 미리보기 가능
-- `init.sh --diff`로 관리 대상 파일의 변경 내용을 unified diff로 확인 가능
-- `init.sh --backup-all`로 관리 대상 전체 snapshot 백업 가능
-- `init.sh --reapply`로 `CLAUDE.md`/`AGENTS.md` 재생성 + AI 채우기 재실행 가능
-- 필수 바이너리, 핵심 파일 존재 여부, `.mcp.json` 형식, 플레이스홀더 잔존 여부를 점검
-- `blank-start` 모드는 doctor에서도 예외 처리하여 플레이스홀더 잔존을 정상으로 간주
-
-### 구현 계획
-
-1. 관리 대상 파일 목록을 명시적으로 정의한다.
-2. `doctor` 진단 규칙을 만든다.
-3. `--dry-run`, `--diff`, `--backup-all` 흐름을 설계한다.
-4. `init.sh` 반복 실행 시 overwrite 정책을 통일한다.
-5. 결과 리포트 형식을 만든다.
-6. 정상/부분 설치/충돌 상태 fixture로 회귀 검증한다.
-
-### 완료 기준
-
-- 사용자가 설치 전후 상태를 스스로 진단할 수 있다
-- 반복 실행 시 기존 수동 수정이 예기치 않게 사라지지 않는다
-- 어떤 파일이 왜 바뀌는지 미리 확인할 수 있다
-- 문제 발생 시 "무엇이 빠졌는지"를 문서가 아니라 명령으로 확인할 수 있다
-
-## 현재 상태 (v1-beta)
+- [x] Phase 1: 멀티 도구 지원 (Claude Code, Codex, Cursor, Gemini CLI, Copilot)
+- [x] Phase 2: 동기화 시스템 (symlink, update, sync, manifest 옵션, 충돌 감지, settings.local.json)
+- [x] Phase 3: 프로필 시스템 (standard, minimal, strict, team)
+- [x] Phase 4: 플러그인 마켓플레이스 (core/strict/team 분리, install/uninstall/check-update CLI)
+- [x] Phase 5: 고급 hooks (branch 보호, async test, compact backup, session context, team webhook)
+- [x] Phase 6: 커뮤니티 & 배포 (CI/CD, npm 준비, brew formula, LICENSE, SECURITY, issue templates)
+
+### 현재 상태 (v1.0.0)
 
 ```
 init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → AI가 템플릿 채우기
 ```
 
-- Claude Code: `standard` / `minimal` profile, hooks, agents 4개, skills 5개
-- Multi-tool: Cursor, Gemini CLI, GitHub Copilot 1차 지원
-- Codex: `config.toml` + 프로젝트 로컬 MCP preset
-- Sync: `--link` 공유 자산 심링크 + `update` 갱신 모드 1차 지원
-- Safety: `doctor`, `dry-run`, `diff`, `backup-all`, `reapply`
-- Detection: `blank-start / docs-first / hybrid / code-first`, archetype / stack 자동 감지, `--auto-mcp`
-- Templates: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `docs/decisions.md`
-- Sync: manifest 프로젝트별 옵션, settings.local.json override, 충돌 감지, 디렉토리 심링크
-- Plugin: ai-setting-core/strict/team 분리, install/uninstall/check-update CLI
-- Deploy: npm publish 준비 (v1.0.0), brew formula, CI/CD, release automation
+| 영역 | 구현 내용 |
+|------|-----------|
+| **Claude Code** | standard/minimal/strict/team 프로필, hooks 7개, agents 4개, skills 5개 |
+| **멀티 도구** | Cursor (.cursor/rules), Gemini CLI (.gemini), GitHub Copilot (.github), Codex (.codex) |
+| **MCP** | core(기본)/web(선택)/infra(선택) preset, `--auto-mcp` archetype 기반 자동 적용 |
+| **감지** | blank-start/docs-first/hybrid/code-first 모드, 8종 archetype, 9종 스택 자동 감지 |
+| **안전** | doctor, dry-run, diff, backup-all, reapply |
+| **동기화** | `--link`(파일), `--link-dir`(디렉토리), update, sync(manifest), settings.local.json override, `--sync-conflict` |
+| **플러그인** | ai-setting-core/strict/team, `plugin list\|install\|uninstall\|check-update\|upgrade` |
+| **배포** | package.json v1.0.0, MIT, CI/CD, release workflow, brew formula |
+| **문서** | CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md, decisions.md 템플릿 |
+
+### 1차 고도화 상세 (아카이브)
+
+<details>
+<summary>Priority 0: 프로젝트 로컬 MCP 도입</summary>
+
+> "글로벌에만 있던 MCP를 새 프로젝트에서도 바로 쓴다"
+
+- `init.sh`가 프로젝트 로컬 MCP 설정도 함께 생성
+- 이 저장소가 소유한 preset 기준으로 생성 (글로벌 복사 아님)
+- API 키 없이 바로 사용할 수 있는 MCP만 포함
+
+| preset | 서버 | 기본 포함 |
+|--------|------|-----------|
+| `core` | sequential-thinking, serena, upstash-context-7-mcp | ✅ |
+| `web` | playwright | 선택 |
+| `infra` | docker | 선택 |
+
+</details>
+
+<details>
+<summary>Priority 1: 문서/구현 기준 분기</summary>
+
+> "문서만 있으면 문서를 따르고, 구현이 있으면 실제 상태를 먼저 보며, 아무 근거가 없으면 과추론하지 않는다"
+
+| 모드 | 우선 기준 | 처리 방식 |
+|------|-----------|-----------|
+| `blank-start` | 확인 가능한 사실만 | 안전한 초기화, AI 자동 채우기 건너뛰기 |
+| `docs-first` | 문서 | 문서 기준 작성, 미구현은 TODO 표시 |
+| `hybrid` | 코드 + 문서 | 코드 먼저, 문서는 보완용 |
+| `code-first` | 코드 | 코드 우선, 문서와 불일치 시 명시 |
+
+</details>
+
+<details>
+<summary>Priority 2: 다언어/프레임워크/비웹 프로젝트 확장</summary>
+
+> archetype 기반 지원 구조
+
+감지 대상: `frontend-web`, `backend-api`, `cli-tool`, `worker-batch`, `data-automation`, `library-sdk`, `infra-iac`, `general-app`
+스택 감지: Next.js, Vite, Node, Python, Go, Rust, Java/Kotlin, Ruby, PHP
+
+</details>
+
+<details>
+<summary>Priority 3: Doctor / Safe Reapply / Diff Preview</summary>
+
+> "반복 실행해도 안전하고, 무엇이 문제인지 바로 진단할 수 있다"
+
+- `--doctor`: 필수 바이너리, 설정 파일, hook 실행 가능 여부, placeholder 잔존 점검
+- `--dry-run`: 실제 변경 없이 예정 작업 출력
+- `--diff`: 관리 대상 파일 unified diff
+- `--backup-all`: 관리 대상 전체 snapshot
+- `--reapply`: 템플릿 재생성 + AI 재실행
+
+</details>
+
+<details>
+<summary>Phase 1~6 상세</summary>
+
+**Phase 1 (멀티 도구)**: Cursor .mdc, Gemini settings/GEMINI.md, Copilot instructions
+**Phase 2 (동기화)**: --link, --link-dir, update, sync manifest, settings.local.json, --sync-conflict
+**Phase 3 (프로필)**: standard/minimal/strict/team, 프로필별 hooks/agents/skills 차등 적용
+**Phase 4 (플러그인)**: marketplace.json, core/strict/team 분리, plugin CLI (list/install/uninstall/check-update/upgrade)
+**Phase 5 (고급 hooks)**: branch 보호, async test, compact backup, session context, team webhook
+**Phase 6 (배포)**: CI/CD, npm v1.0.0, brew formula, MIT LICENSE, SECURITY.md, issue templates
+
+</details>
 
 ---
 
-## Phase 1: 멀티 도구 지원
+## 2차 고도화 (예정)
 
-> "AI 도구가 뭐든 같은 규칙이 적용된다"
+> v1.0.0 → v2.0.0
+> 실제 배포 실행, 코드 품질 개선, MCP 확장, 테스트 자동화, 커뮤니티 생태계 구축
 
-현재 상태:
-- Cursor 지원: `.cursor/rules/ai-setting.mdc` 생성
-- Gemini CLI 지원: `.gemini/settings.json`, `GEMINI.md` 생성
-- GitHub Copilot 지원: `.github/copilot-instructions.md` 생성
-- `doctor / diff / backup-all / reapply`도 새 관리 대상 파일을 함께 인식
+### 완료 체크
 
-### 1-1. Cursor 지원 추가
-- `.cursor/rules/*.mdc` 파일 생성
-- AGENTS.md 템플릿의 Coding Rules를 `.mdc` 형식으로 변환
-- init.sh에 `.cursor/rules/` 복사 추가
-- **난이도**: 쉬움 (포맷 변환만)
-- **참고**: cursorrules.org, awesome-cursorrules
-
-### 1-2. Gemini CLI 지원 추가
-- `.gemini/settings.json` 템플릿
-- `GEMINI.md` (= CLAUDE.md의 Gemini 버전)
-- init.sh에 `.gemini/` 복사 추가
-- **난이도**: 쉬움 (JSON 템플릿)
-- **참고**: geminicli.com/docs/reference/configuration/
-
-### 1-3. GitHub Copilot 지원 추가
-- `.github/copilot-instructions.md` 생성
-- AGENTS.md의 규칙을 Copilot 형식으로 변환
-- **난이도**: 쉬움
-
-### 결과
-```
-init.sh 실행 후:
-  .claude/      → Claude Code
-  .codex/       → Codex CLI
-  .cursor/      → Cursor
-  .gemini/      → Gemini CLI
-  .github/      → GitHub Copilot
-```
+- [ ] Phase 7: 실제 배포 실행
+- [ ] Phase 8: init.sh 모듈 분리
+- [ ] Phase 9: 테스트 자동화
+- [ ] Phase 10: MCP preset 확장
+- [ ] Phase 11: 커뮤니티 플러그인 생태계
+- [ ] Phase 12: archetype별 템플릿 특화
 
 ---
 
-## Phase 2: 동기화 시스템
+### Phase 7: 실제 배포 실행
 
-> "한 곳을 고치면 모든 프로젝트에 반영된다"
+> "준비된 배포 파이프라인을 실제로 가동한다"
 
-현재 상태:
-- `init.sh --link` 파일 단위 심링크 지원
-- `init.sh --link-dir` 디렉토리 단위 심링크 지원 (hooks, agents, skills 통째로)
-- `init.sh update /path/to/project` AI 없이 공유 자산 갱신
-- `init.sh sync [manifest]` 다중 프로젝트 배치 sync
-- manifest에 프로젝트별 옵션 지정 가능 (`profile=`, `mcp-preset=`, `archetype=`, `stack=`)
-- `.claude/settings.local.json`으로 프로젝트별 override merge 지원 (jq 필요)
-- `--sync-conflict=overwrite|skip|backup` 충돌 감지 및 해결 전략
-- `.claude/settings.json`, hooks, agents, skills, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`은 심링크로 연결 가능
-- 프로젝트별 문서(`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Copilot 문서), `.codex/config.toml`, `.mcp.json`은 계속 로컬 파일로 유지
+1차 고도화에서 배포 *준비*는 완료했지만, 실제 실행은 아직이다.
 
-### 2-1. Symlink 기반 동기화 (stow 패턴)
-현재 방식 (복사):
-```
-ai-setting/ --cp--> project-a/.claude/
-            --cp--> project-b/.claude/
-            --cp--> project-c/.claude/
-# ai-setting 업데이트해도 프로젝트에는 반영 안 됨
-```
+| 항목 | 현재 상태 | 할 일 |
+|------|-----------|-------|
+| `git push` | 로컬에 미push 커밋 있음 | origin에 push |
+| `npm publish` | package.json 준비 완료, `private` 제거됨 | `npm publish` 실행 |
+| GitHub repo | private | public 전환 |
+| brew tap | Formula 파일 존재 | 별도 `homebrew-ai-setting` repo 생성 후 formula 등록 |
+| sync-conf.dev | 미등록 | 커뮤니티 디렉토리 등록 |
+| CI 검증 | workflow 파일 존재 | push 후 GitHub Actions 통과 확인 |
 
-개선 방식 (심링크):
-```
-~/.ai-setting/claude/ <--symlink-- project-a/.claude/
-                      <--symlink-- project-b/.claude/
-                      <--symlink-- project-c/.claude/
-# ai-setting 업데이트하면 모든 프로젝트에 즉시 반영
-```
+#### 완료 기준
 
-- `init.sh --link` 옵션 추가 (1차: 공유 가능한 자산만 심링크)
-- 프로젝트별 오버라이드: `.claude/settings.local.json` 같은 로컬 설정
-- **난이도**: 쉬움
-- **참고**: GNU Stow, agentsync, AI dotfiles 패턴
-
-### 2-2. 업데이트 명령
-```bash
-# 원본이 업데이트된 후 프로젝트에 반영
-init.sh update /path/to/project
-
-# 또는 심링크 모드에서는 git pull만 하면 됨
-cd ~/.ai-setting && git pull
-```
-
-현재 1차 구현:
-- `init.sh sync ./projects.manifest`로 여러 프로젝트에 순차 적용 가능
-- manifest는 한 줄에 프로젝트 경로 하나씩 기록하는 단순 텍스트 형식
-- 기본은 `update`, `--sync-mode init`으로 init 흐름도 배치 적용 가능
+- `npx ai-setting init ./my-project` 로 바로 설치 가능
+- `brew install jaewon/tap/ai-setting` 으로 설치 가능
+- CI가 push/PR마다 자동 실행
+- tag push 시 npm + GitHub Release 자동 생성
 
 ---
 
-## Phase 3: 프로필 시스템
+### Phase 8: init.sh 모듈 분리
 
-> "프로젝트 성격에 따라 다른 설정을 적용한다"
+> "단일 파일 ~3000행을 유지보수 가능한 구조로 분리한다"
 
-현재 상태:
-- `init.sh --profile standard|minimal|strict|team` 지원
-- `standard`는 기존 전체 설정을 유지
-- `minimal`은 `protect-files + auto-format`만 활성화하고 managed agents/skills는 복사하지 않음
-- `strict`는 branch 보호 hook을 추가
-- `team`은 `strict` 기반 + PR 템플릿 생성
+현재 `init.sh`가 모든 기능을 포함하여 약 3000행에 달한다. 기능별로 분리하면 가독성과 유지보수성이 크게 향상된다.
 
-### 프로필 구조
+#### 분리 구조
+
 ```
 ai-setting/
-├── profiles/
-│   ├── standard/     # 현재 기본값 (균형잡힌 설정)
-│   ├── strict/       # 보안 강화, 모든 체크 활성화
-│   ├── minimal/      # 최소 설정 (hooks + 포맷터만)
-│   └── team/         # 팀 프로젝트용 (리뷰 강화, PR 규칙)
+├── init.sh                    # 메인 엔트리 (옵션 파싱 + 실행 흐름)
+├── lib/
+│   ├── common.sh              # 색상, dry-run, mkdir, copy, symlink 헬퍼
+│   ├── detect.sh              # 프로젝트 모드/archetype/스택 감지
+│   ├── doctor.sh              # doctor 진단 로직
+│   ├── sync.sh                # sync manifest, 충돌 감지, settings.local.json
+│   ├── plugin.sh              # plugin list/install/uninstall/check-update/upgrade
+│   ├── mcp.sh                 # MCP preset 생성
+│   └── ai-fill.sh             # AI 자동 채우기 프롬프트/실행
 ```
 
-### 프로필별 차이
+#### 완료 기준
 
-| 항목 | minimal | standard | strict | team |
-|------|---------|----------|--------|------|
-| protect-files hook | ✅ | ✅ | ✅ | ✅ |
-| block-commands hook | — | ✅ | ✅ | ✅ |
-| auto-format hook | ✅ | ✅ | ✅ | ✅ |
-| notification / stop / reminder | — | ✅ | ✅ | ✅ |
-| agents 4개 | — | ✅ | ✅ | ✅ |
-| skills 5개 | — | ✅ | ✅ | ✅ |
-| branch 보호 hook | — | — | ✅ | ✅ |
-| PR 템플릿 | — | — | — | ✅ |
-
-### 사용법
-```bash
-# 기본 (standard)
-init.sh /path/to/project
-
-# 프로필 지정
-init.sh --profile minimal /path/to/project
-init.sh --profile standard /path/to/project
-init.sh --profile strict /path/to/project
-init.sh --profile team /path/to/project
-```
-
-- **난이도**: 중간
-- **참고**: rulebook-ai의 packs 시스템, Trail of Bits 보안 프로필
+- `init.sh`가 300행 이내로 축소
+- `bash -n lib/*.sh` 모두 통과
+- 기존 모든 모드/옵션이 동일하게 동작 (회귀 없음)
 
 ---
 
-## Phase 4: 플러그인 마켓플레이스
+### Phase 9: 테스트 자동화
 
-> "다른 사람들이 만든 에이전트/스킬을 설치하고, 내 것도 공유한다"
+> "CI에서 스모크 테스트를 넘어 체계적인 회귀 테스트를 실행한다"
 
-현재 상태:
-- 공식 Claude Code plugin / marketplace 포맷 기준으로 `.claude-plugin/marketplace.json` 반영
-- `plugins/ai-setting-core` — core hooks, agents, skills, MCP
-- `plugins/ai-setting-strict` — branch protection hook (strict/team 전용)
-- `plugins/ai-setting-team` — team webhook notification hook
-- `ai-setting plugin list|install|uninstall|check-update|upgrade` CLI 명령 지원
-- `.ai-setting/installed-plugins.json`으로 설치 기록 및 버전 관리
-- project docs 템플릿, Cursor/Gemini/Copilot/Codex 설정은 계속 `init.sh` 범위로 유지
+현재는 CI에서 기본 스모크 테스트만 돌린다. fixture 기반 시나리오 테스트를 추가한다.
 
-### Claude Code 플러그인 형식
-```json
-// .claude-plugin/marketplace.json
-{
-  "name": "jaewon-ai-setting",
-  "owner": {
-    "name": "Jaewon"
-  },
-  "metadata": {
-    "pluginRoot": "./plugins"
-  },
-  "plugins": [
-    {
-      "name": "ai-setting-core",
-      "source": "./plugins/ai-setting-core"
-    }
-  ]
-}
+#### 테스트 범위
+
+| 카테고리 | 테스트 항목 |
+|----------|-------------|
+| **프로필** | 4개 프로필별 파일 생성/미생성 검증 |
+| **모드** | blank-start/docs-first/hybrid/code-first 감지 정확도 |
+| **archetype** | 8종 archetype 감지 fixture |
+| **동기화** | link, link-dir, update, sync manifest (옵션 포함), 충돌 전략 |
+| **플러그인** | install → verify → uninstall → verify 라운드트립 |
+| **override** | settings.local.json merge 결과 검증 |
+| **멱등성** | 같은 명령 2회 실행 시 결과 동일 |
+| **에지 케이스** | jq 미설치, 빈 프로젝트, 기존 설정 있는 프로젝트 |
+
+#### 구현 방향
+
+```
+tests/
+├── fixtures/
+│   ├── blank-project/
+│   ├── docs-only-project/
+│   ├── nextjs-project/
+│   ├── python-api-project/
+│   └── ...
+├── test_profiles.sh
+├── test_detect.sh
+├── test_sync.sh
+├── test_plugin.sh
+└── run_all.sh
 ```
 
-### 사용법 (마켓플레이스 등록 후)
-```
-claude plugin validate .
-claude plugin marketplace add ./
-claude plugin install ai-setting-core@jaewon-ai-setting --scope project
-/plugin marketplace update
-```
+#### 완료 기준
 
-- init.sh 없이 Claude Code 안에서 core hooks/skills/agents/MCP 설치 가능
-- 업데이트 자동 전파
-- **난이도**: 중간
-- **참고**: Claude Code Plugin Marketplaces, Plugins reference
+- `./tests/run_all.sh` 한 번에 전체 테스트 실행
+- CI에서 fixture 테스트 자동 실행
+- 새 기능 추가 시 테스트 없으면 CI 실패하도록 가이드
 
 ---
 
-## Phase 5: 고급 hooks
+### Phase 10: MCP preset 확장
 
-> "더 똑똑한 자동화"
+> "1차에서 보류했던 MCP를 조건부로 추가한다"
 
-현재 상태:
-- `strict` / `team` 프로필에 branch 보호 hook 적용 완료
-- `standard` / `strict` / `team` 프로필에 compact 대응용 `session-context` hook 1차 적용
-- `standard` / `strict` / `team` 프로필에 async test hook 1차 적용
-- `team` 프로필에 optional webhook notify hook 1차 적용
-- `standard` / `strict` / `team` 프로필에 compact backup hook 1차 적용
+1차 고도화에서 보류/후보로 남긴 MCP를 조건부 preset으로 추가한다.
 
-### 5-1. 브랜치 보호 hook
-```bash
-# main/master 브랜치에 직접 커밋 차단
-BRANCH=$(git branch --show-current)
-if [[ "$BRANCH" == "main" || "$BRANCH" == "master" ]]; then
-  echo "Blocked: 직접 커밋 금지. feat/fix 브랜치에서 PR로 머지하세요." >&2
-  exit 2
-fi
-```
+| 분류 | MCP | 조건 | 선행 작업 |
+|------|-----|------|-----------|
+| `local-tools` | `filesystem` | 허용 루트 정책 설계 완료 후 | 보안 스코프 정의, allowedDirectories 설정 자동화 |
+| `local-tools` | `git` | 권한 정책 정의 후 | read-only 기본, write는 opt-in |
+| `web-debug` | `Chrome DevTools` | web preset 선택 시 | playwright와 역할 구분 문서화 |
+| `frontend-addon` | `Agentation` | React/Next archetype일 때 | React 18+ 감지 로직 |
+| `next-addon` | `Next.js DevTools` | Next.js 스택일 때 | next.config 감지와 연동 |
+| `api-key` | `brave-search` | API 키 제공 시 | `.env` 기반 키 주입 패턴 설계 |
 
-### 5-2. 비동기 테스트 실행 hook
-- PostToolUse에서 코드 변경 감지 시 백그라운드로 테스트 실행
-- 결과를 다음 프롬프트에 주입
+#### 완료 기준
 
-현재 1차 구현:
-- `.ai-setting/test-command` 또는 `AI_SETTING_ASYNC_TEST_CMD`가 있으면 해당 명령을 백그라운드 실행
-- 명령이 없을 때는 Python/Go/Rust만 보수적으로 auto-detect
-- 상태/로그는 `.claude/context/async-test-status.md`, `.claude/context/async-test.log`에 기록
-
-### 5-3. Slack/Discord 알림 hook
-- HTTP hook으로 작업 완료/실패 시 팀 채널에 알림
-- `"type": "command"` → `curl -X POST webhook_url`
-
-현재 1차 구현:
-- `team` profile에서 Stop 시점에 optional webhook 전송 훅 실행
-- 실제 webhook URL은 환경변수로 두고, 프로젝트에는 `.ai-setting/team-webhook.json` 메타설정만 저장
-- 기본값은 disabled라서 별도 활성화 전까지는 no-op
-
-### 5-4. 컴팩션 컨텍스트 주입 hook
-- PreCompact 시점에 핵심 컨텍스트를 별도 파일에 백업
-- SessionStart에서 복원
-
-현재 1차 구현:
-- Stop 시점에 `.claude/context/compact-latest.md`를 갱신하고 `.claude/context/compact-history/`에 타임스탬프 스냅샷 보관
-- SessionStart(compact)에서는 최신 compact backup을 우선 복원
-- async test / team webhook / git status 요약도 snapshot에 포함
-
-- **난이도**: 쉬움~중간
-- **참고**: claude-code-hooks-mastery, pixelmojo CI/CD 패턴
+- preset 추가 시 `--mcp-preset` 옵션으로 선택 가능
+- archetype 감지와 연동하여 `--auto-mcp`에서 자동 추천
+- 보안 민감 MCP는 opt-in + 문서 경고
 
 ---
 
-## Phase 6: 커뮤니티 & 배포
+### Phase 11: 커뮤니티 플러그인 생태계
 
-> "더 많은 사람이 쓰고, 더 많은 사람이 기여한다"
+> "외부 기여자가 자신만의 플러그인을 만들어 공유할 수 있다"
 
-현재 상태:
-- `CONTRIBUTING.md` 추가
-- 기능 추가 시 검증/문서/커밋 규칙을 저장소 내부 기준으로 문서화
-- `bin/ai-setting` 로컬 CLI wrapper 추가
-- `package.json` v1.0.0 배포 준비 완료 (MIT 라이선스, engines, repository, keywords)
-- `LICENSE` MIT 추가
-- `.npmignore` 추가
-- `Formula/ai-setting.rb` Homebrew formula 추가
-- `SECURITY.md` 보안 정책 추가
-- `.github/workflows/ci.yml` CI 파이프라인 추가
-- `.github/workflows/release.yml` 자동 배포 파이프라인 추가
-- `.github/ISSUE_TEMPLATE/` bug report, feature request 템플릿 추가
-- sync-conf.dev 등록은 public 전환 후 진행 예정
+| 항목 | 설명 |
+|------|------|
+| 플러그인 작성 가이드 | `docs/plugin-guide.md` — hooks.json/plugin.json 작성법, 디렉토리 구조 |
+| 템플릿 스캐폴더 | `ai-setting plugin create <name>` — 빈 플러그인 구조 자동 생성 |
+| 원격 플러그인 설치 | `ai-setting plugin install <github-url>` — git clone 기반 |
+| 플러그인 레지스트리 | `registry.json` 중앙 카탈로그 또는 awesome-ai-setting-plugins 목록 |
+| 호환성 검증 | 플러그인 간 hook 충돌 감지, settings merge 안전성 검증 |
 
-### 6-1. sync-conf.dev 등록
-- 커뮤니티 디렉토리에 등록하여 `npx sync-conf install jaewon/ai-setting`으로 설치 가능
+#### 완료 기준
 
-### 6-2. npm/brew 패키지화
-1차 기준:
-
-```bash
-cd /path/to/ai-setting
-./bin/ai-setting init /path/to/project
-./bin/ai-setting update /path/to/project
-```
-
-2차 목표:
-
-```bash
-# npm
-npx ai-setting init /path/to/project
-
-# 또는 brew
-brew install ai-setting
-ai-setting init /path/to/project
-```
-
-### 6-3. public 전환 + 기여 가이드
-- 현재 private → public 전환
-- CONTRIBUTING.md (에이전트/스킬 추가 방법)
-- 프로필/언어별 기여 가이드
+- 외부 기여자가 가이드만 보고 플러그인을 만들 수 있다
+- GitHub URL로 원격 플러그인 설치 가능
+- 플러그인 간 충돌 시 경고 메시지 출력
 
 ---
 
-## 우선순위 요약
+### Phase 12: archetype별 템플릿 특화
+
+> "프로젝트 유형에 따라 더 정확한 기본 설정을 제공한다"
+
+현재 archetype 감지는 AI 프롬프트에 힌트를 주는 수준이다. 2차에서는 archetype별로 다른 템플릿과 기본값을 제공한다.
+
+| archetype | 특화 내용 |
+|-----------|-----------|
+| `frontend-web` | lint/format 명령, 번들 사이즈 체크, 컴포넌트 테스트 기본값 |
+| `backend-api` | API 테스트, DB 마이그레이션 체크, health check 관련 기본값 |
+| `cli-tool` | CLI 인수 테스트, 맨페이지/help 생성 관련 기본값 |
+| `data-automation` | 데이터 검증, 파이프라인 테스트 기본값 |
+| `infra-iac` | plan/apply 안전장치, drift 감지 관련 기본값 |
+
+#### 구현 방향
+
+```
+templates/
+├── CLAUDE.md.template              # 공통
+├── archetype/
+│   ├── frontend-web.partial.md     # archetype별 추가 섹션
+│   ├── backend-api.partial.md
+│   ├── cli-tool.partial.md
+│   └── ...
+```
+
+#### 완료 기준
+
+- archetype별 CLAUDE.md에 유형 특화 섹션이 자동 삽입
+- 공통 템플릿과 archetype partial이 깔끔하게 합성
+- 새 archetype partial 추가가 쉬운 구조
+
+---
+
+### 2차 고도화 우선순위 요약
 
 | Phase | 핵심 | 난이도 | 효과 |
 |-------|------|--------|------|
-| **Priority 0** | 프로젝트 로컬 MCP preset | 중간 | 재현성 확보, 온보딩 비용 감소 |
-| **Priority 1** | docs-first / hybrid / code-first 분기 | 중간 | 초기/진행 프로젝트 모두 정확도 향상 |
-| **Priority 2** | 다언어/프레임워크/비웹 프로젝트 확장 | 중간~높음 | 웹 편향 제거, 적용 범위 확대 |
-| **Priority 3** | doctor / safe reapply / diff preview | 중간 | 반복 실행 안전성, 문제 진단성 향상 |
-| **Phase 1** | Cursor/Gemini/Copilot 지원 | 쉬움 | 사용자 3배 확대 |
-| **Phase 2** | Symlink 동기화 | 쉬움 | 유지보수 비용 제거 |
-| **Phase 3** | 프로필 시스템 | 중간 | 포크 방지, 맞춤 적용 |
-| **Phase 4** | 플러그인 마켓플레이스 | 중간 | 네이티브 배포, 자동 업데이트 |
-| **Phase 5** | 고급 hooks | 쉬움~중간 | 자동화 강화 |
-| **Phase 6** | 커뮤니티 & 배포 | 쉬움~중간 | 생태계 참여 |
+| **Phase 7** | 실제 배포 실행 | 쉬움 | npm/brew로 누구나 설치 가능 |
+| **Phase 8** | init.sh 모듈 분리 | 중간 | 유지보수성 대폭 향상 |
+| **Phase 9** | 테스트 자동화 | 중간 | 회귀 방지, 품질 보증 |
+| **Phase 10** | MCP preset 확장 | 중간 | 프로젝트별 최적 도구 제공 |
+| **Phase 11** | 커뮤니티 플러그인 | 중간~높음 | 생태계 확장, 외부 기여 |
+| **Phase 12** | archetype 템플릿 특화 | 중간 | 프로젝트별 정확도 향상 |
 
-### 권장 순서
-1. **Priority 0 (프로젝트 로컬 MCP)** — 재현 가능한 기본 개발 환경 확보
-2. **Priority 1 (문서/구현 분기)** — 프로젝트 성숙도에 맞는 해석 기준 확보
-3. **Priority 2 (다언어/비웹 확장)** — 웹 편향 제거, archetype 기반 지원 구조 확보
-4. **Priority 3 (doctor / safe reapply)** — 운영 안정성 확보
-5. **Phase 1-1 (Cursor)** + **Phase 2-1 (Symlink)** — 가장 빠르게 가장 큰 효과
-6. **Phase 3 (프로필)** — 다양한 프로젝트 대응
-7. **Phase 5-1 (브랜치 보호)** — 바로 추가 가능한 실용 hook
-8. 나머지는 필요에 따라
+#### 권장 순서
+
+1. **Phase 7 (배포 실행)** — 가장 먼저, 나머지는 배포 후
+2. **Phase 8 (모듈 분리)** — 다음 기능 추가 전에 구조 정리
+3. **Phase 9 (테스트)** — 모듈 분리와 함께 진행
+4. **Phase 10 (MCP 확장)** — 사용자 피드백 반영
+5. **Phase 11 (커뮤니티)** — 생태계 성장
+6. **Phase 12 (템플릿 특화)** — 장기 고도화
 
 ---
 
