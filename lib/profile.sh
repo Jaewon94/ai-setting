@@ -156,6 +156,21 @@ copy_cursor_assets() {
     backup_existing_path "$TARGET/.cursor/rules/ai-setting.mdc" ".cursor/rules/ai-setting.mdc"
   fi
   install_shared_asset "$SCRIPT_DIR/cursor/rules/ai-setting.mdc" "$TARGET/.cursor/rules/ai-setting.mdc"
+
+  # 스택 기반 파일 타입별 규칙 추가
+  case "${PROJECT_STACK:-}" in
+    *TypeScript*|*JavaScript*|*Next.js*|*Vite*|*Node*)
+      install_shared_asset "$SCRIPT_DIR/cursor/rules/typescript.mdc" "$TARGET/.cursor/rules/typescript.mdc"
+      ;;
+    *Python*)
+      install_shared_asset "$SCRIPT_DIR/cursor/rules/python.mdc" "$TARGET/.cursor/rules/python.mdc"
+      ;;
+  esac
+
+  # testing.mdc는 모든 프로젝트에 적용 (blank-start 제외)
+  if [ "${PROJECT_CONTEXT_MODE:-}" != "blank-start" ]; then
+    install_shared_asset "$SCRIPT_DIR/cursor/rules/testing.mdc" "$TARGET/.cursor/rules/testing.mdc"
+  fi
 }
 
 copy_gemini_assets() {

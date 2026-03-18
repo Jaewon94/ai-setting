@@ -1,0 +1,14 @@
+---
+description: TypeScript/TSX coding rules
+globs: "**/*.ts,**/*.tsx"
+---
+
+- Use explicit return types for exported functions and public methods.
+- Prefer `interface` over `type` for object shapes; use `type` for unions and intersections.
+- Use `readonly` for data that should not be mutated after creation.
+- Avoid `any` — use `unknown` with type guards instead.
+- Prefer `const` assertions (`as const`) for literal types.
+- Use barrel exports (`index.ts`) only at module boundaries, not within feature directories.
+- Follow the naming, error handling, and testing conventions in `AGENTS.md`.
+
+@AGENTS.md

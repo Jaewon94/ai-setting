@@ -1,0 +1,14 @@
+---
+description: Python coding rules
+globs: "**/*.py"
+---
+
+- Use type hints for all function signatures (parameters and return types).
+- Follow PEP 8: snake_case for functions/variables, PascalCase for classes.
+- Prefer `pathlib.Path` over `os.path` for file operations.
+- Use dataclasses or pydantic for structured data — avoid raw dicts for domain objects.
+- Never use bare `except:` — catch specific exceptions only.
+- Use `logging` or `structlog` instead of `print()` for application output.
+- Follow the error handling, dependency, and testing conventions in `AGENTS.md`.
+
+@AGENTS.md

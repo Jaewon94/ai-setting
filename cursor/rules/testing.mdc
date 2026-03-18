@@ -1,0 +1,13 @@
+---
+description: Test file rules
+globs: "**/*.test.*,**/*.spec.*,**/test_*.py,**/*_test.py,**/*_test.go,**/*_test.rs"
+---
+
+- One behavior per test function (Arrange → Act → Assert).
+- Use descriptive test names that explain the expected behavior, not the implementation.
+- Mock external dependencies (APIs, databases, file systems) — never hit real services in unit tests.
+- Cover happy path, edge cases, and error cases for each public function.
+- Keep test setup minimal — use fixtures or factories, not complex setUp methods.
+- Follow the project test command defined in `CLAUDE.md`.
+
+@CLAUDE.md
