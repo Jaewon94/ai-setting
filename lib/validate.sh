@@ -101,6 +101,25 @@ get_profile_settings_template() {
   esac
 }
 
+get_codex_config_template() {
+  local profile="$1"
+
+  case "$profile" in
+    minimal)
+      printf '%s\n' "$SCRIPT_DIR/codex/config.minimal.toml"
+      ;;
+    strict)
+      printf '%s\n' "$SCRIPT_DIR/codex/config.strict.toml"
+      ;;
+    team)
+      printf '%s\n' "$SCRIPT_DIR/codex/config.team.toml"
+      ;;
+    *)
+      printf '%s\n' "$SCRIPT_DIR/codex/config.toml"
+      ;;
+  esac
+}
+
 validate_archetype_hint() {
   local archetype="$1"
 
