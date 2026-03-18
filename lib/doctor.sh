@@ -111,6 +111,12 @@ run_doctor() {
     doctor_warn "GEMINI.md 없음 — Gemini CLI 프로젝트 컨텍스트가 아직 생성되지 않았을 수 있음"
   fi
 
+  if [ -f "$target/CODEX.md" ]; then
+    doctor_ok "CODEX.md 존재"
+  else
+    doctor_warn "CODEX.md 없음 — Codex CLI 프로젝트 컨텍스트가 아직 생성되지 않았을 수 있음"
+  fi
+
   if [ -f "$target/.github/copilot-instructions.md" ]; then
     doctor_ok ".github/copilot-instructions.md 존재"
   else
