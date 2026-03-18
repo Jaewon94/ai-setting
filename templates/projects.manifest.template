@@ -2,8 +2,12 @@
 # - 한 줄에 프로젝트 경로 하나씩 작성
 # - 빈 줄과 '#' 주석은 무시됩니다
 # - 상대 경로는 이 manifest 파일 위치를 기준으로 해석됩니다
+# - 경로 뒤에 key=value 옵션을 추가하면 프로젝트별 설정을 지정할 수 있습니다
+#   지원 옵션: profile, mcp-preset, archetype, stack
+#   프로젝트별 옵션은 글로벌 옵션(CLI 인자)보다 우선합니다
 
 # 예시:
 # ../storyforge
-# ../taskrelay
-# /Users/jaewon/workspace/internal-tool
+# ../taskrelay  profile=strict  mcp-preset=core,web
+# ../internal-tool  profile=minimal  archetype=cli-tool
+# /Users/jaewon/workspace/data-pipeline  profile=standard  stack=python

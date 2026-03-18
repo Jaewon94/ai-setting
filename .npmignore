@@ -1,0 +1,7 @@
+.git
+.github
+docs/
+.claude-plugin/marketplace.json
+*.backup.*
+*.tmp
+.DS_Store

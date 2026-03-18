@@ -22,6 +22,34 @@
       "license": "UNLICENSED",
       "category": "development",
       "tags": ["claude-code", "hooks", "skills", "agents", "mcp"]
+    },
+    {
+      "name": "ai-setting-strict",
+      "source": "./plugins/ai-setting-strict",
+      "description": "Branch protection hook — blocks direct git actions on main/master branches.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Jaewon"
+      },
+      "homepage": "https://github.com/Jaewon94/ai-setting#readme",
+      "repository": "https://github.com/Jaewon94/ai-setting",
+      "license": "UNLICENSED",
+      "category": "security",
+      "tags": ["claude-code", "hooks", "branch-protection", "strict"]
+    },
+    {
+      "name": "ai-setting-team",
+      "source": "./plugins/ai-setting-team",
+      "description": "Team webhook notification hook — Slack/Discord alerts on Claude Code stop events.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Jaewon"
+      },
+      "homepage": "https://github.com/Jaewon94/ai-setting#readme",
+      "repository": "https://github.com/Jaewon94/ai-setting",
+      "license": "UNLICENSED",
+      "category": "team",
+      "tags": ["claude-code", "hooks", "webhook", "team", "slack", "discord"]
     }
   ]
 }

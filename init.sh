@@ -132,6 +132,332 @@ resolve_manifest_target_path() {
   esac
 }
 
+parse_manifest_line() {
+  local line="$1"
+  local tokens=()
+  read -ra tokens <<< "$line"
+
+  MANIFEST_LINE_PATH="${tokens[0]}"
+  MANIFEST_LINE_PROFILE=""
+  MANIFEST_LINE_MCP_PRESET=""
+  MANIFEST_LINE_ARCHETYPE=""
+  MANIFEST_LINE_STACK=""
+
+  local i=1
+  while [ $i -lt ${#tokens[@]} ]; do
+    local token="${tokens[$i]}"
+    case "$token" in
+      profile=*)
+        MANIFEST_LINE_PROFILE="${token#profile=}"
+        ;;
+      mcp-preset=*)
+        MANIFEST_LINE_MCP_PRESET="${token#mcp-preset=}"
+        ;;
+      archetype=*)
+        MANIFEST_LINE_ARCHETYPE="${token#archetype=}"
+        ;;
+      stack=*)
+        MANIFEST_LINE_STACK="${token#stack=}"
+        ;;
+    esac
+    i=$((i + 1))
+  done
+}
+
+cmd_plugin_list() {
+  local marketplace="$SCRIPT_DIR/.claude-plugin/marketplace.json"
+
+  if [ ! -f "$marketplace" ]; then
+    echo -e "${RED}오류: marketplace.json을 찾을 수 없습니다${NC}" >&2
+    return 1
+  fi
+
+  if ! command -v jq &>/dev/null; then
+    echo -e "${RED}오류: jq가 필요합니다${NC}" >&2
+    return 1
+  fi
+
+  local target="${1:-.}"
+  local installed_file="$target/.ai-setting/installed-plugins.json"
+
+  echo -e "${CYAN}━━━ Available Plugins ━━━${NC}"
+  jq -r '.plugins[] | "  \(.name) v\(.version) — \(.description)"' "$marketplace"
+
+  if [ -f "$installed_file" ]; then
+    echo ""
+    echo -e "${CYAN}━━━ Installed Plugins ━━━${NC}"
+    jq -r 'to_entries[] | "  \(.key) v\(.value.version) — installed \(.value.installed_at)"' "$installed_file"
+  fi
+}
+
+cmd_plugin_install() {
+  local plugin_name="$1"
+  local target="${2:-.}"
+  local marketplace="$SCRIPT_DIR/.claude-plugin/marketplace.json"
+
+  if ! command -v jq &>/dev/null; then
+    echo -e "${RED}오류: jq가 필요합니다${NC}" >&2
+    return 1
+  fi
+
+  local plugin_source
+  plugin_source="$(jq -r --arg name "$plugin_name" '.plugins[] | select(.name == $name) | .source' "$marketplace")"
+
+  if [ -z "$plugin_source" ]; then
+    echo -e "${RED}오류: 플러그인 '${plugin_name}'을 찾을 수 없습니다${NC}" >&2
+    return 1
+  fi
+
+  local plugin_dir="$SCRIPT_DIR/$plugin_source"
+  local plugin_version
+  plugin_version="$(jq -r --arg name "$plugin_name" '.plugins[] | select(.name == $name) | .version' "$marketplace")"
+
+  echo -e "${CYAN}━━━ Plugin Install: ${plugin_name} v${plugin_version} ━━━${NC}"
+
+  # Copy hooks scripts
+  if [ -d "$plugin_dir/scripts" ]; then
+    mkdir -p "$target/.claude/hooks"
+    for script in "$plugin_dir/scripts/"*.sh; do
+      [ -f "$script" ] || continue
+      cp "$script" "$target/.claude/hooks/"
+      chmod +x "$target/.claude/hooks/$(basename "$script")"
+      echo "  ✅ hook 스크립트 설치: $(basename "$script")"
+    done
+  fi
+
+  # Copy agents
+  if [ -d "$plugin_dir/agents" ]; then
+    mkdir -p "$target/.claude/agents"
+    for agent in "$plugin_dir/agents/"*.md; do
+      [ -f "$agent" ] || continue
+      cp "$agent" "$target/.claude/agents/"
+      echo "  ✅ agent 설치: $(basename "$agent")"
+    done
+  fi
+
+  # Copy skills
+  if [ -d "$plugin_dir/skills" ]; then
+    for skill_dir in "$plugin_dir/skills/"*/; do
+      [ -d "$skill_dir" ] || continue
+      local skill_name
+      skill_name="$(basename "$skill_dir")"
+      mkdir -p "$target/.claude/skills/$skill_name"
+      cp "$skill_dir"* "$target/.claude/skills/$skill_name/" 2>/dev/null || true
+      echo "  ✅ skill 설치: $skill_name"
+    done
+  fi
+
+  # Merge hooks.json into settings.json
+  if [ -f "$plugin_dir/hooks/hooks.json" ] && [ -f "$target/.claude/settings.json" ]; then
+    local merged
+    merged="$(jq -s '
+      def merge_hooks:
+        reduce .[] as $item ({}; . * $item);
+      .[0] as $base | .[1].hooks as $new_hooks |
+      $base * {hooks: ($base.hooks // {} | to_entries | map({key: .key, value: .value}) |
+        from_entries) * ($new_hooks // {})}
+    ' "$target/.claude/settings.json" "$plugin_dir/hooks/hooks.json" 2>/dev/null)"
+    if [ $? -eq 0 ] && [ -n "$merged" ]; then
+      echo "$merged" > "$target/.claude/settings.json"
+      echo "  ✅ hooks.json → settings.json merge 완료"
+    fi
+  fi
+
+  # Record installation
+  mkdir -p "$target/.ai-setting"
+  local installed_file="$target/.ai-setting/installed-plugins.json"
+  local now
+  now="$(date '+%Y-%m-%d %H:%M:%S')"
+  if [ -f "$installed_file" ]; then
+    jq --arg name "$plugin_name" --arg ver "$plugin_version" --arg at "$now" \
+      '. + {($name): {version: $ver, installed_at: $at}}' "$installed_file" > "${installed_file}.tmp"
+    mv "${installed_file}.tmp" "$installed_file"
+  else
+    jq -n --arg name "$plugin_name" --arg ver "$plugin_version" --arg at "$now" \
+      '{($name): {version: $ver, installed_at: $at}}' > "$installed_file"
+  fi
+
+  echo ""
+  echo -e "${GREEN}✅ ${plugin_name} v${plugin_version} 설치 완료${NC}"
+}
+
+cmd_plugin_uninstall() {
+  local plugin_name="$1"
+  local target="${2:-.}"
+  local marketplace="$SCRIPT_DIR/.claude-plugin/marketplace.json"
+
+  if ! command -v jq &>/dev/null; then
+    echo -e "${RED}오류: jq가 필요합니다${NC}" >&2
+    return 1
+  fi
+
+  local plugin_source
+  plugin_source="$(jq -r --arg name "$plugin_name" '.plugins[] | select(.name == $name) | .source' "$marketplace")"
+
+  if [ -z "$plugin_source" ]; then
+    echo -e "${RED}오류: 플러그인 '${plugin_name}'을 찾을 수 없습니다${NC}" >&2
+    return 1
+  fi
+
+  local plugin_dir="$SCRIPT_DIR/$plugin_source"
+
+  echo -e "${CYAN}━━━ Plugin Uninstall: ${plugin_name} ━━━${NC}"
+
+  # Remove hooks scripts
+  if [ -d "$plugin_dir/scripts" ]; then
+    for script in "$plugin_dir/scripts/"*.sh; do
+      [ -f "$script" ] || continue
+      local target_script="$target/.claude/hooks/$(basename "$script")"
+      if [ -f "$target_script" ]; then
+        rm "$target_script"
+        echo "  🗑 hook 스크립트 제거: $(basename "$script")"
+      fi
+    done
+  fi
+
+  # Remove agents
+  if [ -d "$plugin_dir/agents" ]; then
+    for agent in "$plugin_dir/agents/"*.md; do
+      [ -f "$agent" ] || continue
+      local target_agent="$target/.claude/agents/$(basename "$agent")"
+      if [ -f "$target_agent" ]; then
+        rm "$target_agent"
+        echo "  🗑 agent 제거: $(basename "$agent")"
+      fi
+    done
+  fi
+
+  # Remove installed record
+  local installed_file="$target/.ai-setting/installed-plugins.json"
+  if [ -f "$installed_file" ]; then
+    jq --arg name "$plugin_name" 'del(.[$name])' "$installed_file" > "${installed_file}.tmp"
+    mv "${installed_file}.tmp" "$installed_file"
+  fi
+
+  echo ""
+  echo -e "${GREEN}✅ ${plugin_name} 제거 완료${NC}"
+}
+
+cmd_plugin_check_update() {
+  local target="${1:-.}"
+  local marketplace="$SCRIPT_DIR/.claude-plugin/marketplace.json"
+  local installed_file="$target/.ai-setting/installed-plugins.json"
+
+  if ! command -v jq &>/dev/null; then
+    echo -e "${RED}오류: jq가 필요합니다${NC}" >&2
+    return 1
+  fi
+
+  if [ ! -f "$installed_file" ]; then
+    echo "설치된 플러그인이 없습니다."
+    return 0
+  fi
+
+  echo -e "${CYAN}━━━ Plugin Update Check ━━━${NC}"
+  local has_update=false
+
+  while IFS= read -r name; do
+    local installed_ver
+    local latest_ver
+    installed_ver="$(jq -r --arg n "$name" '.[$n].version' "$installed_file")"
+    latest_ver="$(jq -r --arg n "$name" '.plugins[] | select(.name == $n) | .version' "$marketplace")"
+
+    if [ -z "$latest_ver" ]; then
+      echo "  ${name}: marketplace에서 찾을 수 없음"
+      continue
+    fi
+
+    if [ "$installed_ver" != "$latest_ver" ]; then
+      echo -e "  ${YELLOW}${name}: ${installed_ver} → ${latest_ver} (업데이트 가능)${NC}"
+      has_update=true
+    else
+      echo "  ${name}: ${installed_ver} (최신)"
+    fi
+  done < <(jq -r 'keys[]' "$installed_file")
+
+  if [ "$has_update" = true ]; then
+    echo ""
+    echo "업데이트하려면: ai-setting plugin upgrade <name> <target>"
+  fi
+}
+
+cmd_plugin_upgrade() {
+  local plugin_name="$1"
+  local target="${2:-.}"
+
+  echo "기존 플러그인 제거 후 재설치합니다..."
+  cmd_plugin_uninstall "$plugin_name" "$target"
+  cmd_plugin_install "$plugin_name" "$target"
+}
+
+get_shared_asset_paths() {
+  local profile="${1:-standard}"
+  local paths=(
+    ".claude/settings.json"
+    ".claude/hooks/protect-files.sh"
+  )
+  if [ "$profile" != "minimal" ]; then
+    paths+=(
+      ".claude/hooks/block-dangerous-commands.sh"
+      ".claude/hooks/session-context.sh"
+      ".claude/hooks/compact-backup.sh"
+      ".claude/hooks/async-test.sh"
+    )
+  fi
+  if [ "$profile" = "strict" ] || [ "$profile" = "team" ]; then
+    paths+=(".claude/hooks/protect-main-branch.sh")
+  fi
+  if [ "$profile" = "team" ]; then
+    paths+=(".claude/hooks/team-webhook-notify.sh")
+  fi
+  paths+=(
+    ".cursor/rules/ai-setting.mdc"
+    ".gemini/settings.json"
+  )
+  printf '%s\n' "${paths[@]}"
+}
+
+detect_sync_conflicts() {
+  local target="$1"
+  local profile="${2:-standard}"
+  local conflict_count=0
+  local conflict_files=()
+
+  while IFS= read -r rel_path; do
+    local target_file="$target/$rel_path"
+
+    [ -f "$target_file" ] || continue
+    [ -L "$target_file" ] && continue
+
+    local source_file=""
+    case "$rel_path" in
+      .claude/settings.json)
+        source_file="$(get_profile_settings_template "$profile")"
+        ;;
+      .claude/hooks/*)
+        local hook_name="${rel_path#.claude/hooks/}"
+        source_file="$SCRIPT_DIR/claude/hooks/$hook_name"
+        ;;
+      .cursor/rules/ai-setting.mdc)
+        source_file="$SCRIPT_DIR/cursor/rules/ai-setting.mdc"
+        ;;
+      .gemini/settings.json)
+        source_file="$SCRIPT_DIR/gemini/settings.json"
+        ;;
+    esac
+
+    [ -f "$source_file" ] || continue
+
+    if ! diff -q "$source_file" "$target_file" >/dev/null 2>&1; then
+      conflict_count=$((conflict_count + 1))
+      conflict_files+=("$rel_path")
+    fi
+  done < <(get_shared_asset_paths "$profile")
+
+  SYNC_CONFLICT_COUNT=$conflict_count
+  SYNC_CONFLICT_FILES=("${conflict_files[@]}")
+}
+
 run_sync_manifest() {
   local manifest_path="$1"
   local raw_line=""
@@ -184,15 +510,49 @@ run_sync_manifest() {
     fi
 
     total=$((total + 1))
-    target_path="$(resolve_manifest_target_path "$manifest_dir" "$line")"
+
+    parse_manifest_line "$line"
+    target_path="$(resolve_manifest_target_path "$manifest_dir" "$MANIFEST_LINE_PATH")"
+
+    local per_project_profile="${MANIFEST_LINE_PROFILE:-$CLAUDE_PROFILE}"
+    local per_project_mcp_preset="$MANIFEST_LINE_MCP_PRESET"
+    local per_project_archetype="${MANIFEST_LINE_ARCHETYPE:-$USER_ARCHETYPE_HINT}"
+    local per_project_stack="${MANIFEST_LINE_STACK:-$USER_STACK_HINT}"
 
     echo -e "${GREEN}[${total}]${NC} ${target_path}"
+    if [ -n "$MANIFEST_LINE_PROFILE" ] || [ -n "$MANIFEST_LINE_MCP_PRESET" ] || [ -n "$MANIFEST_LINE_ARCHETYPE" ] || [ -n "$MANIFEST_LINE_STACK" ]; then
+      local opts_display=""
+      [ -n "$MANIFEST_LINE_PROFILE" ] && opts_display+="profile=${MANIFEST_LINE_PROFILE} "
+      [ -n "$MANIFEST_LINE_MCP_PRESET" ] && opts_display+="mcp-preset=${MANIFEST_LINE_MCP_PRESET} "
+      [ -n "$MANIFEST_LINE_ARCHETYPE" ] && opts_display+="archetype=${MANIFEST_LINE_ARCHETYPE} "
+      [ -n "$MANIFEST_LINE_STACK" ] && opts_display+="stack=${MANIFEST_LINE_STACK} "
+      echo -e "  옵션: ${opts_display}"
+    fi
 
     if [ ! -d "$target_path" ]; then
       echo -e "  ${YELLOW}⚠ 대상 디렉토리가 없어 건너뜁니다${NC}"
       skipped_count=$((skipped_count + 1))
       echo ""
       continue
+    fi
+
+    detect_sync_conflicts "$target_path" "$per_project_profile"
+    if [ "$SYNC_CONFLICT_COUNT" -gt 0 ]; then
+      echo -e "  ${YELLOW}⚠ 충돌 감지 (${SYNC_CONFLICT_COUNT}개): ${SYNC_CONFLICT_FILES[*]}${NC}"
+      case "$SYNC_CONFLICT_STRATEGY" in
+        skip)
+          echo -e "  ${YELLOW}→ --sync-conflict=skip: 이 프로젝트를 건너뜁니다${NC}"
+          skipped_count=$((skipped_count + 1))
+          echo ""
+          continue
+          ;;
+        backup)
+          echo -e "  → --sync-conflict=backup: 백업 후 덮어쓰기"
+          ;;
+        overwrite)
+          echo -e "  → --sync-conflict=overwrite: 직접 덮어쓰기"
+          ;;
+      esac
     fi
 
     child_command=("$SCRIPT_DIR/init.sh")
@@ -203,9 +563,11 @@ run_sync_manifest() {
       child_mode_label="init"
     fi
 
-    child_command+=("--profile" "$CLAUDE_PROFILE")
+    child_command+=("--profile" "$per_project_profile")
 
-    if [ "$LINK_MODE" = true ]; then
+    if [ "$LINK_DIR_MODE" = true ]; then
+      child_command+=("--link-dir")
+    elif [ "$LINK_MODE" = true ]; then
       child_command+=("--link")
     fi
     if [ "$AUTO_MCP" = true ]; then
@@ -225,14 +587,16 @@ run_sync_manifest() {
     fi
     if [ "$MCP_ENABLED" = false ]; then
       child_command+=("--no-mcp")
+    elif [ -n "$per_project_mcp_preset" ]; then
+      child_command+=("--mcp-preset" "$per_project_mcp_preset")
     elif [ "$USER_MCP_PRESET_SPECIFIED" = true ] && [ "${#MCP_PRESETS[@]}" -gt 0 ]; then
       child_command+=("--mcp-preset" "$(IFS=,; echo "${MCP_PRESETS[*]}")")
     fi
-    if [ -n "$USER_ARCHETYPE_HINT" ]; then
-      child_command+=("--archetype" "$USER_ARCHETYPE_HINT")
+    if [ -n "$per_project_archetype" ]; then
+      child_command+=("--archetype" "$per_project_archetype")
     fi
-    if [ -n "$USER_STACK_HINT" ]; then
-      child_command+=("--stack" "$USER_STACK_HINT")
+    if [ -n "$per_project_stack" ]; then
+      child_command+=("--stack" "$per_project_stack")
     fi
 
     child_command+=("$target_path")
@@ -445,6 +809,16 @@ run_doctor() {
     fi
   else
     doctor_error ".claude/settings.json 없음"
+  fi
+
+  if [ -f "$target/.claude/settings.local.json" ]; then
+    if command -v jq &>/dev/null && jq empty "$target/.claude/settings.local.json" >/dev/null 2>&1; then
+      doctor_ok ".claude/settings.local.json 존재 (유효한 JSON)"
+    elif command -v jq &>/dev/null; then
+      doctor_error ".claude/settings.local.json JSON 형식이 올바르지 않음"
+    else
+      doctor_warn ".claude/settings.local.json 존재하지만 jq가 없어 형식 검증은 건너뜀"
+    fi
   fi
 
   if [ -f "$target/.cursor/rules/ai-setting.mdc" ]; then
@@ -905,6 +1279,22 @@ run_symlink() {
   ln -sfn "$src" "$final_path"
 }
 
+install_shared_directory_link() {
+  local src_dir="$1"
+  local dst_dir="$2"
+
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "디렉토리 심링크: ${dst_dir} -> ${src_dir}"
+    return
+  fi
+
+  if [ -e "$dst_dir" ] && [ ! -L "$dst_dir" ]; then
+    rm -rf "$dst_dir"
+  fi
+  ln -sfn "$src_dir" "$dst_dir"
+  echo -e "  🔗 디렉토리 심링크: $(basename "$dst_dir") -> ${src_dir}"
+}
+
 install_shared_asset() {
   local src="$1"
   local dst="$2"
@@ -1080,10 +1470,59 @@ cleanup_managed_claude_assets() {
   done
 }
 
+merge_settings_local() {
+  local settings_path="$TARGET/.claude/settings.json"
+  local local_path="$TARGET/.claude/settings.local.json"
+
+  if [ ! -f "$local_path" ]; then
+    return
+  fi
+
+  if ! command -v jq &>/dev/null; then
+    echo -e "${YELLOW}  ⚠ jq가 없어 settings.local.json merge를 건너뜁니다${NC}"
+    return
+  fi
+
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "settings.local.json merge 적용: ${local_path}"
+    return
+  fi
+
+  if [ -L "$settings_path" ]; then
+    local resolved
+    resolved="$(readlink "$settings_path")"
+    cp "$resolved" "$settings_path.tmp"
+    rm "$settings_path"
+    mv "$settings_path.tmp" "$settings_path"
+    echo -e "  ${YELLOW}⚠ settings.json 심링크를 파일로 전환 (local override 적용 위해)${NC}"
+  fi
+
+  local merged
+  merged="$(jq -s '.[0] * .[1]' "$settings_path" "$local_path" 2>/dev/null)"
+  if [ $? -eq 0 ] && [ -n "$merged" ]; then
+    echo "$merged" > "$settings_path"
+    echo -e "  ✅ settings.local.json merge 적용 완료"
+  else
+    echo -e "  ${RED}✗ settings.local.json merge 실패 (JSON 형식 확인 필요)${NC}"
+  fi
+}
+
 copy_claude_profile_assets() {
   local settings_template
 
   settings_template="$(get_profile_settings_template "$CLAUDE_PROFILE")"
+
+  if [ "$LINK_DIR_MODE" = true ]; then
+    run_mkdir_p "$TARGET/.claude"
+    install_shared_asset "$settings_template" "$TARGET/.claude/settings.json"
+    install_shared_directory_link "$SCRIPT_DIR/claude/hooks" "$TARGET/.claude/hooks"
+    if [ "$CLAUDE_PROFILE" != "minimal" ]; then
+      install_shared_directory_link "$SCRIPT_DIR/claude/agents" "$TARGET/.claude/agents"
+      install_shared_directory_link "$SCRIPT_DIR/claude/skills" "$TARGET/.claude/skills"
+    fi
+    merge_settings_local
+    return
+  fi
 
   run_mkdir_p "$TARGET/.claude/hooks"
   install_shared_asset "$settings_template" "$TARGET/.claude/settings.json"
@@ -1122,6 +1561,8 @@ copy_claude_profile_assets() {
     install_shared_asset "$SCRIPT_DIR/claude/skills/gap-check/SKILL.md" "$TARGET/.claude/skills/gap-check/"
     install_shared_asset "$SCRIPT_DIR/claude/skills/cross-validate/SKILL.md" "$TARGET/.claude/skills/cross-validate/"
   fi
+
+  merge_settings_local
 }
 
 copy_cursor_assets() {
@@ -1720,17 +2161,78 @@ EOF
 EOF
 }
 
+# ai-setting 디렉토리 (이 스크립트가 있는 곳)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # 서브커맨드 전처리
 UPDATE_MODE=false
 SYNC_MODE=false
+PLUGIN_MODE=false
+PLUGIN_SUBCOMMAND=""
+PLUGIN_NAME=""
+PLUGIN_TARGET=""
 if [ "${1:-}" = "update" ]; then
   UPDATE_MODE=true
   shift
 elif [ "${1:-}" = "sync" ]; then
   SYNC_MODE=true
   shift
+elif [ "${1:-}" = "plugin" ]; then
+  PLUGIN_MODE=true
+  shift
+  PLUGIN_SUBCOMMAND="${1:-}"
+  shift
+  # plugin 서브커맨드 인자 수집
+  case "$PLUGIN_SUBCOMMAND" in
+    install|uninstall|upgrade)
+      PLUGIN_NAME="${1:-}"
+      PLUGIN_TARGET="${2:-.}"
+      ;;
+    list|check-update)
+      PLUGIN_TARGET="${1:-.}"
+      ;;
+  esac
 elif [ "${1:-}" = "init" ]; then
   shift
+fi
+
+# plugin 모드는 옵션 파싱 불필요 — 바로 실행
+if [ "$PLUGIN_MODE" = true ]; then
+  case "$PLUGIN_SUBCOMMAND" in
+    list)
+      cmd_plugin_list "$PLUGIN_TARGET"
+      ;;
+    install)
+      if [ -z "$PLUGIN_NAME" ]; then
+        echo -e "${RED}오류: plugin install <name> [target] 형식으로 사용하세요${NC}" >&2
+        exit 1
+      fi
+      cmd_plugin_install "$PLUGIN_NAME" "$PLUGIN_TARGET"
+      ;;
+    uninstall)
+      if [ -z "$PLUGIN_NAME" ]; then
+        echo -e "${RED}오류: plugin uninstall <name> [target] 형식으로 사용하세요${NC}" >&2
+        exit 1
+      fi
+      cmd_plugin_uninstall "$PLUGIN_NAME" "$PLUGIN_TARGET"
+      ;;
+    check-update)
+      cmd_plugin_check_update "$PLUGIN_TARGET"
+      ;;
+    upgrade)
+      if [ -z "$PLUGIN_NAME" ]; then
+        echo -e "${RED}오류: plugin upgrade <name> [target] 형식으로 사용하세요${NC}" >&2
+        exit 1
+      fi
+      cmd_plugin_upgrade "$PLUGIN_NAME" "$PLUGIN_TARGET"
+      ;;
+    *)
+      echo -e "${RED}오류: 알 수 없는 plugin 서브커맨드: ${PLUGIN_SUBCOMMAND}${NC}" >&2
+      echo "사용법: ai-setting plugin {list|install|uninstall|check-update|upgrade} [name] [target]"
+      exit 1
+      ;;
+  esac
+  exit 0
 fi
 
 # 옵션 파싱
@@ -1741,6 +2243,7 @@ BACKUP_ALL=false
 REAPPLY_MODE=false
 AUTO_MCP=false
 LINK_MODE=false
+LINK_DIR_MODE=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
@@ -1752,6 +2255,7 @@ USER_STACK_HINT=""
 USER_MCP_PRESET_SPECIFIED=false
 SYNC_MODE_KIND="update"
 SYNC_MANIFEST=""
+SYNC_CONFLICT_STRATEGY="backup"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -1771,6 +2275,10 @@ while [ "$#" -gt 0 ]; do
     --link)
       LINK_MODE=true
       ;;
+    --link-dir)
+      LINK_MODE=true
+      LINK_DIR_MODE=true
+      ;;
     --update)
       UPDATE_MODE=true
       ;;
@@ -1782,6 +2290,17 @@ while [ "$#" -gt 0 ]; do
       fi
       validate_sync_mode "$2"
       SYNC_MODE_KIND="$2"
+      shift
+      ;;
+    --sync-conflict)
+      if [ -z "${2:-}" ]; then
+        echo -e "${RED}오류: --sync-conflict 뒤에 값이 필요합니다 (overwrite|skip|backup)${NC}" >&2
+        exit 1
+      fi
+      case "$2" in
+        overwrite|skip|backup) SYNC_CONFLICT_STRATEGY="$2" ;;
+        *) echo -e "${RED}오류: --sync-conflict 값은 overwrite, skip, backup 중 하나여야 합니다${NC}" >&2; exit 1 ;;
+      esac
       shift
       ;;
     --dry-run)
@@ -1915,9 +2434,6 @@ if [ "$REAPPLY_MODE" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" =
   usage
   exit 1
 fi
-
-# ai-setting 디렉토리 (이 스크립트가 있는 곳)
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 if [ "$SYNC_MODE" = true ]; then
   SYNC_MANIFEST="${SYNC_MANIFEST:-$SCRIPT_DIR/projects.manifest}"

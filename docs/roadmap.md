@@ -10,11 +10,11 @@
 - [x] Priority 2: archetype / stack 자동 감지 1차 도입
 - [x] Priority 3: `doctor / dry-run / diff / backup-all / reapply` 도입
 - [x] Phase 1: 멀티 도구 지원
-- [ ] Phase 2: 동기화 시스템
+- [x] Phase 2: 동기화 시스템
 - [x] Phase 3: 프로필 시스템 고도화
-- [ ] Phase 4: 플러그인 마켓플레이스
+- [x] Phase 4: 플러그인 마켓플레이스
 - [x] Phase 5: 고급 hooks 1차
-- [ ] Phase 6: 커뮤니티 & 배포
+- [x] Phase 6: 커뮤니티 & 배포
 
 ## Priority 0: 프로젝트 로컬 MCP 도입
 
@@ -333,7 +333,9 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - Safety: `doctor`, `dry-run`, `diff`, `backup-all`, `reapply`
 - Detection: `blank-start / docs-first / hybrid / code-first`, archetype / stack 자동 감지, `--auto-mcp`
 - Templates: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `docs/decisions.md`
-- 현재 한계: 동기화 시스템 미구현, 플러그인/배포 경로 미구현
+- Sync: manifest 프로젝트별 옵션, settings.local.json override, 충돌 감지, 디렉토리 심링크
+- Plugin: ai-setting-core/strict/team 분리, install/uninstall/check-update CLI
+- Deploy: npm publish 준비 (v1.0.0), brew formula, CI/CD, release automation
 
 ---
 
@@ -383,12 +385,15 @@ init.sh 실행 후:
 > "한 곳을 고치면 모든 프로젝트에 반영된다"
 
 현재 상태:
-- `init.sh --link` 1차 지원
-- `init.sh update /path/to/project` 1차 지원
-- `init.sh sync [manifest]` 1차 지원
+- `init.sh --link` 파일 단위 심링크 지원
+- `init.sh --link-dir` 디렉토리 단위 심링크 지원 (hooks, agents, skills 통째로)
+- `init.sh update /path/to/project` AI 없이 공유 자산 갱신
+- `init.sh sync [manifest]` 다중 프로젝트 배치 sync
+- manifest에 프로젝트별 옵션 지정 가능 (`profile=`, `mcp-preset=`, `archetype=`, `stack=`)
+- `.claude/settings.local.json`으로 프로젝트별 override merge 지원 (jq 필요)
+- `--sync-conflict=overwrite|skip|backup` 충돌 감지 및 해결 전략
 - `.claude/settings.json`, hooks, agents, skills, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`은 심링크로 연결 가능
 - 프로젝트별 문서(`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Copilot 문서), `.codex/config.toml`, `.mcp.json`은 계속 로컬 파일로 유지
-- manifest 기반 다중 프로젝트 배치 sync는 가능하지만, 전체 디렉토리 단위 심링크와 로컬 override merge는 아직 미구현
 
 ### 2-1. Symlink 기반 동기화 (stow 패턴)
 현재 방식 (복사):
@@ -484,11 +489,13 @@ init.sh --profile team /path/to/project
 > "다른 사람들이 만든 에이전트/스킬을 설치하고, 내 것도 공유한다"
 
 현재 상태:
-- 공식 Claude Code plugin / marketplace 포맷 기준으로 `.claude-plugin/marketplace.json` 1차 반영
-- `plugins/ai-setting-core` plugin 1차 반영
-- `ai-setting-core`는 hooks, agents, skills, core MCP를 포함
+- 공식 Claude Code plugin / marketplace 포맷 기준으로 `.claude-plugin/marketplace.json` 반영
+- `plugins/ai-setting-core` — core hooks, agents, skills, MCP
+- `plugins/ai-setting-strict` — branch protection hook (strict/team 전용)
+- `plugins/ai-setting-team` — team webhook notification hook
+- `ai-setting plugin list|install|uninstall|check-update|upgrade` CLI 명령 지원
+- `.ai-setting/installed-plugins.json`으로 설치 기록 및 버전 관리
 - project docs 템플릿, Cursor/Gemini/Copilot/Codex 설정은 계속 `init.sh` 범위로 유지
-- strict/team 전용 plugin 분리와 공개 배포 채널 연결은 아직 미구현
 
 ### Claude Code 플러그인 형식
 ```json
@@ -586,8 +593,15 @@ fi
 - `CONTRIBUTING.md` 추가
 - 기능 추가 시 검증/문서/커밋 규칙을 저장소 내부 기준으로 문서화
 - `bin/ai-setting` 로컬 CLI wrapper 추가
-- `package.json` 1차 scaffold 추가 (`private`, `bin.ai-setting`, `npm pack --dry-run` 검증 가능)
-- public registry publish, brew formula, sync-conf.dev 등록은 아직 미진행
+- `package.json` v1.0.0 배포 준비 완료 (MIT 라이선스, engines, repository, keywords)
+- `LICENSE` MIT 추가
+- `.npmignore` 추가
+- `Formula/ai-setting.rb` Homebrew formula 추가
+- `SECURITY.md` 보안 정책 추가
+- `.github/workflows/ci.yml` CI 파이프라인 추가
+- `.github/workflows/release.yml` 자동 배포 파이프라인 추가
+- `.github/ISSUE_TEMPLATE/` bug report, feature request 템플릿 추가
+- sync-conf.dev 등록은 public 전환 후 진행 예정
 
 ### 6-1. sync-conf.dev 등록
 - 커뮤니티 디렉토리에 등록하여 `npx sync-conf install jaewon/ai-setting`으로 설치 가능

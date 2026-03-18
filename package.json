@@ -1,7 +1,6 @@
 {
   "name": "ai-setting",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
   "description": "Bootstrap Claude Code, Codex, Cursor, Gemini CLI, and Copilot project settings.",
   "bin": {
     "ai-setting": "./bin/ai-setting"
@@ -24,7 +23,35 @@
     "help": "./bin/ai-setting --help",
     "pack:check": "npm pack --dry-run",
     "plugin:validate": "claude plugin validate .",
-    "plugin:validate:core": "claude plugin validate ./plugins/ai-setting-core"
+    "plugin:validate:core": "claude plugin validate ./plugins/ai-setting-core",
+    "preversion": "bash -n init.sh",
+    "postversion": "git push && git push --tags"
   },
-  "license": "UNLICENSED"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaewon94/ai-setting.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Jaewon94/ai-setting/issues"
+  },
+  "homepage": "https://github.com/Jaewon94/ai-setting#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ai",
+    "claude-code",
+    "codex",
+    "cursor",
+    "gemini",
+    "copilot",
+    "bootstrap",
+    "settings",
+    "hooks",
+    "agents",
+    "skills",
+    "mcp"
+  ],
+  "author": "Jaewon",
+  "license": "MIT"
 }
