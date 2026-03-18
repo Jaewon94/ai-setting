@@ -111,54 +111,38 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 ## 2차 고도화 (예정)
 
 > v1.0.0 → v2.0.0
-> 실제 배포 실행, 코드 품질 개선, MCP 확장, 테스트 자동화, 커뮤니티 생태계 구축
+> 코드 구조 개선, 멀티 도구 지원 심화, 테스트 자동화, 배포, 생태계 확장
 
 ### 완료 체크
 
-- [ ] Phase 7: 실제 배포 실행
-- [ ] Phase 8: init.sh 모듈 분리
+- [ ] Phase 7: init.sh 모듈 분리
+- [ ] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
 - [ ] Phase 9: 테스트 자동화
-- [ ] Phase 10: MCP preset 확장
-- [ ] Phase 11: 커뮤니티 플러그인 생태계
-- [ ] Phase 12: archetype별 템플릿 특화
+- [ ] Phase 10: 실제 배포 실행
+- [ ] Phase 11: MCP preset 확장
+- [ ] Phase 12: 커뮤니티 플러그인 생태계
+- [ ] Phase 13: archetype별 템플릿 특화
 
 ---
 
-### Phase 7: 실제 배포 실행
-
-> "준비된 배포 파이프라인을 실제로 가동한다"
-
-1차 고도화에서 배포 *준비*는 완료했지만, 실제 실행은 아직이다.
-
-| 항목 | 현재 상태 | 할 일 |
-|------|-----------|-------|
-| `git push` | 로컬에 미push 커밋 있음 | origin에 push |
-| `npm publish` | package.json 준비 완료, `private` 제거됨 | `npm publish` 실행 |
-| GitHub repo | private | public 전환 |
-| brew tap | Formula 파일 존재 | 별도 `homebrew-ai-setting` repo 생성 후 formula 등록 |
-| sync-conf.dev | 미등록 | 커뮤니티 디렉토리 등록 |
-| CI 검증 | workflow 파일 존재 | push 후 GitHub Actions 통과 확인 |
-
-#### 완료 기준
-
-- `npx ai-setting init ./my-project` 로 바로 설치 가능
-- `brew install jaewon/tap/ai-setting` 으로 설치 가능
-- CI가 push/PR마다 자동 실행
-- tag push 시 npm + GitHub Release 자동 생성
-
----
-
-### Phase 8: init.sh 모듈 분리
+### Phase 7: init.sh 모듈 분리 ⭐ 최우선
 
 > "단일 파일 ~3000행을 유지보수 가능한 구조로 분리한다"
 
-현재 `init.sh`가 모든 기능을 포함하여 약 3000행에 달한다. 기능별로 분리하면 가독성과 유지보수성이 크게 향상된다.
+현재 `init.sh`가 모든 기능을 포함하여 약 3000행에 달한다. Phase 8 이후 기능 추가 전에 반드시 구조를 정리해야 한다.
+
+#### 구현 지침
+
+- 분리 전 전체 기능의 스모크 테스트를 통과하는 baseline을 확보한다
+- 함수 의존 관계를 먼저 파악하고, 순환 참조 없이 분리한다
+- 각 모듈은 독립적으로 `bash -n` 통과해야 한다
+- 분리 후 기존 모든 모드/옵션이 동일하게 동작하는지 회귀 검증한다
 
 #### 분리 구조
 
 ```
 ai-setting/
-├── init.sh                    # 메인 엔트리 (옵션 파싱 + 실행 흐름)
+├── init.sh                    # 메인 엔트리 (옵션 파싱 + 실행 흐름, ~300행)
 ├── lib/
 │   ├── common.sh              # 색상, dry-run, mkdir, copy, symlink 헬퍼
 │   ├── detect.sh              # 프로젝트 모드/archetype/스택 감지
@@ -172,8 +156,94 @@ ai-setting/
 #### 완료 기준
 
 - `init.sh`가 300행 이내로 축소
-- `bash -n lib/*.sh` 모두 통과
+- `bash -n init.sh lib/*.sh` 모두 통과
 - 기존 모든 모드/옵션이 동일하게 동작 (회귀 없음)
+- `bin/ai-setting` 래퍼가 변경 없이 동작
+
+---
+
+### Phase 8: 멀티 도구 지원 심화 ⭐ 최우선
+
+> "설정 파일 복사 수준에서 각 도구의 고유 기능을 활용하는 수준으로 끌어올린다"
+
+현재 Cursor/Gemini/Copilot/Codex는 기본 설정 파일만 생성하고 있다. 각 도구의 공식 문서와 베스트 프랙티스를 기반으로 특화 규칙을 추가한다.
+
+#### 구현 지침
+
+- **반드시 각 도구의 공식 문서를 먼저 확인**하고 최신 설정 스키마/기능을 파악한다
+- 커뮤니티 베스트 프랙티스 (cursorrules.org, awesome-cursorrules 등)를 참고한다
+- 각 도구마다 실제로 해당 도구를 실행해서 설정이 적용되는지 검증한다
+- 기존 AGENTS.md/CLAUDE.md의 규칙을 각 도구 형식에 맞게 변환하되, 도구 고유 기능도 활용한다
+
+#### 8-1. Cursor 지원 심화
+
+현재: `.cursor/rules/ai-setting.mdc` 1개 (AGENTS.md/CLAUDE.md 참조만)
+
+목표:
+- **glob 패턴 기반 파일 타입별 규칙** 추가 (Cursor의 핵심 차별점)
+- always/auto/manual/agent-requested 타입 분리 활용
+- 프로젝트 archetype별 Cursor rule 변형
+
+참고 자료:
+- [Cursor Rules 공식 문서](https://docs.cursor.com/context/rules)
+- [cursorrules.org](https://cursorrules.org/) — 커뮤니티 규칙 생성기
+- [awesome-cursorrules](https://github.com/PatrickJS/awesome-cursorrules)
+
+추가 대상 예시:
+```
+.cursor/rules/
+├── ai-setting.mdc            # 기존: 프로젝트 공통 규칙 (always)
+├── typescript.mdc            # glob: **/*.ts,**/*.tsx — TS 코딩 규칙
+├── python.mdc                # glob: **/*.py — Python 코딩 규칙
+├── testing.mdc               # glob: **/*.test.*,**/*.spec.* — 테스트 규칙
+└── docs.mdc                  # glob: **/*.md — 문서 작성 규칙
+```
+
+#### 8-2. Gemini CLI 지원 심화
+
+현재: `.gemini/settings.json` (gitignore만), `GEMINI.md` (CLAUDE.md/AGENTS.md 참조만)
+
+목표:
+- Gemini CLI의 고유 설정 옵션 활용 (sandbox mode, model 설정 등)
+- `GEMINI.md`에 Gemini 특화 지침 추가 (tool use 패턴, 응답 형식 등)
+- `.gemini/` 디렉토리의 추가 설정 파일 활용
+
+참고 자료:
+- [Gemini CLI Configuration](https://geminicli.com/docs/reference/configuration/)
+- [Gemini CLI GitHub](https://github.com/google-gemini/gemini-cli)
+
+#### 8-3. GitHub Copilot 지원 심화
+
+현재: `.github/copilot-instructions.md` (generic build/test/lint 요약)
+
+목표:
+- Copilot의 파일별 지침 (`*.test.ts` 패턴 등) 활용
+- `copilot-instructions.md`에 프로젝트 구조, 네이밍 컨벤션, API 패턴 등 Copilot 특화 지침 추가
+- VS Code settings 연동 (`.vscode/settings.json`의 Copilot 관련 설정)
+
+참고 자료:
+- [GitHub Copilot Instructions 공식 문서](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot)
+- [Copilot Best Practices](https://github.blog/developer-skills/github/how-to-use-github-copilot-in-your-ide-tips-tricks-and-best-practices/)
+
+#### 8-4. Codex CLI 지원 심화
+
+현재: `.codex/config.toml` (모델/sandbox/MCP만)
+
+목표:
+- Codex의 approval_policy 세분화 (suggest/auto-edit/full-auto)
+- 프로필별 Codex 설정 차등 적용
+- Codex 전용 지침 파일 (`CODEX.md` 또는 `codex/instructions.md`)
+
+참고 자료:
+- [Codex CLI Config Reference](https://developers.openai.com/codex/config-reference/)
+- [Codex CLI GitHub](https://github.com/openai/codex)
+
+#### 완료 기준
+
+- 각 도구에서 설정이 실제로 적용되고 동작하는지 검증
+- 도구별 2개 이상의 특화 규칙/설정 추가
+- archetype 감지와 연동하여 도구별 규칙이 프로젝트 유형에 맞게 생성
+- README에 도구별 지원 수준 표를 ★ 3개 이상으로 끌어올림
 
 ---
 
@@ -181,7 +251,7 @@ ai-setting/
 
 > "CI에서 스모크 테스트를 넘어 체계적인 회귀 테스트를 실행한다"
 
-현재는 CI에서 기본 스모크 테스트만 돌린다. fixture 기반 시나리오 테스트를 추가한다.
+Phase 7 모듈 분리와 함께 진행하면 분리 과정의 회귀를 방지할 수 있다.
 
 #### 테스트 범위
 
@@ -221,11 +291,33 @@ tests/
 
 ---
 
-### Phase 10: MCP preset 확장
+### Phase 10: 실제 배포 실행
+
+> "준비된 배포 파이프라인을 실제로 가동한다"
+
+Phase 7~9 완료 후 안정화된 상태에서 배포한다.
+
+| 항목 | 현재 상태 | 할 일 |
+|------|-----------|-------|
+| `git push` | 로컬에 미push 커밋 있음 | origin에 push |
+| `npm publish` | package.json 준비 완료 | `npm publish` 실행 |
+| GitHub repo | private | public 전환 |
+| brew tap | Formula 파일 존재 | 별도 `homebrew-ai-setting` repo 생성 후 formula 등록 |
+| sync-conf.dev | 미등록 | 커뮤니티 디렉토리 등록 |
+| CI 검증 | workflow 파일 존재 | push 후 GitHub Actions 통과 확인 |
+
+#### 완료 기준
+
+- `npx ai-setting init ./my-project` 로 바로 설치 가능
+- `brew install jaewon/tap/ai-setting` 으로 설치 가능
+- CI가 push/PR마다 자동 실행
+- tag push 시 npm + GitHub Release 자동 생성
+
+---
+
+### Phase 11: MCP preset 확장
 
 > "1차에서 보류했던 MCP를 조건부로 추가한다"
-
-1차 고도화에서 보류/후보로 남긴 MCP를 조건부 preset으로 추가한다.
 
 | 분류 | MCP | 조건 | 선행 작업 |
 |------|-----|------|-----------|
@@ -244,7 +336,7 @@ tests/
 
 ---
 
-### Phase 11: 커뮤니티 플러그인 생태계
+### Phase 12: 커뮤니티 플러그인 생태계
 
 > "외부 기여자가 자신만의 플러그인을 만들어 공유할 수 있다"
 
@@ -264,11 +356,9 @@ tests/
 
 ---
 
-### Phase 12: archetype별 템플릿 특화
+### Phase 13: archetype별 템플릿 특화
 
 > "프로젝트 유형에 따라 더 정확한 기본 설정을 제공한다"
-
-현재 archetype 감지는 AI 프롬프트에 힌트를 주는 수준이다. 2차에서는 archetype별로 다른 템플릿과 기본값을 제공한다.
 
 | archetype | 특화 내용 |
 |-----------|-----------|
@@ -300,23 +390,22 @@ templates/
 
 ### 2차 고도화 우선순위 요약
 
-| Phase | 핵심 | 난이도 | 효과 |
-|-------|------|--------|------|
-| **Phase 7** | 실제 배포 실행 | 쉬움 | npm/brew로 누구나 설치 가능 |
-| **Phase 8** | init.sh 모듈 분리 | 중간 | 유지보수성 대폭 향상 |
-| **Phase 9** | 테스트 자동화 | 중간 | 회귀 방지, 품질 보증 |
-| **Phase 10** | MCP preset 확장 | 중간 | 프로젝트별 최적 도구 제공 |
-| **Phase 11** | 커뮤니티 플러그인 | 중간~높음 | 생태계 확장, 외부 기여 |
-| **Phase 12** | archetype 템플릿 특화 | 중간 | 프로젝트별 정확도 향상 |
+| Phase | 핵심 | 난이도 | 효과 | 순서 |
+|-------|------|--------|------|------|
+| **Phase 7** | init.sh 모듈 분리 | 중간 | 유지보수성 대폭 향상 | ⭐ 1순위 |
+| **Phase 8** | 멀티 도구 특화 | 중간 | Cursor/Gemini/Copilot 실질적 가치 | ⭐ 1순위 |
+| **Phase 9** | 테스트 자동화 | 중간 | 회귀 방지, 품질 보증 | 2순위 |
+| **Phase 10** | 실제 배포 실행 | 쉬움 | npm/brew로 누구나 설치 가능 | 3순위 |
+| **Phase 11** | MCP preset 확장 | 중간 | 프로젝트별 최적 도구 제공 | 4순위 |
+| **Phase 12** | 커뮤니티 플러그인 | 중간~높음 | 생태계 확장, 외부 기여 | 5순위 |
+| **Phase 13** | archetype 템플릿 특화 | 중간 | 프로젝트별 정확도 향상 | 6순위 |
 
 #### 권장 순서
 
-1. **Phase 7 (배포 실행)** — 가장 먼저, 나머지는 배포 후
-2. **Phase 8 (모듈 분리)** — 다음 기능 추가 전에 구조 정리
-3. **Phase 9 (테스트)** — 모듈 분리와 함께 진행
-4. **Phase 10 (MCP 확장)** — 사용자 피드백 반영
-5. **Phase 11 (커뮤니티)** — 생태계 성장
-6. **Phase 12 (템플릿 특화)** — 장기 고도화
+1. **Phase 7 (모듈 분리)** → **Phase 8 (멀티 도구 심화)** — 동시 진행 가능, 최우선
+2. **Phase 9 (테스트)** — 모듈 분리 직후 회귀 검증 체계 구축
+3. **Phase 10 (배포)** — 안정화 후 실제 배포
+4. **Phase 11~13** — 사용자 피드백 반영하며 순차 진행
 
 ---
 
