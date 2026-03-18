@@ -1,9 +1,9 @@
 # AI Setting - 새 프로젝트용 AI 도구 공통 설정
 
-> 새 프로젝트에 Claude Code, Codex 등 AI 코딩 도구 설정을 한 번에 적용.
+> 새 프로젝트에 Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot 설정을 한 번에 적용.
 > StoryForge, TaskRelay + 커뮤니티 베스트 프랙티스에서 추출.
 
-기여나 확장 작업은 [CONTRIBUTING.md](/Users/jaewon/my-project/ai-setting/CONTRIBUTING.md)를 기준으로 진행하면 됩니다.
+기여나 확장 작업은 [CONTRIBUTING.md](CONTRIBUTING.md)를 기준으로 진행하면 됩니다.
 
 ## 빠른 시작
 
@@ -24,11 +24,19 @@ cd /path/to/ai-setting
 # 공유 자산은 심링크로, 프로젝트 문서는 로컬 파일로 유지
 ./bin/ai-setting --link /path/to/my-new-project
 
+# hooks/agents/skills 디렉토리를 통째로 심링크
+./bin/ai-setting --link-dir /path/to/my-new-project
+
 # 기존 프로젝트의 공유 자산/MCP만 빠르게 업데이트
 ./bin/ai-setting update /path/to/my-new-project
 
 # 여러 프로젝트를 manifest 기준으로 한 번에 동기화
 ./bin/ai-setting sync ./projects.manifest
+
+# 플러그인 관리 (설치/제거/업데이트)
+./bin/ai-setting plugin list
+./bin/ai-setting plugin install ai-setting-strict /path/to/my-project
+./bin/ai-setting plugin uninstall ai-setting-strict /path/to/my-project
 
 # 기존처럼 init.sh를 직접 실행해도 동일
 /path/to/ai-setting/init.sh /path/to/my-new-project
@@ -89,32 +97,48 @@ init.sh 실행
 
 `bin/ai-setting`은 저장소 루트의 `init.sh`를 감싸는 얇은 래퍼입니다. 덕분에 저장소 안에서는 `./bin/ai-setting ...` 형태로 일관되게 실행할 수 있고, 이후 npm/brew 같은 배포 채널로 확장할 때도 같은 커맨드 이름을 유지할 수 있습니다.
 
-같이 추가된 [package.json](/Users/jaewon/my-project/ai-setting/package.json)은 아직 공개 배포용이 아니라 로컬 스캐폴드입니다.
-- 기본값은 `private: true`
-- `bin.ai-setting` 엔트리만 정의
-- `npm run pack:check`로 패키지 메타데이터를 dry-run 검증 가능
-- `npm run plugin:validate`, `npm run plugin:validate:core`로 Claude Code plugin / marketplace 스캐폴드를 검증 가능
+[package.json](package.json)은 npm 배포 준비가 완료된 상태입니다.
+- v1.0.0, MIT 라이선스
+- `bin.ai-setting` CLI 엔트리
+- `npm run pack:check`로 패키지 메타데이터 dry-run 검증
+- `npm run plugin:validate`로 Claude Code plugin / marketplace 검증
 
 ### Claude Code 플러그인 마켓플레이스
 
-이 저장소는 `init.sh` 기반 부트스트랩 외에 Claude Code용 플러그인 마켓플레이스 1차 스캐폴드도 함께 제공합니다.
+이 저장소는 `init.sh` 기반 부트스트랩 외에 Claude Code용 플러그인도 함께 제공합니다.
 
-현재 포함:
-- [.claude-plugin/marketplace.json](/Users/jaewon/my-project/ai-setting/.claude-plugin/marketplace.json) — 로컬/원격에서 추가 가능한 marketplace catalog
-- [plugins/ai-setting-core/.claude-plugin/plugin.json](/Users/jaewon/my-project/ai-setting/plugins/ai-setting-core/.claude-plugin/plugin.json) — `ai-setting-core` 플러그인 메타데이터
-- [plugins/ai-setting-core/hooks/hooks.json](/Users/jaewon/my-project/ai-setting/plugins/ai-setting-core/hooks/hooks.json) — core hook 등록
-- [plugins/ai-setting-core/.mcp.json](/Users/jaewon/my-project/ai-setting/plugins/ai-setting-core/.mcp.json) — keyless core MCP 기본값
+포함 플러그인:
 
-이 1차 플러그인은 Claude Code 전용입니다.
-- 포함: hooks, agents, skills, core MCP
-- 제외: `CLAUDE.md`/`AGENTS.md` 템플릿 생성, Cursor/Gemini/Copilot 설정, Codex 설정
+| 플러그인 | 설명 |
+|----------|------|
+| `ai-setting-core` | core hooks, agents, skills, keyless MCP 기본값 |
+| `ai-setting-strict` | main/master 브랜치 보호 hook (strict/team용) |
+| `ai-setting-team` | Slack/Discord 웹훅 알림 hook (team용) |
 
-로컬 테스트 예시:
+플러그인 CLI:
+
+```bash
+# 설치 가능한 플러그인 목록
+./bin/ai-setting plugin list
+
+# 플러그인 설치 (대상 프로젝트에 hook/agent/skill 복사 + settings.json merge)
+./bin/ai-setting plugin install ai-setting-strict /path/to/project
+
+# 설치된 플러그인 업데이트 확인
+./bin/ai-setting plugin check-update /path/to/project
+
+# 플러그인 제거
+./bin/ai-setting plugin uninstall ai-setting-strict /path/to/project
+
+# 플러그인 업그레이드 (제거 후 재설치)
+./bin/ai-setting plugin upgrade ai-setting-strict /path/to/project
+```
+
+Claude Code 네이티브 마켓플레이스:
 
 ```bash
 # marketplace / plugin 스키마 검증
 npm run plugin:validate
-npm run plugin:validate:core
 
 # Claude Code에 로컬 marketplace 추가
 claude plugin marketplace add ./
@@ -122,8 +146,6 @@ claude plugin marketplace add ./
 # project scope로 core plugin 설치
 claude plugin install ai-setting-core@jaewon-ai-setting --scope project
 ```
-
-`--scope project` 설치는 대상 프로젝트 디렉토리에서 실행하면 `.claude/settings.json`의 `enabledPlugins`에 등록됩니다.
 
 ### 옵션
 
@@ -141,6 +163,9 @@ claude plugin install ai-setting-core@jaewon-ai-setting --scope project
 # 공유 가능한 설정 자산을 심링크로 연결
 /path/to/ai-setting/init.sh --link /path/to/my-new-project
 
+# hooks/agents/skills 디렉토리를 통째로 심링크
+/path/to/ai-setting/init.sh --link-dir /path/to/my-new-project
+
 # AI 자동 채우기 없이 shared assets / MCP만 갱신
 /path/to/ai-setting/init.sh update /path/to/my-new-project
 
@@ -149,6 +174,9 @@ claude plugin install ai-setting-core@jaewon-ai-setting --scope project
 
 # 여러 프로젝트를 init 흐름으로 다시 적용
 /path/to/ai-setting/init.sh sync --sync-mode init ./projects.manifest
+
+# sync 시 로컬 수정 보호 (충돌 감지 → skip)
+/path/to/ai-setting/init.sh sync --sync-conflict skip ./projects.manifest
 
 # 웹 프로젝트: core + web
 /path/to/ai-setting/init.sh --mcp-preset web /path/to/my-new-project
@@ -207,11 +235,21 @@ claude plugin install ai-setting-core@jaewon-ai-setting --scope project
 
 `--link`를 주면 공유 가능한 설정 자산은 복사 대신 ai-setting 저장소 원본을 가리키는 심링크로 연결합니다.
 
-심링크 대상:
+`--link-dir`를 주면 `.claude/hooks`, `.claude/agents`, `.claude/skills` 디렉토리를 통째로 심링크합니다. 개별 파일이 아닌 디렉토리 단위로 연결되므로 ai-setting에 새 hook/agent/skill이 추가되면 자동으로 반영됩니다.
+
+심링크 대상 (`--link`):
 - `.claude/settings.json`
-- `.claude/hooks/*`
-- `.claude/agents/*`
-- `.claude/skills/*`
+- `.claude/hooks/*` (개별 파일)
+- `.claude/agents/*` (개별 파일)
+- `.claude/skills/*` (개별 파일)
+- `.cursor/rules/ai-setting.mdc`
+- `.gemini/settings.json`
+
+심링크 대상 (`--link-dir`):
+- `.claude/settings.json` (파일)
+- `.claude/hooks/` (디렉토리 전체)
+- `.claude/agents/` (디렉토리 전체)
+- `.claude/skills/` (디렉토리 전체)
 - `.cursor/rules/ai-setting.mdc`
 - `.gemini/settings.json`
 
@@ -258,6 +296,7 @@ claude plugin install ai-setting-core@jaewon-ai-setting --scope project
 
 manifest 형식:
 - 한 줄에 프로젝트 경로 하나씩 작성
+- 경로 뒤에 `key=value` 옵션을 추가하면 프로젝트별 설정 지정 가능 (글로벌 옵션보다 우선)
 - 빈 줄과 `#` 주석은 무시
 - 상대 경로는 manifest 파일 위치 기준으로 해석
 
@@ -266,9 +305,21 @@ manifest 예시:
 ```text
 # projects.manifest
 ../storyforge
-../taskrelay
-/Users/jaewon/workspace/internal-tool
+../taskrelay  profile=strict  mcp-preset=core,web
+../internal-tool  profile=minimal  archetype=cli-tool
 ```
+
+지원 옵션: `profile=`, `mcp-preset=`, `archetype=`, `stack=`
+
+충돌 감지:
+- sync/update 시 로컬에서 수정된 managed 파일이 있으면 충돌을 감지합니다.
+- `--sync-conflict=backup` (기본): 백업 후 덮어쓰기
+- `--sync-conflict=skip`: 해당 프로젝트를 건너뜀
+- `--sync-conflict=overwrite`: 직접 덮어쓰기
+
+프로젝트별 override:
+- `.claude/settings.local.json`에 JSON을 넣으면 update/init 시 `settings.json`에 deep merge 됩니다 (jq 필요).
+- 심링크 모드에서 override가 있으면 settings.json만 copy 모드로 전환됩니다.
 
 시작 방법:
 - `templates/projects.manifest.template`를 복사해 `projects.manifest`를 만든 뒤 경로를 채우면 됨
@@ -439,6 +490,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 - 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`(team), `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
 - team profile에서는 `.ai-setting/team-webhook.json`도 함께 확인
 - `.mcp.json` JSON 유효성
+- `.claude/settings.local.json` 존재 시 JSON 유효성
 - 템플릿/skill placeholder 잔존 여부
 - 공유 자산 모드가 `copy`인지 `symlink`인지
 - async test 명령이 명시되었는지 또는 자동 감지가 가능한지
@@ -549,15 +601,19 @@ ai-setting/
 ├── codex/
 │   └── config.toml                        # Codex CLI 기본 설정 (MCP preset은 init 시 추가)
 ├── plugins/
-│   └── ai-setting-core/
-│       ├── .claude-plugin/
-│       │   └── plugin.json               # Claude Code core plugin manifest
-│       ├── hooks/
-│       │   └── hooks.json                # Plugin hook config
-│       ├── scripts/                      # Plugin hook scripts
-│       ├── agents/                       # Plugin agents
-│       ├── skills/                       # Plugin skills
-│       └── .mcp.json                     # Plugin-scoped core MCP defaults
+│   ├── ai-setting-core/                  # Core 플러그인 (hooks, agents, skills, MCP)
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── hooks/hooks.json
+│   │   ├── scripts/, agents/, skills/
+│   │   └── .mcp.json
+│   ├── ai-setting-strict/               # Strict 플러그인 (branch protection)
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── hooks/hooks.json
+│   │   └── scripts/protect-main-branch.sh
+│   └── ai-setting-team/                 # Team 플러그인 (webhook notification)
+│       ├── .claude-plugin/plugin.json
+│       ├── hooks/hooks.json
+│       └── scripts/team-webhook-notify.sh
 ├── templates/
 │   ├── CLAUDE.md.template                 # [대괄호]만 채우면 됨
 │   ├── AGENTS.md.template                 # [대괄호]만 채우면 됨
@@ -567,6 +623,16 @@ ai-setting/
 │   ├── pull_request_template.md.template  # team profile용 PR 템플릿
 │   ├── team-webhook.json.template         # team profile 웹훅 메타설정 템플릿
 │   └── decisions.md.template              # 기술 의사결정 기록
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml                        # CI 파이프라인 (lint, smoke, profile, sync 테스트)
+│   │   └── release.yml                   # 자동 릴리스 (npm publish + GitHub Release)
+│   └── ISSUE_TEMPLATE/                   # bug report, feature request 템플릿
+├── Formula/
+│   └── ai-setting.rb                     # Homebrew formula
+├── LICENSE                               # MIT
+├── SECURITY.md                           # 보안 정책
+├── .npmignore                            # npm 배포 제외 파일
 └── README.md
 ```
 
@@ -620,18 +686,18 @@ ai-setting/
 - 선택 `web` → `playwright`
 - 선택 `infra` → `docker`
 
-### Claude Code 플러그인 코어
+### Claude Code 플러그인
 
-`ai-setting-core` 플러그인은 현재 아래 자산을 Claude Code plugin 형태로 제공합니다.
-
-- hooks: protect-files, block-dangerous-commands, async-test, session-context, compact-backup
-- agents: security-reviewer, architect-reviewer, test-writer, research
-- skills: review, gap-check, cross-validate, deploy, fix-issue
-- MCP: sequential-thinking, serena, upstash-context-7-mcp
+| 플러그인 | 내용 |
+|----------|------|
+| `ai-setting-core` | hooks 5개, agents 4개, skills 5개, core MCP |
+| `ai-setting-strict` | main/master 브랜치 보호 hook |
+| `ai-setting-team` | Slack/Discord 웹훅 알림 hook |
 
 주의:
 - plugin은 Claude Code 전용 배포 채널이라 Cursor/Gemini/Copilot/Codex 파일은 포함하지 않습니다.
 - plugin skill은 init 기반 프로젝트처럼 AI가 placeholder를 채워주지 않으므로, generic 안내형 문구로 제공됩니다.
+- `ai-setting plugin install/uninstall` CLI로 설치/제거하면 `.ai-setting/installed-plugins.json`에 기록됩니다.
 
 ### 보호 패턴 (protect-files.sh)
 

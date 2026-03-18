@@ -47,6 +47,27 @@ tmpdir=$(mktemp -d)
 ./init.sh --skip-ai --reapply "$(mktemp -d)"
 ```
 
+동기화/플러그인을 건드렸다면 추가로 확인:
+
+```bash
+# link-dir
+./init.sh --skip-ai --link-dir "$(mktemp -d)"
+
+# sync manifest with per-project options
+tmpdir=$(mktemp -d) && echo "$tmpdir profile=strict" > /tmp/test.manifest
+./init.sh sync --skip-ai --dry-run /tmp/test.manifest
+
+# sync conflict detection
+./init.sh sync --skip-ai --sync-conflict skip /tmp/test.manifest
+
+# plugin lifecycle
+tmpdir=$(mktemp -d) && ./init.sh --skip-ai "$tmpdir"
+./init.sh plugin list
+./init.sh plugin install ai-setting-strict "$tmpdir"
+./init.sh plugin check-update "$tmpdir"
+./init.sh plugin uninstall ai-setting-strict "$tmpdir"
+```
+
 ## 어디를 수정하나
 
 ### Claude Code 관련
@@ -71,6 +92,17 @@ tmpdir=$(mktemp -d)
 - `templates/copilot-instructions.md.template`
   - GitHub Copilot 저장소 지침 템플릿입니다.
 
+### 플러그인 관련
+
+- `plugins/ai-setting-core/`
+  - Core 플러그인 (hooks, agents, skills, MCP)
+- `plugins/ai-setting-strict/`
+  - Strict 전용 플러그인 (branch protection hook)
+- `plugins/ai-setting-team/`
+  - Team 전용 플러그인 (webhook notification hook)
+- `.claude-plugin/marketplace.json`
+  - 플러그인 카탈로그 (새 플러그인 추가 시 엔트리 추가)
+
 ### 공통 템플릿 / 부트스트랩
 
 - `templates/*.template`
@@ -78,7 +110,7 @@ tmpdir=$(mktemp -d)
 - `codex/config.toml`
   - Codex 기본 템플릿입니다.
 - `init.sh`
-  - 옵션 파싱, 파일 생성, backup/diff/doctor, AI 자동 채우기 흐름의 중심입니다.
+  - 옵션 파싱, 파일 생성, backup/diff/doctor, sync, plugin, AI 자동 채우기 흐름의 중심입니다.
 
 ## 새 기능을 추가할 때
 
@@ -100,6 +132,13 @@ tmpdir=$(mktemp -d)
 - 가능한 한 source-of-truth 문서를 재사용하고 중복 템플릿은 줄입니다.
 - 생성 파일 위치를 명확히 하고 managed path 목록에 반영합니다.
 - `doctor`, `diff`, `backup-all`, `reapply`를 같이 갱신합니다.
+
+### 새 플러그인 추가
+
+- `plugins/<name>/` 디렉토리를 만듭니다.
+- `.claude-plugin/plugin.json`, `hooks/hooks.json`, 필요한 `scripts/`를 추가합니다.
+- `.claude-plugin/marketplace.json`에 엔트리를 추가합니다.
+- `npm run plugin:validate`로 검증합니다.
 
 ### 새 언어 / archetype 지원 추가
 

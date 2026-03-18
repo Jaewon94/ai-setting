@@ -25,12 +25,15 @@ usage() {
   $USAGE_NAME [옵션] [프로젝트 경로]
   $USAGE_NAME update [옵션] [프로젝트 경로]
   $USAGE_NAME sync [옵션] [manifest 경로]
+  $USAGE_NAME plugin {list|install|uninstall|check-update|upgrade} [name] [target]
 
 옵션:
   --profile PROFILE        Claude Code 프로필 지정 (standard|minimal|strict|team)
   --link                   공유 가능한 설정 자산을 복사 대신 심링크로 연결
+  --link-dir               hooks/agents/skills 디렉토리를 통째로 심링크
   --update                 AI 자동 채우기 없이 공유 자산/MCP를 최신 상태로 갱신
   --sync-mode MODE         sync 명령에서 각 프로젝트에 적용할 방식 (update|init)
+  --sync-conflict STRATEGY sync 시 충돌 해결 전략 (overwrite|skip|backup, 기본: backup)
   --doctor                 현재 프로젝트 설정 상태 진단
   --dry-run                실제 변경 없이 예정 작업만 출력
   --diff                   실제 변경 없이 관리 대상 파일 diff 출력
@@ -45,6 +48,13 @@ usage() {
   --no-mcp                 프로젝트 로컬 MCP 생성 건너뛰기
   -h, --help               도움말 출력
 
+플러그인:
+  plugin list [target]               설치 가능/설치됨 플러그인 목록
+  plugin install <name> [target]     플러그인 설치
+  plugin uninstall <name> [target]   플러그인 제거
+  plugin check-update [target]       설치된 플러그인 업데이트 확인
+  plugin upgrade <name> [target]     플러그인 업그레이드
+
 MCP preset:
   core   sequential-thinking, serena, upstash-context-7-mcp
   web    playwright (core와 함께 사용 권장)
@@ -56,6 +66,7 @@ Archetype:
 
 sync manifest 형식:
   - 한 줄에 프로젝트 경로 하나씩 작성
+  - 경로 뒤에 key=value 옵션 추가 가능 (profile=, mcp-preset=, archetype=, stack=)
   - 빈 줄과 '#'으로 시작하는 주석은 무시
   - 상대 경로는 manifest 파일 기준으로 해석
 EOF
