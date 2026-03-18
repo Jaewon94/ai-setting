@@ -409,6 +409,92 @@ templates/
 
 ---
 
+## 3차 고도화 (장기 방향)
+
+> v2.0.0 → v3.0.0
+> 로컬 LLM 지원, 설정 참조 검증, 상용/로컬 통합 아키텍처
+
+### 현재 한계
+
+현재 ai-setting은 상용 AI 도구(Claude Code, Codex, Cursor, Gemini CLI, Copilot)만 지원한다. 각 도구마다 별도 설정 파일을 생성하고, `@참조`로 AGENTS.md/CLAUDE.md를 가리키는 구조지만:
+- 각 도구가 실제로 `@파일` 참조를 지원하는지 **전수 검증이 되지 않았음**
+- 로컬 LLM 도구(Aider, Continue.dev, Tabby 등)는 **전혀 미지원**
+- 도구가 늘어날수록 비슷한 내용의 설정 파일이 **중복 증가**
+
+### Phase 14: 로컬 LLM 도구 지원
+
+> "Ollama/LM Studio 기반 로컬 모델로도 같은 규칙을 적용한다"
+
+대상 도구:
+
+| 도구 | 형태 | 설정 파일 | 메모 |
+|------|------|-----------|------|
+| **Aider** | CLI | `.aider.conf.yml`, `.aiderignore` | Ollama/OpenAI-compatible 지원 |
+| **Continue.dev** | VS Code/JetBrains | `.continue/config.json` | 로컬/원격 모델 모두 지원 |
+| **Tabby** | Self-hosted 서버 | 서버 설정 + 클라이언트 연동 | 코드 완성 + 채팅 |
+
+구현 방향:
+- 각 도구의 공식 문서를 **먼저 확인**하여 설정 스키마와 파일 참조 방식을 파악
+- AGENTS.md/CLAUDE.md를 참조할 수 있으면 참조, 못 하면 도구별 규칙 변환 생성
+- `--local-llm` 또는 `--tool aider` 같은 옵션으로 선택적 생성
+
+### Phase 15: 설정 참조 방식 전수 검증
+
+> "각 도구가 실제로 @파일 참조를 지원하는지 검증하고, 안 되는 건 대안을 찾는다"
+
+검증 대상:
+
+| 도구 | 검증 항목 | 현재 가정 |
+|------|-----------|-----------|
+| Gemini CLI | GEMINI.md에서 `@CLAUDE.md` 참조가 실제로 동작하는가 | 동작할 것으로 가정 |
+| Copilot | copilot-instructions.md에서 외부 파일 참조가 가능한가 | 독립 파일일 가능성 |
+| Codex CLI | CODEX.md를 자동으로 읽는가, `@참조`가 가능한가 | 미확인 |
+| Cursor | .mdc의 `@file` 참조 범위와 제한 | 공식 문서 확인 완료 |
+| Aider | `--read` 플래그로 CLAUDE.md 주입이 가능한가 | 미확인 |
+| Continue | config.json에서 docs 디렉토리 참조가 가능한가 | 미확인 |
+
+작업:
+1. 각 도구를 **실제 설치하고 테스트**하여 참조 동작 여부 확인
+2. 동작하지 않는 도구는 **규칙 변환 생성** 방식으로 전환
+3. 결과를 README와 로드맵에 명시 (지원 수준 표에 "참조" vs "독립" 구분)
+
+### Phase 16: 통합 설정 아키텍처
+
+> "상용이든 로컬이든, 어떤 AI 도구를 써도 AGENTS.md + CLAUDE.md 하나로 동일한 규칙이 적용된다"
+
+최종 목표 구조:
+```
+AGENTS.md          ← 단일 소스 오브 트루스 (코딩 규칙, 금지 패턴, 원칙)
+CLAUDE.md          ← 단일 소스 오브 트루스 (프로젝트 설정, 빌드, 도메인)
+    │
+    ├─ 직접 읽기: Claude Code, (검증 후 추가)
+    │
+    └─ 어댑터 생성: 도구별 최소 설정 파일
+         ├─ .cursor/rules/*.mdc
+         ├─ .gemini/settings.json
+         ├─ .github/copilot-instructions.md
+         ├─ .codex/config.toml + CODEX.md
+         ├─ .aider.conf.yml
+         ├─ .continue/config.json
+         └─ (향후 도구)
+```
+
+핵심 원칙:
+- 규칙/컨벤션은 **AGENTS.md + CLAUDE.md에만** 작성
+- 각 도구 설정은 **참조(지원 시)** 또는 **최소 변환(미지원 시)**으로만 생성
+- 도구가 아무리 늘어나도 **수정할 곳은 하나** — 중복 제거
+- `init.sh`가 도구별 어댑터를 자동 생성하는 역할
+
+### 3차 고도화 우선순위
+
+| Phase | 핵심 | 선행 조건 |
+|-------|------|-----------|
+| **Phase 14** | 로컬 LLM 도구 지원 | 각 도구 공식 문서 확인 |
+| **Phase 15** | 설정 참조 전수 검증 | 실제 도구 설치 + 테스트 |
+| **Phase 16** | 통합 설정 아키텍처 | Phase 14, 15 결과 기반 |
+
+---
+
 ## 참고 자료
 
 - [rulebook-ai](https://github.com/botingw/rulebook-ai) — 멀티 도구 규칙 생성
@@ -424,3 +510,6 @@ templates/
 - [Gemini CLI Configuration](https://geminicli.com/docs/reference/configuration/)
 - [Codex CLI Config Reference](https://developers.openai.com/codex/config-reference/)
 - [AI Dotfiles 패턴](https://dylanbochman.com/blog/2026-01-25-dotfiles-for-ai-assisted-development/)
+- [Aider](https://aider.chat/) — AI pair programming CLI (Ollama/OpenAI-compatible)
+- [Continue.dev](https://continue.dev/) — VS Code/JetBrains AI 확장 (로컬/원격 모델)
+- [Tabby](https://tabby.tabbyml.com/) — Self-hosted AI 코딩 어시스턴트
