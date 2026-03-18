@@ -12,6 +12,7 @@
     "codex/",
     "cursor/",
     "gemini/",
+    "lib/",
     "plugins/",
     "templates/",
     "CONTRIBUTING.md",
