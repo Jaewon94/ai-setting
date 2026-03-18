@@ -1,0 +1,27 @@
+{
+  "name": "jaewon-ai-setting",
+  "owner": {
+    "name": "Jaewon"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for ai-setting core workflows and MCP defaults.",
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "ai-setting-core",
+      "source": "./plugins/ai-setting-core",
+      "description": "Core Claude Code hooks, agents, skills, and keyless MCP defaults from ai-setting.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Jaewon"
+      },
+      "homepage": "https://github.com/Jaewon94/ai-setting#readme",
+      "repository": "https://github.com/Jaewon94/ai-setting",
+      "license": "UNLICENSED",
+      "category": "development",
+      "tags": ["claude-code", "hooks", "skills", "agents", "mcp"]
+    }
+  ]
+}

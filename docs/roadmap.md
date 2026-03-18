@@ -483,31 +483,45 @@ init.sh --profile team /path/to/project
 
 > "다른 사람들이 만든 에이전트/스킬을 설치하고, 내 것도 공유한다"
 
+현재 상태:
+- 공식 Claude Code plugin / marketplace 포맷 기준으로 `.claude-plugin/marketplace.json` 1차 반영
+- `plugins/ai-setting-core` plugin 1차 반영
+- `ai-setting-core`는 hooks, agents, skills, core MCP를 포함
+- project docs 템플릿, Cursor/Gemini/Copilot/Codex 설정은 계속 `init.sh` 범위로 유지
+- strict/team 전용 plugin 분리와 공개 배포 채널 연결은 아직 미구현
+
 ### Claude Code 플러그인 형식
 ```json
 // .claude-plugin/marketplace.json
 {
-  "name": "ai-setting",
-  "version": "1.0.0",
-  "description": "AI 코딩 도구 공통 설정",
-  "components": {
-    "agents": ["security-reviewer", "architect-reviewer", ...],
-    "skills": ["deploy", "review", "gap-check", ...],
-    "hooks": ["protect-files", "block-dangerous-commands"]
-  }
+  "name": "jaewon-ai-setting",
+  "owner": {
+    "name": "Jaewon"
+  },
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "ai-setting-core",
+      "source": "./plugins/ai-setting-core"
+    }
+  ]
 }
 ```
 
 ### 사용법 (마켓플레이스 등록 후)
 ```
-/plugin marketplace add jaewon/ai-setting
+claude plugin validate .
+claude plugin marketplace add ./
+claude plugin install ai-setting-core@jaewon-ai-setting --scope project
 /plugin marketplace update
 ```
 
-- init.sh 없이 Claude Code 안에서 바로 설치
+- init.sh 없이 Claude Code 안에서 core hooks/skills/agents/MCP 설치 가능
 - 업데이트 자동 전파
 - **난이도**: 중간
-- **참고**: anthropics/claude-plugins-official, SkillsMP
+- **참고**: Claude Code Plugin Marketplaces, Plugins reference
 
 ---
 

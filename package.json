@@ -7,11 +7,13 @@
     "ai-setting": "./bin/ai-setting"
   },
   "files": [
+    ".claude-plugin/",
     "bin/",
     "claude/",
     "codex/",
     "cursor/",
     "gemini/",
+    "plugins/",
     "templates/",
     "CONTRIBUTING.md",
     "README.md",
@@ -20,7 +22,9 @@
   "scripts": {
     "doctor": "./init.sh --doctor .",
     "help": "./bin/ai-setting --help",
-    "pack:check": "npm pack --dry-run"
+    "pack:check": "npm pack --dry-run",
+    "plugin:validate": "claude plugin validate .",
+    "plugin:validate:core": "claude plugin validate ./plugins/ai-setting-core"
   },
   "license": "UNLICENSED"
 }

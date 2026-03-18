@@ -93,6 +93,37 @@ init.sh 실행
 - 기본값은 `private: true`
 - `bin.ai-setting` 엔트리만 정의
 - `npm run pack:check`로 패키지 메타데이터를 dry-run 검증 가능
+- `npm run plugin:validate`, `npm run plugin:validate:core`로 Claude Code plugin / marketplace 스캐폴드를 검증 가능
+
+### Claude Code 플러그인 마켓플레이스
+
+이 저장소는 `init.sh` 기반 부트스트랩 외에 Claude Code용 플러그인 마켓플레이스 1차 스캐폴드도 함께 제공합니다.
+
+현재 포함:
+- [.claude-plugin/marketplace.json](/Users/jaewon/my-project/ai-setting/.claude-plugin/marketplace.json) — 로컬/원격에서 추가 가능한 marketplace catalog
+- [plugins/ai-setting-core/.claude-plugin/plugin.json](/Users/jaewon/my-project/ai-setting/plugins/ai-setting-core/.claude-plugin/plugin.json) — `ai-setting-core` 플러그인 메타데이터
+- [plugins/ai-setting-core/hooks/hooks.json](/Users/jaewon/my-project/ai-setting/plugins/ai-setting-core/hooks/hooks.json) — core hook 등록
+- [plugins/ai-setting-core/.mcp.json](/Users/jaewon/my-project/ai-setting/plugins/ai-setting-core/.mcp.json) — keyless core MCP 기본값
+
+이 1차 플러그인은 Claude Code 전용입니다.
+- 포함: hooks, agents, skills, core MCP
+- 제외: `CLAUDE.md`/`AGENTS.md` 템플릿 생성, Cursor/Gemini/Copilot 설정, Codex 설정
+
+로컬 테스트 예시:
+
+```bash
+# marketplace / plugin 스키마 검증
+npm run plugin:validate
+npm run plugin:validate:core
+
+# Claude Code에 로컬 marketplace 추가
+claude plugin marketplace add ./
+
+# project scope로 core plugin 설치
+claude plugin install ai-setting-core@jaewon-ai-setting --scope project
+```
+
+`--scope project` 설치는 대상 프로젝트 디렉토리에서 실행하면 `.claude/settings.json`의 `enabledPlugins`에 등록됩니다.
 
 ### 옵션
 
@@ -209,6 +240,11 @@ init.sh 실행
 - ai-setting 저장소를 pull 한 뒤 기존 프로젝트 설정만 다시 맞추고 싶을 때
 - 프로젝트별 문서는 건드리지 않고 공통 규칙/훅/에이전트만 갱신하고 싶을 때
 - `--link` 모드와 함께 써서 링크 + 로컬 설정 갱신을 같이 맞추고 싶을 때
+
+플러그인 방식과의 차이:
+- `update`는 `init.sh`가 만든 프로젝트 파일을 다시 맞추는 흐름
+- plugin marketplace는 Claude Code 안에서 hooks/skills/agents/MCP를 설치하는 별도 배포 채널
+- 프로젝트 문서 템플릿이나 멀티 도구 파일까지 같이 다루려면 여전히 `init.sh`가 필요
 
 ### Sync 모드
 
@@ -475,6 +511,8 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 ```
 ai-setting/
+├── .claude-plugin/
+│   └── marketplace.json                  # Claude Code plugin marketplace catalog
 ├── bin/
 │   └── ai-setting                         # 로컬 CLI 래퍼 (`init.sh` 실행)
 ├── init.sh                               # 🚀 초기화 스크립트
@@ -510,6 +548,16 @@ ai-setting/
 │   └── settings.json                      # Gemini CLI workspace settings
 ├── codex/
 │   └── config.toml                        # Codex CLI 기본 설정 (MCP preset은 init 시 추가)
+├── plugins/
+│   └── ai-setting-core/
+│       ├── .claude-plugin/
+│       │   └── plugin.json               # Claude Code core plugin manifest
+│       ├── hooks/
+│       │   └── hooks.json                # Plugin hook config
+│       ├── scripts/                      # Plugin hook scripts
+│       ├── agents/                       # Plugin agents
+│       ├── skills/                       # Plugin skills
+│       └── .mcp.json                     # Plugin-scoped core MCP defaults
 ├── templates/
 │   ├── CLAUDE.md.template                 # [대괄호]만 채우면 됨
 │   ├── AGENTS.md.template                 # [대괄호]만 채우면 됨
@@ -571,6 +619,19 @@ ai-setting/
 - `core` → `sequential-thinking`, `serena`, `upstash-context-7-mcp`
 - 선택 `web` → `playwright`
 - 선택 `infra` → `docker`
+
+### Claude Code 플러그인 코어
+
+`ai-setting-core` 플러그인은 현재 아래 자산을 Claude Code plugin 형태로 제공합니다.
+
+- hooks: protect-files, block-dangerous-commands, async-test, session-context, compact-backup
+- agents: security-reviewer, architect-reviewer, test-writer, research
+- skills: review, gap-check, cross-validate, deploy, fix-issue
+- MCP: sequential-thinking, serena, upstash-context-7-mcp
+
+주의:
+- plugin은 Claude Code 전용 배포 채널이라 Cursor/Gemini/Copilot/Codex 파일은 포함하지 않습니다.
+- plugin skill은 init 기반 프로젝트처럼 AI가 placeholder를 채워주지 않으므로, generic 안내형 문구로 제공됩니다.
 
 ### 보호 패턴 (protect-files.sh)
 
