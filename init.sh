@@ -569,14 +569,22 @@ if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/CLAUDE.md" ]; then
   TEMPLATES_COPIED=true
 elif [ ! -f "$TARGET/CLAUDE.md" ]; then
   run_copy "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"
-  if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ CLAUDE.md 생성 예정"
-  else
-    echo "  ✅ CLAUDE.md 생성됨"
-  fi
+  echo "  ✅ CLAUDE.md 생성됨"
   TEMPLATES_COPIED=true
 else
   echo -e "  ${YELLOW}⚠ CLAUDE.md 이미 존재 — 건너뜀${NC}"
+fi
+
+# archetype partial 삽입
+ARCHETYPE_PARTIAL="$SCRIPT_DIR/templates/archetype/${PROJECT_ARCHETYPE}.partial.md"
+if [ -f "$ARCHETYPE_PARTIAL" ] && [ -f "$TARGET/CLAUDE.md" ] && [ "$DRY_RUN" != true ]; then
+  if ! grep -qF "## Frontend 규칙\|## API 규칙\|## CLI 규칙\|## Worker/Batch 규칙\|## 데이터/자동화 규칙\|## 라이브러리/SDK 규칙\|## 인프라/IaC 규칙" "$TARGET/CLAUDE.md" 2>/dev/null; then
+    echo "" >> "$TARGET/CLAUDE.md"
+    cat "$ARCHETYPE_PARTIAL" >> "$TARGET/CLAUDE.md"
+    echo "  ✅ archetype 규칙 삽입됨 (${PROJECT_ARCHETYPE})"
+  fi
+elif [ -f "$ARCHETYPE_PARTIAL" ] && [ "$DRY_RUN" = true ]; then
+  dry_run_note "archetype 규칙 삽입 예정 (${PROJECT_ARCHETYPE})"
 fi
 
 if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/AGENTS.md" ]; then
