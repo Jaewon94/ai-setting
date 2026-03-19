@@ -15,7 +15,6 @@ assert_file_not_exists "$t/.cursor" "기본에서 .cursor 없음"
 assert_file_not_exists "$t/.gemini" "기본에서 .gemini 없음"
 assert_file_not_exists "$t/.codex" "기본에서 .codex 없음"
 assert_file_not_exists "$t/GEMINI.md" "기본에서 GEMINI.md 없음"
-assert_file_not_exists "$t/CODEX.md" "기본에서 CODEX.md 없음"
 
 suite "doctor (ERROR 0)"
 output=$("$INIT_SH" --doctor "$t" 2>&1)
@@ -29,7 +28,7 @@ assert_file_exists "$t2/.cursor/rules/ai-setting.mdc" ".cursor/rules/ai-setting.
 assert_file_exists "$t2/.gemini/settings.json" ".gemini/settings.json"
 assert_file_exists "$t2/.codex/config.toml" ".codex/config.toml"
 assert_file_exists "$t2/GEMINI.md" "GEMINI.md"
-assert_file_exists "$t2/CODEX.md" "CODEX.md"
+assert_file_exists "$t2/.codex/config.toml" "codex config.toml"
 assert_file_exists "$t2/.github/copilot-instructions.md" "copilot-instructions.md"
 
 suite "help 출력"

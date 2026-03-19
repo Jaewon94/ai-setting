@@ -232,10 +232,6 @@ cmd_add_tool() {
       ;;
     codex)
       copy_codex_assets
-      if [ ! -f "$TARGET/CODEX.md" ]; then
-        run_copy "$SCRIPT_DIR/templates/CODEX.md.template" "$TARGET/CODEX.md"
-        echo "  CODEX.md 생성됨"
-      fi
       if [ "$MCP_ENABLED" != false ] && [ -f "$TARGET/.codex/config.toml" ]; then
         for preset in "${MCP_PRESETS[@]:-core}"; do
           append_codex_mcp_preset "$preset" "$TARGET/.codex/config.toml"

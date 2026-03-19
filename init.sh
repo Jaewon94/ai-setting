@@ -639,20 +639,6 @@ if tool_enabled "copilot"; then
   fi
 fi
 
-if tool_enabled "codex"; then
-  if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/CODEX.md" ]; then
-    backup_existing_path "$TARGET/CODEX.md" "CODEX.md"
-    run_copy "$SCRIPT_DIR/templates/CODEX.md.template" "$TARGET/CODEX.md"
-    echo "  ✅ CODEX.md 재생성됨"
-    TEMPLATES_COPIED=true
-  elif [ ! -f "$TARGET/CODEX.md" ]; then
-    run_copy "$SCRIPT_DIR/templates/CODEX.md.template" "$TARGET/CODEX.md"
-    echo "  ✅ CODEX.md 생성됨"
-    TEMPLATES_COPIED=true
-  else
-    echo -e "  ${YELLOW}⚠ CODEX.md 이미 존재 — 건너뜀${NC}"
-  fi
-fi
 
 if [ "$CLAUDE_PROFILE" = "team" ]; then
   if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.github/pull_request_template.md" ]; then
@@ -788,7 +774,6 @@ ${AI_PROFILE_GUIDANCE}
 1. CLAUDE.md와 AGENTS.md의 [대괄호] 부분을 이 프로젝트에 맞게 전부 채워줘. 대괄호를 실제 내용으로 교체하고, 프로젝트에 해당하지 않는 섹션은 제거해. 기존 템플릿의 공통 규칙(Coding Rules, Forbidden 등)은 유지하되 프로젝트 스택에 맞게 보강해.
 2. GEMINI.md가 있으면 [대괄호] 부분을 채우고, Gemini CLI에서 참고할 핵심 지침이 CLAUDE.md / AGENTS.md와 모순되지 않게 정리해줘.
 3. .github/copilot-instructions.md가 있으면 GitHub Copilot이 바로 참고할 수 있도록 프로젝트 요약, build/test/lint 명령, 코드 스타일, 금지 패턴을 간결하게 정리해줘.
-4. CODEX.md가 있으면 [대괄호] 부분을 채우고, Codex CLI에서 참고할 핵심 지침이 CLAUDE.md / AGENTS.md와 모순되지 않게 정리해줘.
 ${AI_SKILL_TASK}
 6. .github/pull_request_template.md가 있으면 팀이 바로 쓸 수 있도록 유지하고, placeholder가 있다면 실제 검증/리스크 항목에 맞게 다듬어줘.
 6. 문서와 구현이 충돌하면 CLAUDE.md 끝에 '## Detected Mismatches' 섹션을 추가하고, 확인한 불일치를 짧게 정리해. 충돌이 없으면 이 섹션은 만들지 마.
@@ -929,7 +914,6 @@ if [ "$TEMPLATES_COPIED" = true ]; then
   echo "    CLAUDE.md                 — 프로젝트 빌드/실행/도메인 설정"
   echo "    AGENTS.md                 — 아키텍처/스택/코딩 규칙"
   echo "    GEMINI.md                 — Gemini CLI 프로젝트 컨텍스트"
-  echo "    CODEX.md                  — Codex CLI 프로젝트 컨텍스트"
   echo "    .github/copilot-instructions.md — GitHub Copilot 저장소 지침"
   if [ "$CLAUDE_PROFILE" = "team" ]; then
     echo "    .github/pull_request_template.md — 팀용 PR 템플릿"

@@ -18,7 +18,6 @@ t=$(make_tmpdir)
 "$INIT_SH" --skip-ai --tools claude,codex "$t" >/dev/null 2>&1
 assert_file_exists "$t/.claude/settings.json" "claude 설치됨"
 assert_file_exists "$t/.codex/config.toml" "codex 설치됨"
-assert_file_exists "$t/CODEX.md" "CODEX.md 생성됨"
 assert_file_not_exists "$t/.cursor" "cursor 없음"
 
 suite "add-tool cursor"
@@ -36,7 +35,7 @@ assert_file_exists "$t/GEMINI.md" "add 후 GEMINI.md 있음"
 suite "add-tool codex"
 "$INIT_SH" add-tool codex "$t" >/dev/null 2>&1
 assert_file_exists "$t/.codex/config.toml" "add 후 codex 있음"
-assert_file_exists "$t/CODEX.md" "add 후 CODEX.md 있음"
+assert_file_exists "$t/.codex/config.toml" "add 후 config.toml 있음"
 
 suite "add-tool copilot"
 "$INIT_SH" add-tool copilot "$t" >/dev/null 2>&1

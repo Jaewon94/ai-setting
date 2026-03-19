@@ -627,7 +627,6 @@ ai-setting/
 │   ├── AGENTS.md.template                 # [대괄호]만 채우면 됨
 │   ├── GEMINI.md.template                 # Gemini CLI 컨텍스트 템플릿
 │   ├── copilot-instructions.md.template   # Copilot 저장소 지침 템플릿
-│   ├── CODEX.md.template                  # Codex CLI 프로젝트 컨텍스트 템플릿
 │   ├── projects.manifest.template         # 다중 프로젝트 sync manifest 예시
 │   ├── pull_request_template.md.template  # team profile용 PR 템플릿
 │   ├── team-webhook.json.template         # team profile 웹훅 메타설정 템플릿

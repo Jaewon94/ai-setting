@@ -14,7 +14,6 @@ build_backup_managed_paths() {
     "CLAUDE.md"
     "AGENTS.md"
     "GEMINI.md"
-    "CODEX.md"
     ".github/copilot-instructions.md"
     ".github/pull_request_template.md"
     ".ai-setting/team-webhook.json"

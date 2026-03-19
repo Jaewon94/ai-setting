@@ -46,4 +46,27 @@ echo '{"dependencies":{"next":"14.0.0"}}' > "$t/package.json"
 output=$("$INIT_SH" --skip-ai --auto-mcp --dry-run "$t" 2>&1)
 assert_output_contains "$output" "core,web" "auto-mcp → core,web"
 
+suite "archetype partial 삽입 — frontend-web"
+t=$(make_tmpdir)
+mkdir -p "$t/src/app"
+echo '{"dependencies":{"next":"14"}}' > "$t/package.json"
+touch "$t/next.config.ts"
+"$INIT_SH" --skip-ai "$t" >/dev/null 2>&1
+assert_file_contains "$t/CLAUDE.md" "Frontend 규칙" "frontend-web partial 삽입됨"
+
+suite "archetype partial 삽입 — backend-api"
+t=$(make_tmpdir)
+mkdir -p "$t/app"
+echo '[project]' > "$t/pyproject.toml"
+echo 'from fastapi import FastAPI' > "$t/app/main.py"
+echo '# API' > "$t/README.md"
+"$INIT_SH" --skip-ai "$t" >/dev/null 2>&1
+assert_file_contains "$t/CLAUDE.md" "API 규칙" "backend-api partial 삽입됨"
+
+suite "archetype partial 미삽입 — blank-start"
+t=$(make_tmpdir)
+"$INIT_SH" --skip-ai "$t" >/dev/null 2>&1
+assert_file_exists "$t/CLAUDE.md" "CLAUDE.md 존재"
+# general-app에는 partial이 없으므로 삽입 안 됨
+
 print_summary
