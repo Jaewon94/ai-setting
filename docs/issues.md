@@ -55,6 +55,39 @@
 
 ---
 
+---
+
+### ISS-004: Codex config.toml에 reasoning 옵션 누락 (✅ 수정 완료)
+
+**발견일**: 2026-03-19
+**심각도**: 낮음
+**상태**: ✅ 수정 완료 (2026-03-19)
+
+**문제**: 공식 문서에 `model_reasoning_effort`, `model_reasoning_summary` 옵션이 있으나 미사용
+**수정**: 4개 프로필 config.toml 전부에 `model_reasoning_effort = "medium"`, `model_reasoning_summary = "concise"` 추가
+
+---
+
+### ISS-005: Gemini settings.json 공식 문서 대비 미활용 옵션 (✅ 수정 완료)
+
+**발견일**: 2026-03-19
+**심각도**: 낮음
+**상태**: ✅ 수정 완료 (2026-03-19)
+
+**문제**:
+- `context.fileName`이 문자열인데 공식 문서에서 배열도 지원 → AGENTS.md 직접 포함 가능
+- `includeDirectoryTree` 옵션 미사용
+
+**수정**:
+- fileName을 `["GEMINI.md", "AGENTS.md"]` 배열로 변경 (AGENTS.md도 직접 읽힘)
+- `includeDirectoryTree: true` 추가
+
+---
+
 ## 완료된 이슈
 
-(수정 완료 후 여기로 이동)
+- ISS-001: CODEX.md 제거 ✅
+- ISS-002: archetype partial 테스트 추가 ✅
+- ISS-003: Copilot 경로별 지침 (보류)
+- ISS-004: Codex reasoning 옵션 추가 ✅
+- ISS-005: Gemini settings.json 개선 ✅

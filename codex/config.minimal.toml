@@ -3,6 +3,8 @@
 # 참고: 프로젝트 로컬 MCP preset은 init.sh 실행 시 이 파일에 추가됩니다.
 
 model = "o4-mini"
+model_reasoning_effort = "medium"
+model_reasoning_summary = "concise"
 sandbox_mode = "workspace-write"
 approval_policy = "auto-edit"
 
