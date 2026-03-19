@@ -107,10 +107,31 @@ tmpdir=$(mktemp -d) && ./init.sh --skip-ai "$tmpdir"
 
 - `templates/*.template`
   - 프로젝트에 생성되는 문서 템플릿입니다.
-- `codex/config.toml`
-  - Codex 기본 템플릿입니다.
+- `codex/config*.toml`
+  - 프로필별 Codex 설정 템플릿입니다 (standard, minimal, strict, team).
 - `init.sh`
-  - 옵션 파싱, 파일 생성, backup/diff/doctor, sync, plugin, AI 자동 채우기 흐름의 중심입니다.
+  - 옵션 파싱과 메인 7단계 실행 흐름의 오케스트레이터입니다 (~940행).
+
+### lib/ 모듈 구조
+
+init.sh의 함수들이 12개 모듈로 분리되어 있습니다. 수정 시 해당 모듈만 건드리면 됩니다.
+
+| 모듈 | 책임 |
+|------|------|
+| `common.sh` | 색상, 타임스탬프, trim_whitespace, contains_value, tool_enabled, dry_run_note |
+| `validate.sh` | usage, validate_profile/sync_mode/archetype_hint, get_profile/codex_settings_template |
+| `fileops.sh` | run_mkdir_p, run_copy, run_symlink, run_chmod_file |
+| `assets.sh` | install_shared_asset, install_shared_executable_asset, install_shared_directory_link |
+| `backup.sh` | build_backup_managed_paths, snapshot, perform_backup_all, backup_existing_path |
+| `config-detect.sh` | detect_claude_profile, detect_shared_asset_mode, detect_async_test_strategy |
+| `doctor.sh` | doctor_ok/warn/error, run_doctor, run_diff_preview |
+| `detect.sh` | detect_project_stack/archetype/context_mode, apply_user_hints |
+| `mcp.sh` | add/normalize/recommend MCP presets, write_claude_mcp_config |
+| `profile.sh` | copy_claude/cursor/gemini/codex/copilot_assets, cmd_add_tool |
+| `sync.sh` | parse_manifest_line, detect_sync_conflicts, run_sync_manifest |
+| `plugin.sh` | cmd_plugin_list/install/uninstall/check_update/upgrade |
+
+source 순서(init.sh 상단)가 의존 관계를 반영하므로 순서를 바꾸지 마세요.
 
 ## 새 기능을 추가할 때
 

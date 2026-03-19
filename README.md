@@ -597,11 +597,17 @@ ai-setting/
 │       └── cross-validate/SKILL.md        # AI 출력물 교차검증
 ├── cursor/
 │   └── rules/
-│       └── ai-setting.mdc                 # Cursor always-apply rule
+│       ├── ai-setting.mdc                 # always-apply (공통 규칙, @AGENTS.md @CLAUDE.md)
+│       ├── typescript.mdc                 # glob: **/*.ts,**/*.tsx — TS 코딩 규칙
+│       ├── python.mdc                     # glob: **/*.py — Python 코딩 규칙
+│       └── testing.mdc                    # glob: **/*.test.*,**/*.spec.* — 테스트 규칙
 ├── gemini/
 │   └── settings.json                      # Gemini CLI workspace settings
 ├── codex/
-│   └── config.toml                        # Codex CLI 기본 설정 (MCP preset은 init 시 추가)
+│   ├── config.toml                        # standard profile (기본)
+│   ├── config.minimal.toml                # minimal profile (auto-edit)
+│   ├── config.strict.toml                 # strict profile (suggest)
+│   └── config.team.toml                   # team profile (suggest)
 ├── plugins/
 │   ├── ai-setting-core/                  # Core 플러그인 (hooks, agents, skills, MCP)
 │   │   ├── .claude-plugin/plugin.json
@@ -621,10 +627,24 @@ ai-setting/
 │   ├── AGENTS.md.template                 # [대괄호]만 채우면 됨
 │   ├── GEMINI.md.template                 # Gemini CLI 컨텍스트 템플릿
 │   ├── copilot-instructions.md.template   # Copilot 저장소 지침 템플릿
+│   ├── CODEX.md.template                  # Codex CLI 프로젝트 컨텍스트 템플릿
 │   ├── projects.manifest.template         # 다중 프로젝트 sync manifest 예시
 │   ├── pull_request_template.md.template  # team profile용 PR 템플릿
 │   ├── team-webhook.json.template         # team profile 웹훅 메타설정 템플릿
 │   └── decisions.md.template              # 기술 의사결정 기록
+├── lib/
+│   ├── common.sh                          # 색상, 타임스탬프, 공통 유틸리티
+│   ├── validate.sh                        # 입력 검증, usage, 프로필/archetype 검증
+│   ├── fileops.sh                         # 파일/디렉토리 생성, 복사, 심링크
+│   ├── assets.sh                          # 공유 자산 설치 (심링크/복사)
+│   ├── backup.sh                          # 스냅샷 백업, 기존 경로 백업
+│   ├── config-detect.sh                   # 기존 설정 감지 (프로필, 자산 모드, 테스트 전략)
+│   ├── doctor.sh                          # doctor 진단, diff 미리보기
+│   ├── detect.sh                          # 프로젝트 모드/archetype/스택 감지
+│   ├── mcp.sh                             # MCP preset 관리 및 설정 생성
+│   ├── profile.sh                         # Claude/Cursor/Gemini/Codex/Copilot 자산 복사, add-tool
+│   ├── sync.sh                            # manifest 파싱, 충돌 감지, sync 실행
+│   └── plugin.sh                          # 플러그인 list/install/uninstall/check-update/upgrade
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml                        # CI 파이프라인 (lint, smoke, profile, sync 테스트)
