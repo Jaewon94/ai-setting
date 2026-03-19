@@ -118,7 +118,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - [x] Phase 7: init.sh 모듈 분리
 - [x] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
 - [x] Phase 9: 테스트 자동화
-- [ ] Phase 10: 실제 배포 실행
+- [ ] Phase 10: 실제 배포 실행 (준비 완료, 필요 시 진행)
 - [x] Phase 11: MCP preset 확장
 - [x] Phase 12: 커뮤니티 플러그인 생태계 (가이드 문서)
 - [x] Phase 13: archetype별 템플릿 특화
@@ -291,27 +291,27 @@ tests/
 
 ---
 
-### Phase 10: 실제 배포 실행
+### Phase 10: 실제 배포 실행 (준비 완료, 필요 시 진행)
 
 > "준비된 배포 파이프라인을 실제로 가동한다"
 
-Phase 7~9 완료 후 안정화된 상태에서 배포한다.
+배포 인프라는 모두 준비되어 있다. 외부 사용자나 팀 공유가 필요한 시점에 실행한다.
+현재는 `git clone` 후 `./bin/ai-setting`으로 바로 사용 가능하므로 급하지 않다.
 
-| 항목 | 현재 상태 | 할 일 |
-|------|-----------|-------|
-| `git push` | 로컬에 미push 커밋 있음 | origin에 push |
-| `npm publish` | package.json 준비 완료 | `npm publish` 실행 |
-| GitHub repo | private | public 전환 |
-| brew tap | Formula 파일 존재 | 별도 `homebrew-ai-setting` repo 생성 후 formula 등록 |
-| sync-conf.dev | 미등록 | 커뮤니티 디렉토리 등록 |
-| CI 검증 | workflow 파일 존재 | push 후 GitHub Actions 통과 확인 |
+| 항목 | 준비 상태 | 실행 시 할 일 |
+|------|-----------|--------------|
+| `git push` | ✅ origin에 push 완료 | — |
+| `npm publish` | ✅ package.json v1.0.0 준비 완료 | `npm login` → `npm publish` |
+| GitHub repo | ⏳ private | Settings에서 public 전환 |
+| brew tap | ✅ Formula 파일 존재 | `homebrew-ai-setting` repo 생성 후 formula 등록 |
+| CI | ✅ workflow 파일 존재 | public 전환 후 자동 실행됨 |
+| sync-conf.dev | ⏳ | public 전환 후 등록 |
 
-#### 완료 기준
+#### 실행 시점 기준
 
-- `npx ai-setting init ./my-project` 로 바로 설치 가능
-- `brew install jaewon/tap/ai-setting` 으로 설치 가능
-- CI가 push/PR마다 자동 실행
-- tag push 시 npm + GitHub Release 자동 생성
+- 다른 사람에게 `npx ai-setting`으로 공유하고 싶을 때
+- 팀 프로젝트에서 `brew install`로 배포하고 싶을 때
+- 커뮤니티 피드백을 받고 싶을 때
 
 ---
 
