@@ -119,7 +119,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - [x] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
 - [x] Phase 9: 테스트 자동화
 - [ ] Phase 10: 실제 배포 실행
-- [ ] Phase 11: MCP preset 확장
+- [x] Phase 11: MCP preset 확장
 - [ ] Phase 12: 커뮤니티 플러그인 생태계
 - [x] Phase 13: archetype별 템플릿 특화
 

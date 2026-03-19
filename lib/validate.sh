@@ -44,6 +44,7 @@ MCP preset:
   core   sequential-thinking, serena, upstash-context-7-mcp
   web    playwright (core와 함께 사용 권장)
   infra  docker (core와 함께 사용 권장)
+  local  filesystem (프로젝트 루트 제한), fetch
 
 Archetype:
   frontend-web | backend-api | cli-tool | worker-batch

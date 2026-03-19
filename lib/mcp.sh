@@ -4,7 +4,7 @@
 add_mcp_preset() {
   local preset="$1"
   case "$preset" in
-    core|web|infra)
+    core|web|infra|local)
       ;;
     *)
       echo -e "${RED}오류: 알 수 없는 MCP preset '$preset'${NC}" >&2
@@ -122,6 +122,19 @@ command = "npx"
 args = ["-y", "@hypnosis/docker-mcp-server"]
 EOF
       ;;
+    local)
+      cat <<EOF >> "$file"
+
+# Project-local MCP preset: local
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@anthropic/mcp-filesystem", "${TARGET:-.}"]
+
+[mcp_servers.fetch]
+command = "npx"
+args = ["-y", "@anthropic/mcp-fetch"]
+EOF
+      ;;
   esac
 }
 
@@ -173,6 +186,10 @@ EOF
         ;;
       infra)
         append_claude_mcp_server "$file" "docker" "npx" '["-y", "@hypnosis/docker-mcp-server"]'
+        ;;
+      local)
+        append_claude_mcp_server "$file" "filesystem" "npx" '["--yes", "@anthropic/mcp-filesystem", "."]'
+        append_claude_mcp_server "$file" "fetch" "npx" '["--yes", "@anthropic/mcp-fetch"]'
         ;;
     esac
   done
