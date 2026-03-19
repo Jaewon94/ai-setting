@@ -13,10 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check all shell scripts
-        run: bash -n init.sh claude/hooks/*.sh bin/ai-setting
+        run: bash -n init.sh lib/*.sh claude/hooks/*.sh bin/ai-setting
 
-  smoke-test:
-    name: Smoke Test
+  test:
+    name: Test Suite
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -25,100 +25,5 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y jq
 
-      - name: Dry-run init
-        run: |
-          tmpdir=$(mktemp -d)
-          ./init.sh --skip-ai --dry-run "$tmpdir"
-
-      - name: Full init (skip AI)
-        run: |
-          tmpdir=$(mktemp -d)
-          ./init.sh --skip-ai "$tmpdir"
-          # Verify core files exist
-          test -f "$tmpdir/.claude/settings.json"
-          test -f "$tmpdir/CLAUDE.md"
-          test -f "$tmpdir/AGENTS.md"
-          test -f "$tmpdir/.mcp.json"
-
-      - name: Doctor check
-        run: |
-          tmpdir=$(mktemp -d)
-          ./init.sh --skip-ai "$tmpdir"
-          ./init.sh --doctor "$tmpdir"
-
-      - name: Update mode
-        run: |
-          tmpdir=$(mktemp -d)
-          ./init.sh --skip-ai "$tmpdir"
-          ./init.sh update "$tmpdir"
-
-      - name: Diff mode
-        run: |
-          tmpdir=$(mktemp -d)
-          ./init.sh --skip-ai "$tmpdir"
-          ./init.sh --diff "$tmpdir"
-
-  profile-test:
-    name: Profile Test
-    runs-on: ubuntu-latest
-    needs: lint
-    strategy:
-      matrix:
-        profile: [minimal, standard, strict, team]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
-      - name: Init with ${{ matrix.profile }} profile
-        run: |
-          tmpdir=$(mktemp -d)
-          ./init.sh --skip-ai --profile "${{ matrix.profile }}" "$tmpdir"
-          test -f "$tmpdir/.claude/settings.json"
-          echo "=== settings.json ==="
-          cat "$tmpdir/.claude/settings.json" | head -20
-
-      - name: Doctor with ${{ matrix.profile }} profile
-        run: |
-          tmpdir=$(mktemp -d)
-          ./init.sh --skip-ai --profile "${{ matrix.profile }}" "$tmpdir"
-          ./init.sh --doctor "$tmpdir"
-
-  sync-test:
-    name: Sync Test
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
-      - name: Manifest sync
-        run: |
-          proj1=$(mktemp -d)
-          proj2=$(mktemp -d)
-          manifest=$(mktemp)
-          echo "$proj1" >> "$manifest"
-          echo "$proj2" >> "$manifest"
-          ./init.sh sync "$manifest"
-          test -f "$proj1/.claude/settings.json"
-          test -f "$proj2/.claude/settings.json"
-
-  link-test:
-    name: Link Mode Test
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
-      - name: Symlink init
-        run: |
-          tmpdir=$(mktemp -d)
-          ./init.sh --skip-ai --link "$tmpdir"
-          # Verify symlinks exist
-          test -L "$tmpdir/.claude/settings.json" || test -f "$tmpdir/.claude/settings.json"
+      - name: Run all tests
+        run: ./tests/run_all.sh

@@ -20,6 +20,7 @@
     "init.sh"
   ],
   "scripts": {
+    "test": "./tests/run_all.sh",
     "doctor": "./init.sh --doctor .",
     "help": "./bin/ai-setting --help",
     "pack:check": "npm pack --dry-run",
