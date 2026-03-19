@@ -224,7 +224,7 @@ run_doctor() {
   if [ -f "$target/.codex/config.toml" ]; then
     doctor_ok ".codex/config.toml 존재"
   else
-    doctor_error ".codex/config.toml 없음"
+    doctor_warn ".codex/config.toml 없음 — add-tool codex 또는 --all로 추가 가능"
   fi
 
   if [ -f "$target/.mcp.json" ]; then

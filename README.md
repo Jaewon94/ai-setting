@@ -8,12 +8,20 @@
 ## 빠른 시작
 
 ```bash
-# 저장소 안에서 바로 ai-setting 커맨드 형태로 실행
-cd /path/to/ai-setting
+# 기본: Claude Code 설정만 적용 (가장 깔끔)
 ./bin/ai-setting /path/to/my-new-project
 
-# 웹 프로젝트용 MCP까지 같이 넣기
-./bin/ai-setting --mcp-preset web /path/to/my-new-project
+# Claude Code + Cursor 같이 쓸 때
+./bin/ai-setting --tools claude,cursor /path/to/my-new-project
+
+# 5개 도구 전부 설치
+./bin/ai-setting --all /path/to/my-new-project
+
+# 나중에 도구 추가 (기존 프로젝트에)
+./bin/ai-setting add-tool cursor /path/to/my-project
+./bin/ai-setting add-tool gemini /path/to/my-project
+./bin/ai-setting add-tool codex /path/to/my-project
+./bin/ai-setting add-tool copilot /path/to/my-project
 
 # Claude minimal profile로 가볍게 시작
 ./bin/ai-setting --profile minimal /path/to/my-new-project
@@ -21,29 +29,14 @@ cd /path/to/ai-setting
 # strict profile로 보호 장치 강화
 ./bin/ai-setting --profile strict /path/to/my-new-project
 
-# 공유 자산은 심링크로, 프로젝트 문서는 로컬 파일로 유지
-./bin/ai-setting --link /path/to/my-new-project
-
-# hooks/agents/skills 디렉토리를 통째로 심링크
-./bin/ai-setting --link-dir /path/to/my-new-project
+# 웹 프로젝트용 MCP까지 같이 넣기
+./bin/ai-setting --mcp-preset web /path/to/my-new-project
 
 # 기존 프로젝트의 공유 자산/MCP만 빠르게 업데이트
 ./bin/ai-setting update /path/to/my-new-project
 
 # 여러 프로젝트를 manifest 기준으로 한 번에 동기화
 ./bin/ai-setting sync ./projects.manifest
-
-# 플러그인 관리 (설치/제거/업데이트)
-./bin/ai-setting plugin list
-./bin/ai-setting plugin install ai-setting-strict /path/to/my-project
-./bin/ai-setting plugin uninstall ai-setting-strict /path/to/my-project
-
-# 기존처럼 init.sh를 직접 실행해도 동일
-/path/to/ai-setting/init.sh /path/to/my-new-project
-
-# 또는 현재 디렉토리에 적용
-cd my-new-project
-../ai-setting/bin/ai-setting .
 ```
 
 실행하면:
@@ -150,8 +143,17 @@ claude plugin install ai-setting-core@jaewon-ai-setting --scope project
 ### 옵션
 
 ```bash
-# 기본: core MCP preset 자동 포함
+# 기본: Claude Code만 설치 (core MCP 포함)
 /path/to/ai-setting/init.sh /path/to/my-new-project
+
+# 특정 도구 조합 설치
+/path/to/ai-setting/init.sh --tools claude,cursor /path/to/my-new-project
+
+# 5개 도구 전부 설치
+/path/to/ai-setting/init.sh --all /path/to/my-new-project
+
+# 기존 프로젝트에 도구 추가
+/path/to/ai-setting/init.sh add-tool cursor /path/to/my-new-project
 
 # Claude minimal profile 적용
 /path/to/ai-setting/init.sh --profile minimal /path/to/my-new-project

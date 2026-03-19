@@ -32,3 +32,8 @@ contains_value() {
 dry_run_note() {
   echo -e "  ${CYAN}[dry-run]${NC} $1"
 }
+
+tool_enabled() {
+  local tool="$1"
+  contains_value "$tool" "${TOOLS[@]}"
+}

@@ -55,8 +55,24 @@ elif [ "${1:-}" = "plugin" ]; then
       PLUGIN_TARGET="${1:-.}"
       ;;
   esac
+elif [ "${1:-}" = "add-tool" ]; then
+  ADD_TOOL_MODE=true
+  shift
+  ADD_TOOL_NAME="${1:-}"
+  ADD_TOOL_TARGET="${2:-.}"
 elif [ "${1:-}" = "init" ]; then
   shift
+fi
+
+# add-tool 모드는 옵션 파싱 불필요 — 바로 실행
+if [ "${ADD_TOOL_MODE:-false}" = true ]; then
+  if [ -z "$ADD_TOOL_NAME" ]; then
+    echo -e "${RED}오류: add-tool <tool> [target] 형식으로 사용하세요${NC}" >&2
+    echo "지원 도구: codex, cursor, gemini, copilot"
+    exit 1
+  fi
+  cmd_add_tool "$ADD_TOOL_NAME" "$ADD_TOOL_TARGET"
+  exit 0
 fi
 
 # plugin 모드는 옵션 파싱 불필요 — 바로 실행
@@ -110,6 +126,8 @@ LINK_DIR_MODE=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
+TOOLS=(claude)
+ALL_TOOLS=false
 TARGET=""
 CLAUDE_PROFILE="standard"
 USER_PROJECT_NAME_HINT=""
@@ -141,6 +159,18 @@ while [ "$#" -gt 0 ]; do
     --link-dir)
       LINK_MODE=true
       LINK_DIR_MODE=true
+      ;;
+    --all)
+      ALL_TOOLS=true
+      TOOLS=(claude codex cursor gemini copilot)
+      ;;
+    --tools)
+      if [ -z "${2:-}" ]; then
+        echo -e "${RED}오류: --tools 뒤에 값이 필요합니다 (예: claude,cursor)${NC}" >&2
+        exit 1
+      fi
+      IFS=',' read -r -a TOOLS <<< "$2"
+      shift
       ;;
     --update)
       UPDATE_MODE=true
@@ -467,44 +497,36 @@ fi
 # ============================================================
 # 2단계: 추가 AI 도구 설정 복사
 # ============================================================
-echo -e "${GREEN}[2/7]${NC} Cursor / Gemini / Copilot 설정 복사"
+if tool_enabled "cursor" || tool_enabled "gemini" || tool_enabled "copilot"; then
+  echo -e "${GREEN}[2/7]${NC} 추가 AI 도구 설정 복사"
 
-copy_cursor_assets
-copy_gemini_assets
-
-if [ "$DRY_RUN" = true ]; then
-  if [ "$LINK_MODE" = true ]; then
-    echo "  ✅ Cursor rule 심링크 예정 (.cursor/rules/ai-setting.mdc)"
-    echo "  ✅ Gemini settings 심링크 예정 (.gemini/settings.json)"
-  else
-    echo "  ✅ Cursor rule 복사 예정 (.cursor/rules/ai-setting.mdc)"
-    echo "  ✅ Gemini settings 복사 예정 (.gemini/settings.json)"
+  if tool_enabled "cursor"; then
+    copy_cursor_assets
+    echo "  ✅ Cursor rule 적용됨 (.cursor/rules/)"
   fi
-else
-  if [ "$LINK_MODE" = true ]; then
-    echo "  ✅ Cursor rule 심링크 적용됨 (.cursor/rules/ai-setting.mdc)"
-    echo "  ✅ Gemini settings 심링크 적용됨 (.gemini/settings.json)"
-  else
-    echo "  ✅ Cursor rule 적용됨 (.cursor/rules/ai-setting.mdc)"
+
+  if tool_enabled "gemini"; then
+    copy_gemini_assets
     echo "  ✅ Gemini settings 적용됨 (.gemini/settings.json)"
   fi
+
+  if tool_enabled "copilot"; then
+    copy_copilot_assets
+    echo "  ✅ Copilot instructions 적용됨 (.github/copilot-instructions.md)"
+  fi
+else
+  echo -e "${GREEN}[2/7]${NC} 추가 AI 도구 — 건너뜀 (--tools 또는 --all로 추가 가능)"
 fi
 
 # ============================================================
 # 3단계: Codex 설정 복사
 # ============================================================
-echo -e "${GREEN}[3/7]${NC} Codex CLI 설정 복사 (.codex/)"
-
-run_mkdir_p "$TARGET/.codex"
-if [ -f "$TARGET/.codex/config.toml" ]; then
-  backup_existing_path "$TARGET/.codex/config.toml" ".codex/config.toml"
-fi
-run_copy "$(get_codex_config_template "$CLAUDE_PROFILE")" "$TARGET/.codex/config.toml"
-
-if [ "$DRY_RUN" = true ]; then
-  echo "  ✅ config.toml 복사 예정"
-else
+if tool_enabled "codex"; then
+  echo -e "${GREEN}[3/7]${NC} Codex CLI 설정 복사 (.codex/)"
+  copy_codex_assets
   echo "  ✅ config.toml"
+else
+  echo -e "${GREEN}[3/7]${NC} Codex CLI — 건너뜀 (add-tool codex 로 추가 가능)"
 fi
 
 # ============================================================
@@ -519,18 +541,14 @@ else
     backup_existing_path "$TARGET/.mcp.json" ".mcp.json"
   fi
 
-  for preset in "${MCP_PRESETS[@]}"; do
-    append_codex_mcp_preset "$preset" "$TARGET/.codex/config.toml"
-  done
-  write_claude_mcp_config "$TARGET/.mcp.json"
-
-  if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ Codex MCP preset 적용 예정 ($MCP_PRESET_LABEL)"
-    echo "  ✅ Claude MCP config 생성 예정 (.mcp.json)"
-  else
+  if tool_enabled "codex"; then
+    for preset in "${MCP_PRESETS[@]}"; do
+      append_codex_mcp_preset "$preset" "$TARGET/.codex/config.toml"
+    done
     echo "  ✅ Codex MCP preset 적용됨 ($MCP_PRESET_LABEL)"
-    echo "  ✅ Claude MCP config 생성됨 (.mcp.json)"
   fi
+  write_claude_mcp_config "$TARGET/.mcp.json"
+  echo "  ✅ Claude MCP config 생성됨 (.mcp.json)"
 fi
 
 # ============================================================
@@ -582,68 +600,50 @@ else
   echo -e "  ${YELLOW}⚠ AGENTS.md 이미 존재 — 건너뜀${NC}"
 fi
 
-if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/GEMINI.md" ]; then
-  backup_existing_path "$TARGET/GEMINI.md" "GEMINI.md"
-  run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
-  if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ GEMINI.md 재생성 예정"
-  else
+if tool_enabled "gemini"; then
+  if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/GEMINI.md" ]; then
+    backup_existing_path "$TARGET/GEMINI.md" "GEMINI.md"
+    run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
     echo "  ✅ GEMINI.md 재생성됨"
-  fi
-  TEMPLATES_COPIED=true
-elif [ ! -f "$TARGET/GEMINI.md" ]; then
-  run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
-  if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ GEMINI.md 생성 예정"
-  else
+    TEMPLATES_COPIED=true
+  elif [ ! -f "$TARGET/GEMINI.md" ]; then
+    run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
     echo "  ✅ GEMINI.md 생성됨"
+    TEMPLATES_COPIED=true
+  else
+    echo -e "  ${YELLOW}⚠ GEMINI.md 이미 존재 — 건너뜀${NC}"
   fi
-  TEMPLATES_COPIED=true
-else
-  echo -e "  ${YELLOW}⚠ GEMINI.md 이미 존재 — 건너뜀${NC}"
 fi
 
-run_mkdir_p "$TARGET/.github"
-if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.github/copilot-instructions.md" ]; then
-  backup_existing_path "$TARGET/.github/copilot-instructions.md" ".github/copilot-instructions.md"
-  run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
-  if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ .github/copilot-instructions.md 재생성 예정"
-  else
+if tool_enabled "copilot"; then
+  run_mkdir_p "$TARGET/.github"
+  if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.github/copilot-instructions.md" ]; then
+    backup_existing_path "$TARGET/.github/copilot-instructions.md" ".github/copilot-instructions.md"
+    run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
     echo "  ✅ .github/copilot-instructions.md 재생성됨"
-  fi
-  TEMPLATES_COPIED=true
-elif [ ! -f "$TARGET/.github/copilot-instructions.md" ]; then
-  run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
-  if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ .github/copilot-instructions.md 생성 예정"
-  else
+    TEMPLATES_COPIED=true
+  elif [ ! -f "$TARGET/.github/copilot-instructions.md" ]; then
+    run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
     echo "  ✅ .github/copilot-instructions.md 생성됨"
+    TEMPLATES_COPIED=true
+  else
+    echo -e "  ${YELLOW}⚠ .github/copilot-instructions.md 이미 존재 — 건너뜀${NC}"
   fi
-  TEMPLATES_COPIED=true
-else
-  echo -e "  ${YELLOW}⚠ .github/copilot-instructions.md 이미 존재 — 건너뜀${NC}"
 fi
 
-if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/CODEX.md" ]; then
-  backup_existing_path "$TARGET/CODEX.md" "CODEX.md"
-  run_copy "$SCRIPT_DIR/templates/CODEX.md.template" "$TARGET/CODEX.md"
-  if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ CODEX.md 재생성 예정"
-  else
+if tool_enabled "codex"; then
+  if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/CODEX.md" ]; then
+    backup_existing_path "$TARGET/CODEX.md" "CODEX.md"
+    run_copy "$SCRIPT_DIR/templates/CODEX.md.template" "$TARGET/CODEX.md"
     echo "  ✅ CODEX.md 재생성됨"
-  fi
-  TEMPLATES_COPIED=true
-elif [ ! -f "$TARGET/CODEX.md" ]; then
-  run_copy "$SCRIPT_DIR/templates/CODEX.md.template" "$TARGET/CODEX.md"
-  if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ CODEX.md 생성 예정"
-  else
+    TEMPLATES_COPIED=true
+  elif [ ! -f "$TARGET/CODEX.md" ]; then
+    run_copy "$SCRIPT_DIR/templates/CODEX.md.template" "$TARGET/CODEX.md"
     echo "  ✅ CODEX.md 생성됨"
+    TEMPLATES_COPIED=true
+  else
+    echo -e "  ${YELLOW}⚠ CODEX.md 이미 존재 — 건너뜀${NC}"
   fi
-  TEMPLATES_COPIED=true
-else
-  echo -e "  ${YELLOW}⚠ CODEX.md 이미 존재 — 건너뜀${NC}"
 fi
 
 if [ "$CLAUDE_PROFILE" = "team" ]; then

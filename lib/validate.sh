@@ -7,9 +7,12 @@ usage() {
   $USAGE_NAME [옵션] [프로젝트 경로]
   $USAGE_NAME update [옵션] [프로젝트 경로]
   $USAGE_NAME sync [옵션] [manifest 경로]
+  $USAGE_NAME add-tool <tool> [프로젝트 경로]
   $USAGE_NAME plugin {list|install|uninstall|check-update|upgrade} [name] [target]
 
 옵션:
+  --tools TOOLS            설치할 도구 지정 (예: claude,cursor) 기본값: claude
+  --all                    모든 도구 설정 설치 (claude,codex,cursor,gemini,copilot)
   --profile PROFILE        Claude Code 프로필 지정 (standard|minimal|strict|team)
   --link                   공유 가능한 설정 자산을 복사 대신 심링크로 연결
   --link-dir               hooks/agents/skills 디렉토리를 통째로 심링크
@@ -45,6 +48,17 @@ MCP preset:
 Archetype:
   frontend-web | backend-api | cli-tool | worker-batch
   data-automation | library-sdk | infra-iac | general-app
+
+도구 (--tools, add-tool):
+  claude    Claude Code (기본값)
+  codex     Codex CLI
+  cursor    Cursor
+  gemini    Gemini CLI
+  copilot   GitHub Copilot
+
+add-tool:
+  기존 프로젝트에 도구를 추가합니다.
+  예: $USAGE_NAME add-tool cursor /path/to/project
 
 sync manifest 형식:
   - 한 줄에 프로젝트 경로 하나씩 작성

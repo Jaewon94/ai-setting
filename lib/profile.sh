@@ -180,3 +180,77 @@ copy_gemini_assets() {
   fi
   install_shared_asset "$SCRIPT_DIR/gemini/settings.json" "$TARGET/.gemini/settings.json"
 }
+
+copy_copilot_assets() {
+  run_mkdir_p "$TARGET/.github"
+  if [ -f "$TARGET/.github/copilot-instructions.md" ]; then
+    backup_existing_path "$TARGET/.github/copilot-instructions.md" ".github/copilot-instructions.md"
+  fi
+  run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
+}
+
+copy_codex_assets() {
+  run_mkdir_p "$TARGET/.codex"
+  if [ -f "$TARGET/.codex/config.toml" ]; then
+    backup_existing_path "$TARGET/.codex/config.toml" ".codex/config.toml"
+  fi
+  run_copy "$(get_codex_config_template "$CLAUDE_PROFILE")" "$TARGET/.codex/config.toml"
+}
+
+cmd_add_tool() {
+  local tool_name="$1"
+  local target="${2:-.}"
+
+  TARGET="$(cd "$target" && pwd)"
+  TARGET_BASENAME="$(basename "$TARGET")"
+
+  detect_project_context_mode "$TARGET"
+  detect_project_stack "$TARGET"
+  detect_project_archetype "$TARGET"
+
+  echo -e "${CYAN}━━━ Add Tool: ${tool_name} ━━━${NC}"
+  echo -e "대상: ${TARGET}"
+
+  case "$tool_name" in
+    cursor)
+      copy_cursor_assets
+      echo -e "${GREEN}✅ Cursor 설정 추가 완료${NC}"
+      echo "  .cursor/rules/*.mdc"
+      ;;
+    gemini)
+      copy_gemini_assets
+      if [ ! -f "$TARGET/GEMINI.md" ]; then
+        run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
+        echo "  GEMINI.md 생성됨"
+      fi
+      echo -e "${GREEN}✅ Gemini CLI 설정 추가 완료${NC}"
+      ;;
+    copilot)
+      copy_copilot_assets
+      echo -e "${GREEN}✅ GitHub Copilot 설정 추가 완료${NC}"
+      echo "  .github/copilot-instructions.md"
+      ;;
+    codex)
+      copy_codex_assets
+      if [ ! -f "$TARGET/CODEX.md" ]; then
+        run_copy "$SCRIPT_DIR/templates/CODEX.md.template" "$TARGET/CODEX.md"
+        echo "  CODEX.md 생성됨"
+      fi
+      if [ "$MCP_ENABLED" != false ] && [ -f "$TARGET/.codex/config.toml" ]; then
+        for preset in "${MCP_PRESETS[@]:-core}"; do
+          append_codex_mcp_preset "$preset" "$TARGET/.codex/config.toml"
+        done
+        echo "  MCP preset 적용됨"
+      fi
+      echo -e "${GREEN}✅ Codex CLI 설정 추가 완료${NC}"
+      ;;
+    claude)
+      echo -e "${YELLOW}claude는 기본 설치에 포함됩니다. init.sh를 사용하세요.${NC}"
+      ;;
+    *)
+      echo -e "${RED}오류: 알 수 없는 도구 '${tool_name}'${NC}" >&2
+      echo "지원 도구: claude, codex, cursor, gemini, copilot"
+      return 1
+      ;;
+  esac
+}
