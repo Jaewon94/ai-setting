@@ -522,6 +522,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 진단 항목:
 - 필수 바이너리: `jq`, `npx`, `uvx`, `claude`, `codex`, `gemini`
+- AI 자동 채우기 준비 상태: `claude --version`, `codex exec --help` 기준 실행 가능 여부와 fallback 체인 상태
 - 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`(team), `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`, `docs/research-notes.md`
 - team profile에서는 `.ai-setting/team-webhook.json`도 함께 확인
 - `.mcp.json` JSON 유효성
@@ -533,6 +534,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 참고:
 - `blank-start` 모드에서는 템플릿/skill placeholder가 남아 있어도 정상으로 취급
+- `blank-start` 모드에서는 프로젝트 근거가 거의 없으면 AI 자동 채우기를 기본적으로 건너뜬다고 함께 안내
 - `minimal` profile은 `block-dangerous-commands`, `async-test`와 managed skills 부재를 정상으로 취급
 - `minimal` profile은 `session-context`, `compact-backup`도 비활성 상태를 정상으로 취급
 - `strict/team` profile은 `protect-main-branch.sh`가 없으면 error

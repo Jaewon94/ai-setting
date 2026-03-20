@@ -21,6 +21,7 @@ assert_file_not_exists "$t/GEMINI.md" "기본에서 GEMINI.md 없음"
 suite "doctor (ERROR 0)"
 output=$("$INIT_SH" --doctor "$t" 2>&1)
 assert_output_contains "$output" "ERROR: 0" "doctor ERROR 0"
+assert_output_contains "$output" "AI 자동 채우기 준비" "doctor autofill readiness 표시"
 
 suite "doctor 문서 형식 검사"
 t_doctor=$(make_tmpdir)
@@ -32,6 +33,12 @@ assert_output_contains "$output" "docs/decisions.md에 템플릿 플레이스홀
 assert_output_contains "$output" "docs/research-notes.md에 템플릿 플레이스홀더가 남아 있음" "doctor research placeholder 검사"
 assert_output_contains "$output" "docs/decisions.md 확인일 형식 확인" "doctor decisions date 검사"
 assert_output_contains "$output" "docs/research-notes.md 출처 링크 형식 확인" "doctor research source 검사"
+
+suite "doctor blank-start autofill 안내"
+t_blank=$(make_tmpdir)
+"$INIT_SH" --skip-ai "$t_blank" >/dev/null 2>&1
+output=$("$INIT_SH" --doctor "$t_blank" 2>&1)
+assert_output_contains "$output" "프로젝트 근거가 거의 없어 AI 자동 채우기는 기본적으로 건너뜀" "doctor blank-start autofill 안내"
 
 suite "--all (전체 설치)"
 t2=$(make_tmpdir)

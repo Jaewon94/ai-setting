@@ -22,6 +22,8 @@ run_doctor() {
   local skill_placeholder_count
   local decision_placeholder_count
   local research_placeholder_count
+  local claude_ready=false
+  local codex_ready=false
 
   DOCTOR_OK_COUNT=0
   DOCTOR_WARN_COUNT=0
@@ -58,12 +60,24 @@ run_doctor() {
 
   if command -v claude &> /dev/null; then
     doctor_ok "claude 설치됨"
+    if claude --version >/dev/null 2>&1; then
+      doctor_ok "claude CLI 실행 가능"
+      claude_ready=true
+    else
+      doctor_warn "claude 명령은 있지만 실행 점검에 실패함"
+    fi
   else
     doctor_warn "claude 미설치 — Claude Code 자동 채우기 사용 불가"
   fi
 
   if command -v codex &> /dev/null; then
     doctor_ok "codex 설치됨"
+    if codex exec --help >/dev/null 2>&1; then
+      doctor_ok "codex exec 실행 가능"
+      codex_ready=true
+    else
+      doctor_warn "codex 명령은 있지만 exec 서브커맨드 점검에 실패함"
+    fi
   else
     doctor_warn "codex 미설치 — Codex fallback 자동 채우기 사용 불가"
   fi
@@ -269,6 +283,25 @@ run_doctor() {
     doctor_ok "docs/decisions.md 존재"
   else
     doctor_warn "docs/decisions.md 없음"
+  fi
+
+  if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then
+    doctor_ok "현재 프로젝트는 blank-start 모드"
+    if [ -n "$USER_PROJECT_NAME_HINT" ] || [ -n "$USER_ARCHETYPE_HINT" ] || [ -n "$USER_STACK_HINT" ]; then
+      doctor_ok "사용자 힌트 존재 — guided blank-start로 AI 자동 채우기 시도 가능"
+    else
+      doctor_warn "프로젝트 근거가 거의 없어 AI 자동 채우기는 기본적으로 건너뜀"
+    fi
+  fi
+
+  if [ "$claude_ready" = true ] && [ "$codex_ready" = true ]; then
+    doctor_ok "AI 자동 채우기 준비됨 — Claude 우선, 실패/timeout 시 Codex fallback"
+  elif [ "$claude_ready" = true ]; then
+    doctor_ok "AI 자동 채우기 준비됨 — Claude 경로 사용 가능"
+  elif [ "$codex_ready" = true ]; then
+    doctor_ok "AI 자동 채우기 준비됨 — Codex fallback 경로 사용 가능"
+  else
+    doctor_warn "AI 자동 채우기 준비 안 됨 — 수동 문서 보정이 필요할 수 있음"
   fi
 
   if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then
