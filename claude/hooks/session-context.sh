@@ -52,6 +52,7 @@ write_context() {
     print_excerpt "CLAUDE.md" "$PROJECT_DIR/CLAUDE.md" 60
     print_excerpt "AGENTS.md" "$PROJECT_DIR/AGENTS.md" 50
     print_excerpt "docs/decisions.md" "$PROJECT_DIR/docs/decisions.md" 40
+    print_excerpt "docs/research-notes.md" "$PROJECT_DIR/docs/research-notes.md" 40
   } > "$CONTEXT_FILE"
 }
 
@@ -59,11 +60,11 @@ read_context() {
   if [ -f "$LATEST_COMPACT_BACKUP" ]; then
     cat "$LATEST_COMPACT_BACKUP"
     echo
-    echo "Reminder: 최신 compact backup 기준이므로 필요하면 CLAUDE.md, AGENTS.md, docs/decisions.md 원본도 함께 확인해."
+    echo "Reminder: 최신 compact backup 기준이므로 필요하면 CLAUDE.md, AGENTS.md, docs/decisions.md, docs/research-notes.md 원본도 함께 확인해."
   elif [ -f "$CONTEXT_FILE" ]; then
     cat "$CONTEXT_FILE"
     echo
-    echo "Reminder: 최신 변경이 있었다면 CLAUDE.md, AGENTS.md, docs/decisions.md도 함께 확인해."
+    echo "Reminder: 최신 변경이 있었다면 CLAUDE.md, AGENTS.md, docs/decisions.md, docs/research-notes.md도 함께 확인해."
   else
     echo "Reminder: Read CLAUDE.md and AGENTS.md for project context. Run tests before committing."
   fi

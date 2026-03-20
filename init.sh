@@ -826,9 +826,11 @@ ${AI_PROFILE_GUIDANCE}
 2. GEMINI.md가 있으면 [대괄호] 부분을 채우고, Gemini CLI에서 참고할 핵심 지침이 CLAUDE.md / AGENTS.md와 모순되지 않게 정리해줘.
 3. .github/copilot-instructions.md가 있으면 GitHub Copilot이 바로 참고할 수 있도록 프로젝트 요약, build/test/lint 명령, 코드 스타일, 금지 패턴을 간결하게 정리해줘.
 ${AI_SKILL_TASK}
+5. docs/research-notes.md가 있으면 조사 기록 템플릿을 프로젝트에 맞게 정리해줘. 실제로 확인한 로컬 문서/설정/코드 근거가 있으면 출처와 핵심 내용을 채우고, 외부 문서 확인이 없었다면 placeholder는 TODO 형태로 남겨도 돼.
 6. .github/pull_request_template.md가 있으면 팀이 바로 쓸 수 있도록 유지하고, placeholder가 있다면 실제 검증/리스크 항목에 맞게 다듬어줘.
-6. 문서와 구현이 충돌하면 CLAUDE.md 끝에 '## Detected Mismatches' 섹션을 추가하고, 확인한 불일치를 짧게 정리해. 충돌이 없으면 이 섹션은 만들지 마.
-7. 확실하지 않은 내용은 사실처럼 단정하지 말고 TODO, 가정, 예정으로 표시해.
+7. docs/decisions.md를 새로 채우거나 수정한다면 관련 조사 항목(R-xxx)과 근거 문서를 함께 연결해줘.
+8. 문서와 구현이 충돌하면 CLAUDE.md 끝에 '## Detected Mismatches' 섹션을 추가하고, 확인한 불일치를 짧게 정리해. 충돌이 없으면 이 섹션은 만들지 마.
+9. 확실하지 않은 내용은 사실처럼 단정하지 말고 TODO, 가정, 예정으로 표시해.
 EOF
 )
 

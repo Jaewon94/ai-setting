@@ -64,6 +64,7 @@ write_backup() {
       print_excerpt "CLAUDE.md" "$PROJECT_DIR/CLAUDE.md" 60
       print_excerpt "AGENTS.md" "$PROJECT_DIR/AGENTS.md" 50
       print_excerpt "docs/decisions.md" "$PROJECT_DIR/docs/decisions.md" 40
+      print_excerpt "docs/research-notes.md" "$PROJECT_DIR/docs/research-notes.md" 40
     fi
 
     print_excerpt "Async Test Status" "$ASYNC_STATUS_FILE" 30
