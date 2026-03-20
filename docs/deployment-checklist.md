@@ -2,7 +2,7 @@
 
 **기준일**: 2026-03-20  
 **대상 버전**: `v1.0.0`  
-**상태**: npm 배포 완료, release/brew 후속 진행 중
+**상태**: npm 배포 완료, GitHub Release 확인 및 Homebrew 추후 반영 예정
 
 ---
 
@@ -32,7 +32,7 @@
 | LICENSE / SECURITY / 이슈 템플릿 | ✅ 준비됨 | 루트 및 `.github/ISSUE_TEMPLATE/` |
 | 공개 저장소 전환 | ✅ 완료 | GitHub public 확인 |
 | npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.0.0` publish 완료 |
-| brew tap 등록 | ⏳ 미실행 | 별도 tap repo + GitHub 변수/secret 필요 |
+| brew tap 등록 | ⏸ 보류 | 추후 tap repo 생성 시 반영 |
 
 ---
 
@@ -199,7 +199,7 @@ ai-setting --help
 4. GitHub 저장소 public 전환
 5. `npm publish --access public`
 6. `git tag v1.0.0 && git push origin v1.0.0`
-7. Homebrew tap 정리 및 formula 반영
+7. 필요 시 Homebrew tap 정리 및 formula 반영
 8. `docs/roadmap.md`의 Phase 10 상태 업데이트
 
 ---
@@ -213,4 +213,4 @@ ai-setting --help
 - Homebrew tap 운영까지는 아직 필요 없음
 - 실전 프로젝트 field test를 한두 개 더 보고 싶음
 
-이 경우 현재 상태는 "npm 배포 완료, release/brew 후속만 남음"으로 유지하면 됩니다.
+이 경우 현재 상태는 "npm 배포 완료, Homebrew는 추후 반영 예정"으로 유지하면 됩니다.
