@@ -20,6 +20,8 @@ run_doctor() {
   local target="$1"
   local placeholder_count
   local skill_placeholder_count
+  local decision_placeholder_count
+  local research_placeholder_count
 
   DOCTOR_OK_COUNT=0
   DOCTOR_WARN_COUNT=0
@@ -289,6 +291,40 @@ run_doctor() {
       doctor_ok "문서 템플릿 플레이스홀더 없음"
     else
       doctor_warn "CLAUDE.md / AGENTS.md / GEMINI.md / copilot instructions에 템플릿 플레이스홀더가 남아 있음"
+    fi
+
+    decision_placeholder_count=0
+    research_placeholder_count=0
+
+    if [ -f "$target/docs/decisions.md" ]; then
+      decision_placeholder_count=$(rg -o '\[(결정 제목|선택한 것|검토한 대안들|R-001, R-002 또는 없음|YYYY-MM-DD|문서명|URL|왜 이것을 선택했는지|이 선택의 단점/한계)\]' "$target/docs/decisions.md" 2>/dev/null | wc -l | tr -d ' ')
+      if [ "$decision_placeholder_count" -eq 0 ]; then
+        doctor_ok "docs/decisions.md 플레이스홀더 없음"
+      else
+        doctor_warn "docs/decisions.md에 템플릿 플레이스홀더가 남아 있음"
+      fi
+
+      if rg -q '^\- \*\*관련 조사\*\*: R-[0-9]{3}(, R-[0-9]{3})*$' "$target/docs/decisions.md" 2>/dev/null || \
+         rg -q '^\- \*\*관련 조사\*\*: 없음$' "$target/docs/decisions.md" 2>/dev/null; then
+        doctor_ok "docs/decisions.md 관련 조사 형식 확인"
+      else
+        doctor_warn "docs/decisions.md의 관련 조사 형식이 비어 있거나 표준(R-xxx)과 다를 수 있음"
+      fi
+    fi
+
+    if [ -f "$target/docs/research-notes.md" ]; then
+      research_placeholder_count=$(rg -o '\[(조사 주제|YYYY-MM-DD|왜 이 조사가 필요했는지|문서명|URL|출처에서 확인한 중요한 사실 1|출처에서 확인한 중요한 사실 2|이 조사로 인해 어떤 판단을 했는지|D-001 또는 없음)\]' "$target/docs/research-notes.md" 2>/dev/null | wc -l | tr -d ' ')
+      if [ "$research_placeholder_count" -eq 0 ]; then
+        doctor_ok "docs/research-notes.md 플레이스홀더 없음"
+      else
+        doctor_warn "docs/research-notes.md에 템플릿 플레이스홀더가 남아 있음"
+      fi
+
+      if rg -q '^### R-[0-9]{3}:' "$target/docs/research-notes.md" 2>/dev/null; then
+        doctor_ok "docs/research-notes.md 조사 ID 형식 확인"
+      else
+        doctor_warn "docs/research-notes.md에 표준 조사 ID(R-xxx)가 없을 수 있음"
+      fi
     fi
 
     if [ "$DETECTED_CLAUDE_PROFILE" = "minimal" ]; then

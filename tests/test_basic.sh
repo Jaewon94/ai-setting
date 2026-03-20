@@ -22,6 +22,15 @@ suite "doctor (ERROR 0)"
 output=$("$INIT_SH" --doctor "$t" 2>&1)
 assert_output_contains "$output" "ERROR: 0" "doctor ERROR 0"
 
+suite "doctor 문서 형식 검사"
+t_doctor=$(make_tmpdir)
+mkdir -p "$t_doctor/src"
+echo '{"dependencies":{"typescript":"5"}}' > "$t_doctor/package.json"
+"$INIT_SH" --skip-ai "$t_doctor" >/dev/null 2>&1
+output=$("$INIT_SH" --doctor "$t_doctor" 2>&1)
+assert_output_contains "$output" "docs/decisions.md에 템플릿 플레이스홀더가 남아 있음" "doctor decisions placeholder 검사"
+assert_output_contains "$output" "docs/research-notes.md에 템플릿 플레이스홀더가 남아 있음" "doctor research placeholder 검사"
+
 suite "--all (전체 설치)"
 t2=$(make_tmpdir)
 "$INIT_SH" --skip-ai --all "$t2" >/dev/null 2>&1
