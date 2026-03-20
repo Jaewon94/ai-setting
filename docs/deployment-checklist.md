@@ -40,6 +40,7 @@
 
 - [ ] `./tests/run_all.sh` 통과 확인
 - [ ] `npm pack --dry-run` 결과 확인
+- [ ] 로컬 npm cache 권한 상태 확인 (`~/.npm`에 root-owned file이 없는지)
 - [ ] `package.json` 버전 확인
 - [ ] `README.md`의 빠른 시작/옵션/지원 도구 설명 최신 상태 확인
 - [ ] `docs/roadmap.md`, `docs/issues.md` 상태 최신화 확인
@@ -98,7 +99,13 @@ npm publish
 - [ ] npm 계정 로그인 완료
 - [ ] 패키지 이름 `ai-setting` 사용 가능 여부 확인
 - [ ] `npm pack --dry-run`에 불필요 파일이 포함되지 않는지 확인
+- [ ] 로컬 npm cache 권한 문제가 없는지 확인
 - [ ] `npm publish` 성공
+
+문제 대응 메모:
+
+- `npm pack --dry-run`에서 `EPERM`과 함께 `~/.npm` cache 권한 오류가 나오면 패키지 구성 문제가 아니라 로컬 환경 문제일 수 있음
+- 이 경우 npm cache 권한을 정리한 뒤 다시 `npm pack --dry-run`을 실행해야 함
 
 배포 후 검증:
 
@@ -129,6 +136,7 @@ git push origin v1.0.0
 체크리스트:
 
 - [ ] 태그가 `package.json` 버전과 일치
+- [ ] GitHub repository secret `NPM_TOKEN` 준비
 - [ ] `.github/workflows/release.yml`이 동작할 조건 충족
 - [ ] GitHub Release 페이지에 자동 릴리스 노트 생성 확인
 
@@ -185,11 +193,12 @@ ai-setting --help
 
 1. `./tests/run_all.sh`
 2. `npm pack --dry-run`
-3. GitHub 저장소 public 전환
-4. `npm publish`
-5. `git tag v1.0.0 && git push origin v1.0.0`
-6. Homebrew tap 정리 및 formula 반영
-7. `docs/roadmap.md`의 Phase 10 상태 업데이트
+3. npm cache 권한/패키지 이름/NPM_TOKEN 확인
+4. GitHub 저장소 public 전환
+5. `npm publish`
+6. `git tag v1.0.0 && git push origin v1.0.0`
+7. Homebrew tap 정리 및 formula 반영
+8. `docs/roadmap.md`의 Phase 10 상태 업데이트
 
 ---
 

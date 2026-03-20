@@ -99,7 +99,7 @@ init.sh 실행
 - `BEHAVIORAL_CORE.md` 공통 행동 코어 도입
 - `docs/research-notes.md` + `docs/decisions.md` 기반 출처 추적 구조
 - AI autofill 안정화: Codex CLI 최신 호출 방식 반영, Claude timeout 후 Codex fallback
-- 검증 상태: `./tests/run_all.sh` 기준 `105/105 PASS`
+- 검증 상태: `./tests/run_all.sh` 기준 `107/107 PASS`
 
 실전 검증 문서:
 - `docs/field-test-kobot.md`
