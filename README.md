@@ -561,6 +561,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 - 이후 AI 자동 채우기 단계가 다시 실행됨
 - `.claude`, `.codex`, `.mcp.json`은 기존처럼 최신 설정으로 다시 적용
 - `docs/decisions.md`는 사용자 기록 파일로 보고 유지
+- `docs/research-notes.md`와 `docs/decisions.md`는 `R-xxx` / `D-xxx` 형식으로 서로 참조하도록 권장
 
 추천 조합:
 - 안전하게 하려면 `--backup-all --reapply`
