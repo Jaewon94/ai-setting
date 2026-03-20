@@ -30,6 +30,8 @@ echo '{"dependencies":{"typescript":"5"}}' > "$t_doctor/package.json"
 output=$("$INIT_SH" --doctor "$t_doctor" 2>&1)
 assert_output_contains "$output" "docs/decisions.md에 템플릿 플레이스홀더가 남아 있음" "doctor decisions placeholder 검사"
 assert_output_contains "$output" "docs/research-notes.md에 템플릿 플레이스홀더가 남아 있음" "doctor research placeholder 검사"
+assert_output_contains "$output" "docs/decisions.md 확인일 형식 확인" "doctor decisions date 검사"
+assert_output_contains "$output" "docs/research-notes.md 출처 링크 형식 확인" "doctor research source 검사"
 
 suite "--all (전체 설치)"
 t2=$(make_tmpdir)

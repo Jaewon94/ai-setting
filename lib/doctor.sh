@@ -310,6 +310,18 @@ run_doctor() {
       else
         doctor_warn "docs/decisions.md의 관련 조사 형식이 비어 있거나 표준(R-xxx)과 다를 수 있음"
       fi
+
+      if rg -q '^\- \*\*확인일\*\*: [0-9]{4}-[0-9]{2}-[0-9]{2}$' "$target/docs/decisions.md" 2>/dev/null; then
+        doctor_ok "docs/decisions.md 확인일 형식 확인"
+      else
+        doctor_warn "docs/decisions.md의 확인일 형식이 비어 있거나 표준(YYYY-MM-DD)과 다를 수 있음"
+      fi
+
+      if rg -q '^  - .+ — https?://.+' "$target/docs/decisions.md" 2>/dev/null; then
+        doctor_ok "docs/decisions.md 근거 문서 링크 형식 확인"
+      else
+        doctor_warn "docs/decisions.md의 근거 문서가 문서명 — URL 형식이 아닐 수 있음"
+      fi
     fi
 
     if [ -f "$target/docs/research-notes.md" ]; then
@@ -324,6 +336,25 @@ run_doctor() {
         doctor_ok "docs/research-notes.md 조사 ID 형식 확인"
       else
         doctor_warn "docs/research-notes.md에 표준 조사 ID(R-xxx)가 없을 수 있음"
+      fi
+
+      if rg -q '^\- \*\*확인일\*\*: [0-9]{4}-[0-9]{2}-[0-9]{2}$' "$target/docs/research-notes.md" 2>/dev/null; then
+        doctor_ok "docs/research-notes.md 확인일 형식 확인"
+      else
+        doctor_warn "docs/research-notes.md의 확인일 형식이 비어 있거나 표준(YYYY-MM-DD)과 다를 수 있음"
+      fi
+
+      if rg -q '^  - .+ — https?://.+' "$target/docs/research-notes.md" 2>/dev/null; then
+        doctor_ok "docs/research-notes.md 출처 링크 형식 확인"
+      else
+        doctor_warn "docs/research-notes.md의 출처가 문서명 — URL 형식이 아닐 수 있음"
+      fi
+
+      if rg -q '^\- \*\*관련 결정\*\*: D-[0-9]{3}$' "$target/docs/research-notes.md" 2>/dev/null || \
+         rg -q '^\- \*\*관련 결정\*\*: 없음$' "$target/docs/research-notes.md" 2>/dev/null; then
+        doctor_ok "docs/research-notes.md 관련 결정 형식 확인"
+      else
+        doctor_warn "docs/research-notes.md의 관련 결정 형식이 비어 있거나 표준(D-xxx)과 다를 수 있음"
       fi
     fi
 
