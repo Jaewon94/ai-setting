@@ -120,7 +120,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - [x] Phase 7: init.sh 모듈 분리
 - [x] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
 - [x] Phase 9: 테스트 자동화
-- [ ] Phase 10: 실제 배포 실행 (준비 완료, 필요 시 진행)
+- [ ] Phase 10: 실제 배포 실행 (npm 배포 완료, release/brew 후속 진행)
 - [x] Phase 11: MCP preset 확장
 - [x] Phase 12: 커뮤니티 플러그인 생태계 (가이드 문서)
 - [x] Phase 13: archetype별 템플릿 특화
@@ -133,6 +133,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - `BEHAVIORAL_CORE.md` 공통 행동 코어 도입 완료
 - `docs/research-notes.md` / `docs/decisions.md` 추적성 구조와 doctor 검증 완료
 - Claude timeout 후 Codex fallback까지 포함한 AI autofill 안정화 완료
+- npm scoped package `@jaewon94/ai-setting@1.0.0` publish 완료
 - 실전 검증 문서:
   - `docs/field-test-kobot.md`
   - `docs/field-test-research-traceability.md`

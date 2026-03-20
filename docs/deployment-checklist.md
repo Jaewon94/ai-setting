@@ -2,7 +2,7 @@
 
 **기준일**: 2026-03-20  
 **대상 버전**: `v1.0.0`  
-**상태**: 준비 완료, 실행 대기
+**상태**: npm 배포 완료, release/brew 후속 진행 중
 
 ---
 
@@ -31,16 +31,16 @@
 | Homebrew formula 초안 | ✅ 준비됨 | `Formula/ai-setting.rb` |
 | LICENSE / SECURITY / 이슈 템플릿 | ✅ 준비됨 | 루트 및 `.github/ISSUE_TEMPLATE/` |
 | 공개 저장소 전환 | ✅ 완료 | GitHub public 확인 |
-| npm publish | ⏳ 미실행 | npm 계정/토큰 필요 |
+| npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.0.0` publish 완료 |
 | brew tap 등록 | ⏳ 미실행 | 별도 tap repo 필요 |
 
 ---
 
 ## 배포 전 최종 점검
 
-- [ ] `./tests/run_all.sh` 통과 확인
-- [ ] `npm pack --dry-run` 결과 확인
-- [ ] 로컬 npm cache 권한 상태 확인 (`~/.npm`에 root-owned file이 없는지)
+- [x] `./tests/run_all.sh` 통과 확인
+- [x] `npm pack --dry-run` 결과 확인
+- [x] 로컬 npm cache 권한 상태 확인 (`~/.npm`에 root-owned file이 없는지)
 - [ ] `package.json` 버전 확인
 - [ ] `README.md`의 빠른 시작/옵션/지원 도구 설명 최신 상태 확인
 - [ ] `docs/roadmap.md`, `docs/issues.md` 상태 최신화 확인
@@ -49,7 +49,7 @@
   - `docs/field-test-research-traceability.md`
   - `docs/field-test-ai-autofill.md`
   - `docs/field-test-python-backend.md`
-- [ ] release 대상 커밋이 `main`에 반영됐는지 확인
+- [x] release 대상 커밋이 `main`에 반영됐는지 확인
 
 권장 검증 명령:
 
@@ -68,14 +68,14 @@ git log --oneline -5
 
 실행 항목:
 
-- [ ] GitHub 저장소를 `public`으로 전환
+- [x] GitHub 저장소를 `public`으로 전환
 - [ ] Issues / Discussions / Releases 정책 확인
 - [ ] 기본 브랜치가 `main`인지 확인
 - [ ] repository description / topics 정리
 
 확인 포인트:
 
-- [ ] `https://github.com/Jaewon94/ai-setting` 공개 접근 가능
+- [x] `https://github.com/Jaewon94/ai-setting` 공개 접근 가능
 - [ ] README 렌더링 정상
 - [ ] `LICENSE`, `SECURITY.md`, issue templates 노출 확인
 
@@ -96,11 +96,11 @@ npm publish --access public
 
 체크리스트:
 
-- [ ] npm 계정 로그인 완료
-- [ ] 패키지 이름 `@jaewon94/ai-setting` 확인
-- [ ] `npm pack --dry-run`에 불필요 파일이 포함되지 않는지 확인
-- [ ] 로컬 npm cache 권한 문제가 없는지 확인
-- [ ] `npm publish --access public` 성공
+- [x] npm 계정 로그인 완료
+- [x] 패키지 이름 `@jaewon94/ai-setting` 확인
+- [x] `npm pack --dry-run`에 불필요 파일이 포함되지 않는지 확인
+- [x] 로컬 npm cache 권한 문제가 없는지 확인
+- [x] `npm publish --access public` 성공
 
 문제 대응 메모:
 
@@ -117,7 +117,7 @@ npx @jaewon94/ai-setting --help
 
 - [ ] `npx @jaewon94/ai-setting --help` 정상 출력
 - [ ] README / homepage / repository 링크 정상
-- [ ] 패키지 버전이 `1.0.0`으로 노출됨
+- [x] 패키지 버전이 `1.0.0`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
 
 ---
 
@@ -211,4 +211,4 @@ ai-setting --help
 - Homebrew tap 운영까지는 아직 필요 없음
 - 실전 프로젝트 field test를 한두 개 더 보고 싶음
 
-이 경우 현재 상태는 "배포 준비 완료, 실행만 남음"으로 유지하면 됩니다.
+이 경우 현재 상태는 "npm 배포 완료, release/brew 후속만 남음"으로 유지하면 됩니다.

@@ -111,12 +111,13 @@ init.sh 실행
 
 `bin/ai-setting`은 저장소 루트의 `init.sh`를 감싸는 얇은 래퍼입니다. 덕분에 저장소 안에서는 `./bin/ai-setting ...` 형태로 일관되게 실행할 수 있고, 이후 npm/brew 같은 배포 채널로 확장할 때도 같은 커맨드 이름을 유지할 수 있습니다.
 
-[package.json](package.json)은 npm 배포 준비가 완료된 상태입니다.
+[package.json](package.json)은 npm 배포까지 완료된 상태입니다.
 - v1.0.0, MIT 라이선스
 - npm 패키지명: `@jaewon94/ai-setting`
 - `bin.ai-setting` CLI 엔트리
 - `npm run pack:check`로 패키지 메타데이터 dry-run 검증
 - `npm run plugin:validate`로 Claude Code plugin / marketplace 검증
+- `npm publish --access public` 완료
 - 실제 배포 전 체크리스트: `docs/deployment-checklist.md`
 
 npm 배포 후 사용 예시:
