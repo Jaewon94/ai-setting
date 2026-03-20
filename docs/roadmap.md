@@ -20,10 +20,10 @@
 - [x] Phase 5: 고급 hooks (branch 보호, async test, compact backup, session context, team webhook)
 - [x] Phase 6: 커뮤니티 & 배포 (CI/CD, npm 준비, brew formula, LICENSE, SECURITY, issue templates)
 
-### 현재 상태 (v1.0.0)
+### 현재 상태 (v1.0.0, 2026-03-20 기준)
 
 ```
-init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → AI가 템플릿 채우기
+init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → Claude autofill (timeout) → Codex fallback → 수동 안내
 ```
 
 | 영역 | 구현 내용 |
@@ -36,7 +36,9 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 | **동기화** | `--link`(파일), `--link-dir`(디렉토리), update, sync(manifest), settings.local.json override, `--sync-conflict` |
 | **플러그인** | ai-setting-core/strict/team, `plugin list\|install\|uninstall\|check-update\|upgrade` |
 | **배포** | package.json v1.0.0, MIT, CI/CD, release workflow, brew formula |
-| **문서** | CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md, decisions.md 템플릿 |
+| **문서** | BEHAVIORAL_CORE.md, CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md, research-notes.md, decisions.md 템플릿 |
+| **신뢰성** | research-notes / decisions 추적성 구조, doctor 문서 형식 검사, session/backup 반영 |
+| **검증** | `./tests/run_all.sh` 기준 105개 회귀 테스트, field test 3건 문서화 |
 
 ### 1차 고도화 상세 (아카이브)
 
@@ -122,6 +124,19 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - [x] Phase 11: MCP preset 확장
 - [x] Phase 12: 커뮤니티 플러그인 생태계 (가이드 문서)
 - [x] Phase 13: archetype별 템플릿 특화
+
+### 2차 고도화 최신 메모
+
+- Copilot path-specific instructions 생성 완료
+- `--merge` 모드로 기존 `.claude/settings.json` 보존 + hook 병합 완료
+- monorepo-aware `format-on-write.sh` 적용 완료
+- `BEHAVIORAL_CORE.md` 공통 행동 코어 도입 완료
+- `docs/research-notes.md` / `docs/decisions.md` 추적성 구조와 doctor 검증 완료
+- Claude timeout 후 Codex fallback까지 포함한 AI autofill 안정화 완료
+- 실전 검증 문서:
+  - `docs/field-test-kobot.md`
+  - `docs/field-test-research-traceability.md`
+  - `docs/field-test-ai-autofill.md`
 
 ---
 

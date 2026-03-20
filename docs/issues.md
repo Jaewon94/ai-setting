@@ -1,6 +1,6 @@
 # 이슈 관리
 
-## 점검일: 2026-03-19
+## 점검일: 2026-03-20
 
 전체 프로젝트 점검 결과 발견된 이슈를 기록하고 추적합니다.
 
@@ -40,18 +40,20 @@
 
 ---
 
-### ISS-003: Copilot 경로별 지침 미활용 (ℹ️ 개선 기회)
+### ISS-003: Copilot 경로별 지침 미활용 (✅ 수정 완료)
 
 **발견일**: 2026-03-19
 **심각도**: 낮음
-**상태**: 📋 보류 (향후 개선)
+**상태**: ✅ 수정 완료 (2026-03-20)
 
 **문제**:
 - GitHub Copilot이 `*.instructions.md` 형태의 경로별 지침을 지원 ([공식 문서](https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot))
 - 현재는 copilot-instructions.md 1개만 생성
 
-**해결 방향**:
-- 3차 고도화 또는 사용자 피드백 시 경로별 지침 생성 검토
+**수정 내용**:
+- `.github/instructions/*.instructions.md` 템플릿 추가
+- TypeScript / Python / Testing 경로별 지침 자동 생성
+- profile/doctor/backup/test 흐름에 반영
 
 ---
 
@@ -117,12 +119,51 @@
 
 ---
 
+### ISS-008: 조사/결정 문서의 출처 추적 구조 부족 (✅ 수정 완료)
+
+**발견일**: 2026-03-20
+**심각도**: 중간
+**상태**: ✅ 수정 완료 (2026-03-20)
+
+**문제**:
+- "공식 문서를 보고 판단했다"는 원칙은 있었지만, 무엇을 언제 확인했는지 남기는 표준 문서 구조가 약했음
+- 사용자가 결정의 근거를 나중에 다시 추적하기 어려웠음
+
+**수정 내용**:
+- `docs/research-notes.md` 템플릿 추가
+- `docs/decisions.md`에 `관련 조사`, `확인일`, `근거 문서` 필드 추가
+- `R-xxx`, `D-xxx`, `문서명 — URL`, `YYYY-MM-DD` 형식 표준화
+- `doctor`, `backup`, `diff`, `session-context`, `compact-backup`에 반영
+- 실전 검증 문서 `docs/field-test-research-traceability.md` 추가
+
+---
+
+### ISS-009: AI 자동 채우기 fallback이 최신 CLI 동작과 불일치 (✅ 수정 완료)
+
+**발견일**: 2026-03-20
+**심각도**: 중간
+**상태**: ✅ 수정 완료 (2026-03-20)
+
+**문제**:
+- Codex fallback이 구형 CLI 호출(`codex -q`)에 의존하고 있었음
+- Claude Code가 응답 없이 오래 대기할 때 자동 fallback으로 넘어가는 timeout이 없었음
+
+**수정 내용**:
+- Codex fallback을 `codex exec --skip-git-repo-check`로 변경
+- Claude 자동 채우기에 기본 `20s` timeout 추가 후 Codex fallback 연결
+- `tests/test_basic.sh`에 Codex fallback/Claude timeout 회귀 테스트 추가
+- 실전 검증 문서 `docs/field-test-ai-autofill.md` 추가
+
+---
+
 ## 완료된 이슈
 
 - ISS-001: CODEX.md 제거 ✅
 - ISS-002: archetype partial 테스트 추가 ✅
-- ISS-003: Copilot 경로별 지침 (보류)
+- ISS-003: Copilot 경로별 지침 ✅
 - ISS-004: Codex reasoning 옵션 추가 ✅
 - ISS-005: Gemini settings.json 개선 ✅
 - ISS-006: settings.json merge 모드 ✅
 - ISS-007: 포맷터 경로 자동 조정 ✅
+- ISS-008: research-notes / decisions 추적성 구조 ✅
+- ISS-009: AI 자동 채우기 fallback 안정화 ✅
