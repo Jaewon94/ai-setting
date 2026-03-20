@@ -1,6 +1,7 @@
 # [프로젝트명] - Claude Code 설정
 
 ## 프로젝트 규칙
+@BEHAVIORAL_CORE.md
 @AGENTS.md
 
 ## 빌드 & 실행

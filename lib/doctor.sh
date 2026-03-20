@@ -111,6 +111,12 @@ run_doctor() {
     doctor_warn "GEMINI.md 없음 — Gemini CLI 프로젝트 컨텍스트가 아직 생성되지 않았을 수 있음"
   fi
 
+  if [ -f "$target/BEHAVIORAL_CORE.md" ]; then
+    doctor_ok "BEHAVIORAL_CORE.md 존재"
+  else
+    doctor_warn "BEHAVIORAL_CORE.md 없음 — 공통 행동 원칙 문서가 아직 생성되지 않았을 수 있음"
+  fi
+
   if [ -f "$target/.github/copilot-instructions.md" ]; then
     doctor_ok ".github/copilot-instructions.md 존재"
   else
@@ -312,7 +318,7 @@ run_diff_preview() {
   local -a internal_args
 
   managed_paths=(".claude" ".codex/config.toml" "CLAUDE.md" "AGENTS.md" "docs/decisions.md")
-  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" ".github/copilot-instructions.md" ".github/pull_request_template.md" ".ai-setting/team-webhook.json")
+  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" "BEHAVIORAL_CORE.md" ".github/copilot-instructions.md" ".github/pull_request_template.md" ".ai-setting/team-webhook.json")
   if [ "$MCP_ENABLED" = true ]; then
     managed_paths+=(".mcp.json")
   fi

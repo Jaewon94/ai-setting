@@ -58,6 +58,7 @@
   ✅ Codex MCP preset 적용됨 (core)
   ✅ Claude MCP config 생성됨 (.mcp.json)
 [5/7] 템플릿 복사
+  ✅ BEHAVIORAL_CORE.md 생성됨
   ✅ CLAUDE.md 생성됨
   ✅ AGENTS.md 생성됨
   ✅ GEMINI.md 생성됨
@@ -164,6 +165,9 @@ claude plugin install ai-setting-core@jaewon-ai-setting --scope project
 
 # 공유 가능한 설정 자산을 심링크로 연결
 /path/to/ai-setting/init.sh --link /path/to/my-new-project
+
+# 기존 .claude/settings.json을 보존하고 ai-setting hook만 병합
+/path/to/ai-setting/init.sh --merge /path/to/my-project
 
 # hooks/agents/skills 디렉토리를 통째로 심링크
 /path/to/ai-setting/init.sh --link-dir /path/to/my-new-project
@@ -322,6 +326,8 @@ manifest 예시:
 프로젝트별 override:
 - `.claude/settings.local.json`에 JSON을 넣으면 update/init 시 `settings.json`에 deep merge 됩니다 (jq 필요).
 - 심링크 모드에서 override가 있으면 settings.json만 copy 모드로 전환됩니다.
+- `--merge`를 주면 기존 `.claude/settings.json`의 커스텀 값은 유지하고, ai-setting이 제공하는 hook만 추가합니다 (jq 필요).
+- 기본 포맷터 hook은 편집된 파일 기준으로 가장 가까운 `package.json`, `pyproject.toml`, `requirements*.txt`를 찾아 실행 디렉토리를 맞춥니다. `frontend/`, `backend/` 같은 분리 구조를 1차 지원합니다.
 
 시작 방법:
 - `templates/projects.manifest.template`를 복사해 `projects.manifest`를 만든 뒤 경로를 채우면 됨
@@ -338,7 +344,7 @@ manifest 예시:
 | 도구 | 생성 파일 | 메모 |
 |------|-----------|------|
 | Cursor | `.cursor/rules/ai-setting.mdc` | `AGENTS.md`, `CLAUDE.md`를 import하는 always-apply rule |
-| Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | `GEMINI.md`가 `CLAUDE.md`, `AGENTS.md`를 import |
+| Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | `GEMINI.md`가 `BEHAVIORAL_CORE.md`, `CLAUDE.md`, `AGENTS.md`를 import |
 | GitHub Copilot | `.github/copilot-instructions.md` | 저장소 공통 build/test/validation 규칙 요약 |
 
 ## 적용 후 확인
@@ -347,6 +353,7 @@ manifest 예시:
 
 ### 그대로 사용 (수정 불필요)
 - `.claude/settings.json` — hooks, 포맷터, 알림 전부 포함
+- `BEHAVIORAL_CORE.md` — 도구 공통 행동 원칙 코어
 - `.claude/hooks/*` — 보호 파일 차단 + 위험 명령 차단 + async test + session context + compact backup
 - `.claude/agents/*` — 보안 리뷰, 설계 검증, 테스트 작성, 리서치
 - `.claude/skills/*` — 배포, 코드 리뷰, 이슈 수정, Gap 체크, 교차검증

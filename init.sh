@@ -565,6 +565,27 @@ echo -e "${GREEN}[5/7]${NC} 템플릿 복사"
 
 TEMPLATES_COPIED=false
 
+if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/BEHAVIORAL_CORE.md" ]; then
+  backup_existing_path "$TARGET/BEHAVIORAL_CORE.md" "BEHAVIORAL_CORE.md"
+  run_copy "$SCRIPT_DIR/templates/BEHAVIORAL_CORE.md.template" "$TARGET/BEHAVIORAL_CORE.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ BEHAVIORAL_CORE.md 재생성 예정"
+  else
+    echo "  ✅ BEHAVIORAL_CORE.md 재생성됨"
+  fi
+  TEMPLATES_COPIED=true
+elif [ ! -f "$TARGET/BEHAVIORAL_CORE.md" ]; then
+  run_copy "$SCRIPT_DIR/templates/BEHAVIORAL_CORE.md.template" "$TARGET/BEHAVIORAL_CORE.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ BEHAVIORAL_CORE.md 생성 예정"
+  else
+    echo "  ✅ BEHAVIORAL_CORE.md 생성됨"
+  fi
+  TEMPLATES_COPIED=true
+else
+  echo -e "  ${YELLOW}⚠ BEHAVIORAL_CORE.md 이미 존재 — 건너뜀${NC}"
+fi
+
 if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/CLAUDE.md" ]; then
   backup_existing_path "$TARGET/CLAUDE.md" "CLAUDE.md"
   run_copy "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"

@@ -3,6 +3,12 @@
 ## Project Summary
 - [프로젝트 한 줄 설명]
 
+## Behavioral Core
+- State assumptions explicitly when the code or docs do not fully confirm them.
+- Prefer the simplest sufficient change before introducing new abstractions or dependencies.
+- Keep edits local to the requested scope unless wider change is clearly necessary.
+- Decide how success will be checked before editing, then report what was verified.
+
 ## Build, Test, Validate
 - Build/Run: [프로젝트별 build 또는 run 명령]
 - Test: [프로젝트별 테스트 명령어]
