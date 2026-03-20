@@ -16,6 +16,7 @@ usage() {
   --profile PROFILE        Claude Code 프로필 지정 (standard|minimal|strict|team)
   --link                   공유 가능한 설정 자산을 복사 대신 심링크로 연결
   --link-dir               hooks/agents/skills 디렉토리를 통째로 심링크
+  --merge                  기존 .claude/settings.json을 보존하며 ai-setting hook만 병합
   --update                 AI 자동 채우기 없이 공유 자산/MCP를 최신 상태로 갱신
   --sync-mode MODE         sync 명령에서 각 프로젝트에 적용할 방식 (update|init)
   --sync-conflict STRATEGY sync 시 충돌 해결 전략 (overwrite|skip|backup, 기본: backup)

@@ -123,6 +123,7 @@ REAPPLY_MODE=false
 AUTO_MCP=false
 LINK_MODE=false
 LINK_DIR_MODE=false
+MERGE_SETTINGS=false
 SKIP_AI=false
 MCP_ENABLED=true
 MCP_PRESETS=()
@@ -159,6 +160,9 @@ while [ "$#" -gt 0 ]; do
     --link-dir)
       LINK_MODE=true
       LINK_DIR_MODE=true
+      ;;
+    --merge)
+      MERGE_SETTINGS=true
       ;;
     --all)
       ALL_TOOLS=true
@@ -382,6 +386,9 @@ if [ "$LINK_MODE" = true ]; then
 else
   echo -e "공유 자산 모드: copy"
 fi
+if [ "$MERGE_SETTINGS" = true ]; then
+  echo -e "Claude settings 처리: merge"
+fi
 echo -e "MCP preset: ${MCP_PRESET_LABEL}"
 echo -e "MCP 추천: ${RECOMMENDED_MCP_PRESET_LABEL}"
 echo -e "프로젝트명: ${PROJECT_NAME}"
@@ -433,7 +440,7 @@ if [ -d "$TARGET/.claude" ]; then
   backup_existing_path "$TARGET/.claude" ".claude/"
 fi
 
-cleanup_managed_claude_assets
+cleanup_managed_claude_assets "$MERGE_SETTINGS"
 copy_claude_profile_assets
 
 if [ "$CLAUDE_PROFILE" = "minimal" ]; then

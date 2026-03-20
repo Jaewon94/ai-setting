@@ -14,6 +14,7 @@ cleanup_empty_parent_dir() {
 }
 
 cleanup_managed_claude_assets() {
+  local preserve_settings="${1:-false}"
   local managed_file
   local managed_dir
   local managed_files=(
@@ -47,12 +48,74 @@ cleanup_managed_claude_assets() {
   )
 
   for managed_file in "${managed_files[@]}"; do
+    if [ "$preserve_settings" = true ] && [ "$managed_file" = "$TARGET/.claude/settings.json" ]; then
+      continue
+    fi
     run_remove_path "$managed_file"
   done
 
   for managed_dir in "${managed_dirs[@]}"; do
     cleanup_empty_parent_dir "$managed_dir"
   done
+}
+
+merge_claude_settings_template() {
+  local settings_path="$TARGET/.claude/settings.json"
+  local settings_template="$1"
+
+  if [ ! -f "$settings_path" ] || [ "$MERGE_SETTINGS" != true ]; then
+    install_shared_asset "$settings_template" "$settings_path"
+    return
+  fi
+
+  if ! command -v jq &>/dev/null; then
+    echo -e "${YELLOW}  ⚠ jq가 없어 --merge를 적용할 수 없습니다. 기본 settings.json을 덮어씁니다${NC}"
+    install_shared_asset "$settings_template" "$settings_path"
+    return
+  fi
+
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "기존 settings.json 유지 + profile hook merge: ${settings_path}"
+    return
+  fi
+
+  if [ -L "$settings_path" ]; then
+    local resolved
+    resolved="$(readlink "$settings_path")"
+    cp "$resolved" "$settings_path.tmp"
+    rm "$settings_path"
+    mv "$settings_path.tmp" "$settings_path"
+    echo -e "  ${YELLOW}⚠ settings.json 심링크를 파일로 전환 (--merge 적용 위해)${NC}"
+  fi
+
+  local merged
+  merged="$(jq -s '
+    def hook_key:
+      (.matcher // "") + "|" + ((.hooks // []) | map(.type + ":" + (.command // .prompt // "")) | join("|"));
+    def merge_hook_arrays($base; $incoming):
+      (($base // []) + ($incoming // []) | unique_by(hook_key));
+    def merge_hooks_map($base; $incoming):
+      reduce (($incoming // {}) | keys_unsorted[]) as $event ($base // {};
+        .[$event] = merge_hook_arrays(.[$event]; $incoming[$event])
+      );
+    .[0] as $base | .[1] as $incoming |
+    reduce ($incoming | to_entries[]) as $entry ($base;
+      if $entry.key == "hooks" then
+        .hooks = merge_hooks_map(.hooks; $incoming.hooks)
+      elif has($entry.key) then
+        .
+      else
+        . + {($entry.key): $entry.value}
+      end
+    )
+  ' "$settings_path" "$settings_template" 2>/dev/null)"
+  if [ $? -eq 0 ] && [ -n "$merged" ]; then
+    echo "$merged" > "$settings_path"
+    echo -e "  ✅ 기존 settings.json 유지 + profile hook merge 완료"
+  else
+    echo -e "  ${RED}✗ --merge 적용 실패 (JSON 형식 확인 필요)${NC}"
+    return 1
+  fi
 }
 
 merge_settings_local() {
@@ -99,7 +162,7 @@ copy_claude_profile_assets() {
 
   if [ "$LINK_DIR_MODE" = true ]; then
     run_mkdir_p "$TARGET/.claude"
-    install_shared_asset "$settings_template" "$TARGET/.claude/settings.json"
+    merge_claude_settings_template "$settings_template"
     install_shared_directory_link "$SCRIPT_DIR/claude/hooks" "$TARGET/.claude/hooks"
     if [ "$CLAUDE_PROFILE" != "minimal" ]; then
       install_shared_directory_link "$SCRIPT_DIR/claude/agents" "$TARGET/.claude/agents"
@@ -110,7 +173,7 @@ copy_claude_profile_assets() {
   fi
 
   run_mkdir_p "$TARGET/.claude/hooks"
-  install_shared_asset "$settings_template" "$TARGET/.claude/settings.json"
+  merge_claude_settings_template "$settings_template"
   install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
 
   if [ "$CLAUDE_PROFILE" != "minimal" ]; then
