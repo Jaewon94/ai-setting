@@ -876,7 +876,7 @@ else
   if [ "$AI_SUCCESS" = false ]; then
     if command -v codex &> /dev/null; then
       echo "  🔄 Codex로 프로젝트 분석 중..."
-      if (cd "$TARGET" && codex -q "$AI_PROMPT") 2>/dev/null; then
+      if (cd "$TARGET" && codex exec --skip-git-repo-check "$AI_PROMPT") 2>/dev/null; then
         AI_SUCCESS=true
         echo "  ✅ Codex가 프로젝트 문서를 자동 생성했습니다"
       else

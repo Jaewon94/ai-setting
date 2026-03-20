@@ -47,7 +47,7 @@ assert_file_contains() {
   local pattern="$2"
   local label="${3:-$path contains '$pattern'}"
   TEST_TOTAL=$((TEST_TOTAL + 1))
-  if [ -f "$path" ] && grep -q "$pattern" "$path" 2>/dev/null; then
+  if [ -f "$path" ] && grep -q -- "$pattern" "$path" 2>/dev/null; then
     TEST_PASS=$((TEST_PASS + 1))
     echo "  ✅ $label"
   else

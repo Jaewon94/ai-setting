@@ -66,4 +66,19 @@ ec=$?
 assert_exit_code 0 "$ec" "2회 실행 정상"
 assert_file_exists "$t4/.claude/settings.json" "2회 실행 후 settings.json 존재"
 
+suite "Codex fallback 호출 형식"
+t5=$(make_tmpdir)
+mkdir -p "$t5/src" "$t5/bin"
+echo '{"name":"fallback-check","scripts":{"test":"echo ok"}}' > "$t5/package.json"
+cat > "$t5/bin/codex" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$@" > "$CODEX_ARGS_LOG"
+exit 0
+EOF
+chmod +x "$t5/bin/codex"
+output=$(PATH="$t5/bin:/usr/bin:/bin:/usr/sbin:/sbin" CODEX_ARGS_LOG="$t5/codex-args.log" "$INIT_SH" --all "$t5" 2>&1)
+assert_output_contains "$output" "Codex가 프로젝트 문서를 자동 생성했습니다" "codex fallback 성공 메시지"
+assert_file_contains "$t5/codex-args.log" "exec" "codex exec 사용"
+assert_file_contains "$t5/codex-args.log" "--skip-git-repo-check" "codex git 체크 우회"
+
 print_summary
