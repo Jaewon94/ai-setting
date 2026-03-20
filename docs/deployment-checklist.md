@@ -32,7 +32,7 @@
 | LICENSE / SECURITY / 이슈 템플릿 | ✅ 준비됨 | 루트 및 `.github/ISSUE_TEMPLATE/` |
 | 공개 저장소 전환 | ✅ 완료 | GitHub public 확인 |
 | npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.0.0` publish 완료 |
-| brew tap 등록 | ⏳ 미실행 | 별도 tap repo 필요 |
+| brew tap 등록 | ⏳ 미실행 | 별도 tap repo + GitHub 변수/secret 필요 |
 
 ---
 
@@ -41,10 +41,10 @@
 - [x] `./tests/run_all.sh` 통과 확인
 - [x] `npm pack --dry-run` 결과 확인
 - [x] 로컬 npm cache 권한 상태 확인 (`~/.npm`에 root-owned file이 없는지)
-- [ ] `package.json` 버전 확인
-- [ ] `README.md`의 빠른 시작/옵션/지원 도구 설명 최신 상태 확인
-- [ ] `docs/roadmap.md`, `docs/issues.md` 상태 최신화 확인
-- [ ] 최근 field test 문서 확인
+- [x] `package.json` 버전 확인
+- [x] `README.md`의 빠른 시작/옵션/지원 도구 설명 최신 상태 확인
+- [x] `docs/roadmap.md`, `docs/issues.md` 상태 최신화 확인
+- [x] 최근 field test 문서 확인
   - `docs/field-test-kobot.md`
   - `docs/field-test-research-traceability.md`
   - `docs/field-test-ai-autofill.md`
@@ -70,14 +70,14 @@ git log --oneline -5
 
 - [x] GitHub 저장소를 `public`으로 전환
 - [ ] Issues / Discussions / Releases 정책 확인
-- [ ] 기본 브랜치가 `main`인지 확인
+- [x] 기본 브랜치가 `main`인지 확인
 - [ ] repository description / topics 정리
 
 확인 포인트:
 
 - [x] `https://github.com/Jaewon94/ai-setting` 공개 접근 가능
-- [ ] README 렌더링 정상
-- [ ] `LICENSE`, `SECURITY.md`, issue templates 노출 확인
+- [x] README 렌더링 정상
+- [x] `LICENSE`, `SECURITY.md`, issue templates 노출 확인
 
 ---
 
@@ -135,9 +135,9 @@ git push origin v1.0.0
 
 체크리스트:
 
-- [ ] 태그가 `package.json` 버전과 일치
-- [ ] GitHub repository secret `NPM_TOKEN` 준비
-- [ ] `.github/workflows/release.yml`이 동작할 조건 충족
+- [x] 태그가 `package.json` 버전과 일치
+- [x] GitHub repository secret `NPM_TOKEN` 준비
+- [x] `.github/workflows/release.yml`이 동작할 조건 충족
 - [ ] GitHub Release 페이지에 자동 릴리스 노트 생성 확인
 
 확인 포인트:
@@ -156,13 +156,15 @@ git push origin v1.0.0
 사전 조건:
 
 - [ ] 별도 tap 저장소 생성 (`homebrew-ai-setting` 등)
+- [ ] repository variable `HOMEBREW_TAP_REPO` 설정
+- [ ] repository secret `HOMEBREW_TAP_GH_TOKEN` 설정
 - [ ] 공개 저장소 전환 완료
 - [ ] 첫 release tarball URL 확정
 
 실행 항목:
 
-- [ ] `Formula/ai-setting.rb`의 `url`을 release tarball로 지정
-- [ ] `sha256` 채우기
+- [x] 자동 formula 생성 스크립트 준비 (`scripts/render-homebrew-formula.sh`)
+- [x] Homebrew workflow 준비 (`.github/workflows/homebrew.yml`)
 - [ ] tap 저장소에 formula 배치
 
 검증 예시:

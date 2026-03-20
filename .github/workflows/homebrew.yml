@@ -1,0 +1,78 @@
+name: Homebrew
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to publish into the tap repo (e.g. v1.0.0)'
+        required: true
+
+jobs:
+  update-tap:
+    name: Update Homebrew Tap
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          version="${{ github.event.inputs.version }}"
+          if [ -z "$version" ]; then
+            version="${GITHUB_REF_NAME}"
+          fi
+          case "$version" in
+            v*) ;;
+            *) version="v$version" ;;
+          esac
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate tap configuration
+        env:
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          HOMEBREW_TAP_GH_TOKEN: ${{ secrets.HOMEBREW_TAP_GH_TOKEN }}
+        run: |
+          if [ -z "$HOMEBREW_TAP_REPO" ]; then
+            echo "HOMEBREW_TAP_REPO variable is required" >&2
+            exit 1
+          fi
+          if [ -z "$HOMEBREW_TAP_GH_TOKEN" ]; then
+            echo "HOMEBREW_TAP_GH_TOKEN secret is required" >&2
+            exit 1
+          fi
+
+      - name: Build formula
+        id: formula
+        run: |
+          version="${{ steps.version.outputs.value }}"
+          source_url="https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${version}.tar.gz"
+          curl -fsSL "$source_url" -o "$RUNNER_TEMP/ai-setting.tar.gz"
+          sha256_value="$(shasum -a 256 "$RUNNER_TEMP/ai-setting.tar.gz" | awk '{print $1}')"
+          ./scripts/render-homebrew-formula.sh "$version" "$sha256_value" "$RUNNER_TEMP/ai-setting.rb" "${GITHUB_REPOSITORY}"
+          echo "source_url=$source_url" >> "$GITHUB_OUTPUT"
+          echo "sha256=$sha256_value" >> "$GITHUB_OUTPUT"
+
+      - name: Push formula to tap repo
+        env:
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          HOMEBREW_TAP_GH_TOKEN: ${{ secrets.HOMEBREW_TAP_GH_TOKEN }}
+        run: |
+          tap_dir="$RUNNER_TEMP/homebrew-tap"
+          git clone "https://x-access-token:${HOMEBREW_TAP_GH_TOKEN}@github.com/${HOMEBREW_TAP_REPO}.git" "$tap_dir"
+          mkdir -p "$tap_dir/Formula"
+          cp "$RUNNER_TEMP/ai-setting.rb" "$tap_dir/Formula/ai-setting.rb"
+          cd "$tap_dir"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- Formula/ai-setting.rb; then
+            echo "No Homebrew formula changes detected"
+            exit 0
+          fi
+          git add Formula/ai-setting.rb
+          git commit -m "ai-setting ${{ steps.version.outputs.value }}"
+          git push origin HEAD

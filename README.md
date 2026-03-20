@@ -127,6 +127,21 @@ npx @jaewon94/ai-setting --help
 npx @jaewon94/ai-setting /path/to/my-new-project
 ```
 
+### 배포 자동화
+
+- `main` push: CI만 실행
+- `v*` tag push: npm publish 확인/건너뛰기 + GitHub Release 생성
+- `v*` tag push 또는 수동 실행: Homebrew tap formula 자동 갱신
+
+Homebrew 자동화를 쓰려면 GitHub repo 설정에 아래가 필요합니다.
+
+- repository variable `HOMEBREW_TAP_REPO`
+  예: `Jaewon94/homebrew-ai-setting`
+- repository secret `HOMEBREW_TAP_GH_TOKEN`
+  설명: tap repo에 push 가능한 GitHub token
+
+Formula 생성은 [render-homebrew-formula.sh](/Users/jaewon/my-project/ai-setting/scripts/render-homebrew-formula.sh)로 관리합니다.
+
 ### Claude Code 플러그인 마켓플레이스
 
 이 저장소는 `init.sh` 기반 부트스트랩 외에 Claude Code용 플러그인도 함께 제공합니다.

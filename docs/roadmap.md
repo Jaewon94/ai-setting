@@ -134,6 +134,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - `docs/research-notes.md` / `docs/decisions.md` 추적성 구조와 doctor 검증 완료
 - Claude timeout 후 Codex fallback까지 포함한 AI autofill 안정화 완료
 - npm scoped package `@jaewon94/ai-setting@1.0.0` publish 완료
+- tag push 기반 Homebrew tap 자동 반영 workflow 준비 완료
 - 실전 검증 문서:
   - `docs/field-test-kobot.md`
   - `docs/field-test-research-traceability.md`

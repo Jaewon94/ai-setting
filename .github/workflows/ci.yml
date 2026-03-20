@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check all shell scripts
-        run: bash -n init.sh lib/*.sh claude/hooks/*.sh bin/ai-setting
+        run: bash -n init.sh lib/*.sh claude/hooks/*.sh scripts/*.sh bin/ai-setting
 
   test:
     name: Test Suite
