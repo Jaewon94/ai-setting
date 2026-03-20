@@ -248,10 +248,24 @@ copy_gemini_assets() {
 
 copy_copilot_assets() {
   run_mkdir_p "$TARGET/.github"
+  run_mkdir_p "$TARGET/.github/instructions"
   if [ -f "$TARGET/.github/copilot-instructions.md" ]; then
     backup_existing_path "$TARGET/.github/copilot-instructions.md" ".github/copilot-instructions.md"
   fi
   run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
+
+  case "${PROJECT_STACK:-}" in
+    *TypeScript*|*JavaScript*|*Next.js*|*Vite*|*Node*)
+      run_copy "$SCRIPT_DIR/templates/copilot-instructions/typescript.instructions.md.template" "$TARGET/.github/instructions/typescript.instructions.md"
+      ;;
+    *Python*)
+      run_copy "$SCRIPT_DIR/templates/copilot-instructions/python.instructions.md.template" "$TARGET/.github/instructions/python.instructions.md"
+      ;;
+  esac
+
+  if [ "${PROJECT_CONTEXT_MODE:-}" != "blank-start" ]; then
+    run_copy "$SCRIPT_DIR/templates/copilot-instructions/testing.instructions.md.template" "$TARGET/.github/instructions/testing.instructions.md"
+  fi
 }
 
 copy_codex_assets() {

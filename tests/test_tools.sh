@@ -38,7 +38,11 @@ assert_file_exists "$t/.codex/config.toml" "add 후 codex 있음"
 assert_file_exists "$t/.codex/config.toml" "add 후 config.toml 있음"
 
 suite "add-tool copilot"
+mkdir -p "$t/src"
+echo '{"dependencies":{"typescript":"5"}}' > "$t/package.json"
 "$INIT_SH" add-tool copilot "$t" >/dev/null 2>&1
 assert_file_exists "$t/.github/copilot-instructions.md" "add 후 copilot 있음"
+assert_file_exists "$t/.github/instructions/typescript.instructions.md" "add 후 copilot TS instructions 있음"
+assert_file_exists "$t/.github/instructions/testing.instructions.md" "add 후 copilot test instructions 있음"
 
 print_summary

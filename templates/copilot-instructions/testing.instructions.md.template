@@ -1,0 +1,11 @@
+---
+applyTo: "**/*.test.*,**/*.spec.*,**/test_*.py,**/*_test.py,**/*_test.go,**/*_test.rs"
+---
+
+# Testing Instructions
+
+- Write tests around observable behavior, not private implementation details.
+- Cover happy path, edge cases, and failure cases for changed code.
+- Mock external systems in unit tests; do not call real services.
+- Keep fixtures and setup minimal so failures stay easy to diagnose.
+- Use the project test commands documented in `CLAUDE.md`.

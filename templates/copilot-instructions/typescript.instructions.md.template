@@ -1,0 +1,11 @@
+---
+applyTo: "**/*.ts,**/*.tsx"
+---
+
+# TypeScript Instructions
+
+- Use explicit return types for exported functions and public methods.
+- Prefer `interface` for object shapes and `type` for unions or mapped types.
+- Avoid `any`; use `unknown` with narrowing when needed.
+- Keep React components small and focused; move business logic out of UI components.
+- Follow naming and architecture rules in `AGENTS.md`.
