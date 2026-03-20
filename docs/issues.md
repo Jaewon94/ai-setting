@@ -156,6 +156,48 @@
 
 ---
 
+### ISS-010: npm publish 후 `npx` / `npm exec` 실행 경로 실패 (⚠️ 조사 필요)
+
+**발견일**: 2026-03-20  
+**심각도**: 높음  
+**상태**: ⏳ 조사 중
+
+**문제**:
+- npm 패키지 `@jaewon94/ai-setting@1.0.0` publish 자체는 성공
+- 익명 조회 기준 `npm view @jaewon94/ai-setting version --userconfig=/dev/null` 는 `1.0.0` 반환
+- 그러나 실제 실행 경로 검증에서 아래 명령들이 모두 실패
+
+```bash
+npx @jaewon94/ai-setting --help
+npx --yes --package=@jaewon94/ai-setting -- ai-setting --help
+npm exec --yes --package=@jaewon94/ai-setting -- ai-setting --help
+```
+
+- 공통 에러:
+
+```text
+sh: ai-setting: command not found
+```
+
+**현재까지 확인된 사실**:
+- 로컬 저장소 경로 실행은 정상
+- `./bin/ai-setting --skip-ai --all <tmpdir>` 적용 정상
+- `./bin/ai-setting --doctor <tmpdir>` 결과 `ERROR: 0`
+- `storyforge`, `taskrelay` 대상 `--doctor`, `/tmp` 복제본 `--dry-run`도 의미 있게 동작
+- 즉, 문제 범위는 "배포된 npm 패키지의 실행 엔트리" 쪽으로 좁혀짐
+
+**가설**:
+- scoped package + `bin` 엔트리 노출 방식 문제
+- publish된 패키지 메타데이터와 `npx/npm exec` 해석 차이
+- 로컬 npm 환경과 패키지 bin linking 방식 차이
+
+**다음 액션**:
+- npm registry에서 publish된 `bin` 메타데이터 확인
+- tarball 설치 후 실제 `node_modules/.bin` 생성 여부 확인
+- 필요하면 `package.json#bin` 또는 패키지 구조 조정 후 `1.0.1` 재배포
+
+---
+
 ## 완료된 이슈
 
 - ISS-001: CODEX.md 제거 ✅
@@ -167,3 +209,7 @@
 - ISS-007: 포맷터 경로 자동 조정 ✅
 - ISS-008: research-notes / decisions 추적성 구조 ✅
 - ISS-009: AI 자동 채우기 fallback 안정화 ✅
+
+## 보류 메모
+
+- Homebrew tap 배포는 자동화 코드까지 준비했지만, 실제 tap repo 생성과 GitHub variable/secret 설정은 추후 반영 예정
