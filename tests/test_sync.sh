@@ -27,6 +27,61 @@ echo '{"customKey":"testValue"}' > "$t/.claude/settings.local.json"
 "$INIT_SH" update "$t" >/dev/null 2>&1
 assert_file_contains "$t/.claude/settings.json" "testValue" "merge 결과 반영"
 
+suite "--merge keeps existing settings"
+t=$(make_tmpdir)
+mkdir -p "$t/.claude"
+cat > "$t/.claude/settings.json" <<'EOF'
+{
+  "customKey": "keep-me",
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo custom-notify"
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+"$INIT_SH" --skip-ai --merge "$t" >/dev/null 2>&1
+assert_file_contains "$t/.claude/settings.json" "keep-me" "기존 custom key 유지"
+assert_file_contains "$t/.claude/settings.json" "custom-notify" "기존 notification 유지"
+assert_file_contains "$t/.claude/settings.json" "protect-files.sh" "ai-setting hook merge됨"
+
+suite "format-on-write monorepo frontend"
+t=$(make_tmpdir)
+mkdir -p "$t/frontend/src" "$t/bin"
+echo '{}' > "$t/frontend/package.json"
+cat > "$t/bin/npx" <<EOF
+#!/bin/bash
+echo "\$(pwd)|\$*" >> "$t/format.log"
+EOF
+chmod +x "$t/bin/npx"
+printf '%s' '{"tool_input":{"file_path":"frontend/src/app.ts"}}' | \
+  env PATH="$t/bin:$PATH" CLAUDE_PROJECT_DIR="$t" \
+  "$REPO_ROOT/claude/hooks/format-on-write.sh" >/dev/null 2>&1
+assert_file_contains "$t/format.log" "$t/frontend|prettier --write src/app.ts" "frontend 하위 package.json 기준 prettier 실행"
+
+suite "format-on-write backend requirements"
+t=$(make_tmpdir)
+mkdir -p "$t/backend/app" "$t/bin"
+echo 'fastapi==0.1.0' > "$t/backend/requirements.txt"
+cat > "$t/bin/ruff" <<EOF
+#!/bin/bash
+echo "\$(pwd)|\$*" >> "$t/format.log"
+EOF
+chmod +x "$t/bin/ruff"
+printf '%s' '{"tool_input":{"file_path":"backend/app/main.py"}}' | \
+  env PATH="$t/bin:$PATH" CLAUDE_PROJECT_DIR="$t" \
+  "$REPO_ROOT/claude/hooks/format-on-write.sh" >/dev/null 2>&1
+assert_file_contains "$t/format.log" "$t/backend|format app/main.py" "backend requirements.txt 기준 ruff format 실행"
+assert_file_contains "$t/format.log" "$t/backend|check --fix app/main.py" "backend requirements.txt 기준 ruff check 실행"
+
 suite "sync manifest"
 p1=$(make_tmpdir) && p2=$(make_tmpdir)
 manifest=$(mktemp)

@@ -20,6 +20,7 @@ cleanup_managed_claude_assets() {
   local managed_files=(
     "$TARGET/.claude/settings.json"
     "$TARGET/.claude/hooks/protect-files.sh"
+    "$TARGET/.claude/hooks/format-on-write.sh"
     "$TARGET/.claude/hooks/block-dangerous-commands.sh"
     "$TARGET/.claude/hooks/protect-main-branch.sh"
     "$TARGET/.claude/hooks/session-context.sh"
@@ -175,6 +176,7 @@ copy_claude_profile_assets() {
   run_mkdir_p "$TARGET/.claude/hooks"
   merge_claude_settings_template "$settings_template"
   install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
+  install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/format-on-write.sh" "$TARGET/.claude/hooks/format-on-write.sh"
 
   if [ "$CLAUDE_PROFILE" != "minimal" ]; then
     install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"

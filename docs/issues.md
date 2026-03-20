@@ -86,25 +86,34 @@
 
 ---
 
-### ISS-006: settings.json merge 모드 필요 (📋 향후 개선)
+### ISS-006: settings.json merge 모드 필요 (✅ 수정 완료)
 
 **발견일**: 2026-03-19 (onDeviceAI-KOBOT 실전 테스트)
 **심각도**: 높음
-**상태**: 📋 향후 개선
+**상태**: ✅ 수정 완료 (2026-03-20)
 
 **문제**: 기존 프로젝트에 이미 커스텀 settings.json이 있을 때, ai-setting이 기본 템플릿으로 덮어쓰면 프로젝트 전용 설정(포맷터 경로, 알림 메시지 등)이 사라짐
-**해결 방향**: `--merge` 옵션으로 기존 settings.json에 없는 hook만 추가하는 모드
+**수정**:
+- `--merge` 옵션 추가
+- 기존 `.claude/settings.json`의 커스텀 키/기존 hook 유지
+- ai-setting profile hook만 jq 기반으로 병합
+- 회귀 테스트 추가
 
 ---
 
-### ISS-007: 포맷터 경로가 monorepo에서 안 맞음 (📋 향후 개선)
+### ISS-007: 포맷터 경로가 monorepo에서 안 맞음 (✅ 수정 완료)
 
 **발견일**: 2026-03-19 (onDeviceAI-KOBOT 실전 테스트)
 **심각도**: 중간
-**상태**: 📋 향후 개선
+**상태**: ✅ 수정 완료 (2026-03-20)
 
 **문제**: ai-setting 기본 포맷터가 `cd "$CLAUDE_PROJECT_DIR" && uv run ruff`인데, uv 안 쓰거나 frontend가 하위 디렉토리인 프로젝트에서 안 맞음
-**해결 방향**: 포맷터 커스터마이징 가이드 또는 프로젝트 구조 기반 자동 조정
+**수정**:
+- inline 포맷터 명령을 `format-on-write.sh` hook로 분리
+- 편집된 파일 기준으로 nearest `package.json`, `pyproject.toml`, `requirements*.txt` 탐색
+- `frontend/`, `backend/` 같은 하위 프로젝트에서 해당 디렉토리로 이동 후 실행
+- `uv.lock`이 있을 때만 `uv run ruff`, 아니면 `ruff` 직접 실행
+- monorepo 회귀 테스트 추가
 
 ---
 
@@ -115,3 +124,5 @@
 - ISS-003: Copilot 경로별 지침 (보류)
 - ISS-004: Codex reasoning 옵션 추가 ✅
 - ISS-005: Gemini settings.json 개선 ✅
+- ISS-006: settings.json merge 모드 ✅
+- ISS-007: 포맷터 경로 자동 조정 ✅
