@@ -61,6 +61,7 @@
   ✅ BEHAVIORAL_CORE.md 생성됨
   ✅ CLAUDE.md 생성됨
   ✅ AGENTS.md 생성됨
+  ✅ docs/research-notes.md 생성됨
   ✅ GEMINI.md 생성됨
   ✅ .github/copilot-instructions.md 생성됨
 [6/7] AI로 프로젝트 문서 자동 생성
@@ -345,7 +346,7 @@ manifest 예시:
 |------|-----------|------|
 | Cursor | `.cursor/rules/ai-setting.mdc` | `AGENTS.md`, `CLAUDE.md`를 import하는 always-apply rule |
 | Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | `GEMINI.md`가 `BEHAVIORAL_CORE.md`, `CLAUDE.md`, `AGENTS.md`를 import |
-| GitHub Copilot | `.github/copilot-instructions.md` | 저장소 공통 build/test/validation 규칙 요약 |
+| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | 저장소 공통 규칙 + 경로별 instructions |
 
 ## 적용 후 확인
 
@@ -357,11 +358,13 @@ manifest 예시:
 - `.claude/hooks/*` — 보호 파일 차단 + 위험 명령 차단 + async test + session context + compact backup
 - `.claude/agents/*` — 보안 리뷰, 설계 검증, 테스트 작성, 리서치
 - `.claude/skills/*` — 배포, 코드 리뷰, 이슈 수정, Gap 체크, 교차검증
+- `docs/research-notes.md` — 공식 문서/외부 조사 근거와 요약 기록
 - `.claude/hooks/protect-main-branch.sh` — strict/team에서 main/master 직접 git 작업 차단
 - `.ai-setting/team-webhook.json` — team profile용 웹훅 메타설정 템플릿
 - `.cursor/rules/ai-setting.mdc` — Cursor project-wide rule
 - `.gemini/settings.json` / `GEMINI.md` — Gemini CLI 컨텍스트
 - `.github/copilot-instructions.md` — GitHub Copilot 저장소 지침
+- `.github/instructions/*.instructions.md` — Copilot path-specific instructions
 - `.codex/config.toml` — Codex CLI 기본 설정 + 프로젝트 로컬 MCP
 - `.mcp.json` — Claude Code 프로젝트 로컬 MCP
 
@@ -496,7 +499,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 
 진단 항목:
 - 필수 바이너리: `jq`, `npx`, `uvx`, `claude`, `codex`, `gemini`
-- 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`(team), `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`
+- 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`(team), `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`, `docs/research-notes.md`
 - team profile에서는 `.ai-setting/team-webhook.json`도 함께 확인
 - `.mcp.json` JSON 유효성
 - `.claude/settings.local.json` 존재 시 JSON 유효성
@@ -526,7 +529,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 `init.sh --diff /path/to/project`로 현재 상태와 init 적용 결과의 차이를 unified diff 형태로 볼 수 있습니다.
 
 동작:
-- `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md` 기준으로 비교
+- `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`, `docs/research-notes.md` 기준으로 비교
 - `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`도 포함
 - 실제 파일은 변경하지 않음
 - AI 자동 채우기 결과는 포함하지 않음
@@ -540,7 +543,7 @@ blank-start에서도 의도를 미리 줄 수 있음:
 `init.sh --backup-all /path/to/project`로 적용 전에 관리 대상 전체를 한 번에 스냅샷 백업할 수 있습니다.
 
 동작:
-- `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`를 대상 프로젝트 아래 `.ai-setting.backup.TIMESTAMP/`로 백업
+- `.claude`, `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`, `docs/research-notes.md`를 대상 프로젝트 아래 `.ai-setting.backup.TIMESTAMP/`로 백업
 - `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`도 함께 백업
 - 이후 overwrite 단계에서는 개별 `.backup.*`를 중복 생성하지 않고 snapshot 포함 안내만 출력
 - `--dry-run`과 함께 쓰면 snapshot 생성 예정만 출력

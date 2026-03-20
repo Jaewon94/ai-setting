@@ -636,6 +636,29 @@ else
   echo -e "  ${YELLOW}⚠ AGENTS.md 이미 존재 — 건너뜀${NC}"
 fi
 
+if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/docs/research-notes.md" ]; then
+  backup_existing_path "$TARGET/docs/research-notes.md" "docs/research-notes.md"
+  run_mkdir_p "$TARGET/docs"
+  run_copy "$SCRIPT_DIR/templates/research-notes.md.template" "$TARGET/docs/research-notes.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ docs/research-notes.md 재생성 예정"
+  else
+    echo "  ✅ docs/research-notes.md 재생성됨"
+  fi
+  TEMPLATES_COPIED=true
+elif [ ! -f "$TARGET/docs/research-notes.md" ]; then
+  run_mkdir_p "$TARGET/docs"
+  run_copy "$SCRIPT_DIR/templates/research-notes.md.template" "$TARGET/docs/research-notes.md"
+  if [ "$DRY_RUN" = true ]; then
+    echo "  ✅ docs/research-notes.md 생성 예정"
+  else
+    echo "  ✅ docs/research-notes.md 생성됨"
+  fi
+  TEMPLATES_COPIED=true
+else
+  echo -e "  ${YELLOW}⚠ docs/research-notes.md 이미 존재 — 건너뜀${NC}"
+fi
+
 if tool_enabled "gemini"; then
   if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/GEMINI.md" ]; then
     backup_existing_path "$TARGET/GEMINI.md" "GEMINI.md"

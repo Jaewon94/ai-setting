@@ -16,6 +16,7 @@
 - 사용자 프로젝트 안에서 생성되는 파일은 가능한 한 managed path를 명확히 합니다.
 - project-specific 문서와 shared template를 구분합니다.
 - 기존 동작을 바꾸면 README 예시와 로드맵 현재 상태도 같이 갱신합니다.
+- 공식 문서나 외부 레퍼런스를 보고 판단한 변경은 `docs/research-notes.md` 또는 `docs/decisions.md`에 출처와 확인일을 남깁니다.
 
 ## 개발 워크플로
 
@@ -111,6 +112,13 @@ tmpdir=$(mktemp -d) && ./init.sh --skip-ai "$tmpdir"
   - 프로필별 Codex 설정 템플릿입니다 (standard, minimal, strict, team).
 - `init.sh`
   - 옵션 파싱과 메인 7단계 실행 흐름의 오케스트레이터입니다 (~940행).
+
+### 조사/근거 기록
+
+- `docs/research-notes.md`
+  - 공식 문서, 레퍼런스, 외부 조사 결과의 요약과 출처를 기록합니다.
+- `docs/decisions.md`
+  - 최종 기술 결정과 관련 조사 항목을 기록합니다.
 
 ### lib/ 모듈 구조
 

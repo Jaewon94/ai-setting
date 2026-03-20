@@ -117,10 +117,22 @@ run_doctor() {
     doctor_warn "BEHAVIORAL_CORE.md 없음 — 공통 행동 원칙 문서가 아직 생성되지 않았을 수 있음"
   fi
 
+  if [ -f "$target/docs/research-notes.md" ]; then
+    doctor_ok "docs/research-notes.md 존재"
+  else
+    doctor_warn "docs/research-notes.md 없음 — 조사 근거 기록 문서가 아직 생성되지 않았을 수 있음"
+  fi
+
   if [ -f "$target/.github/copilot-instructions.md" ]; then
     doctor_ok ".github/copilot-instructions.md 존재"
   else
     doctor_warn ".github/copilot-instructions.md 없음 — GitHub Copilot 지원 파일이 아직 생성되지 않았을 수 있음"
+  fi
+
+  if [ -d "$target/.github/instructions" ]; then
+    doctor_ok ".github/instructions 디렉토리 존재"
+  else
+    doctor_warn ".github/instructions 없음 — Copilot path-specific instructions가 아직 생성되지 않았을 수 있음"
   fi
 
   if [ "$DETECTED_CLAUDE_PROFILE" = "team" ]; then
@@ -317,8 +329,8 @@ run_diff_preview() {
   local -a managed_paths
   local -a internal_args
 
-  managed_paths=(".claude" ".codex/config.toml" "CLAUDE.md" "AGENTS.md" "docs/decisions.md")
-  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" "BEHAVIORAL_CORE.md" ".github/copilot-instructions.md" ".github/pull_request_template.md" ".ai-setting/team-webhook.json")
+  managed_paths=(".claude" ".codex/config.toml" "CLAUDE.md" "AGENTS.md" "docs/decisions.md" "docs/research-notes.md")
+  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" "BEHAVIORAL_CORE.md" ".github/copilot-instructions.md" ".github/instructions/typescript.instructions.md" ".github/instructions/python.instructions.md" ".github/instructions/testing.instructions.md" ".github/pull_request_template.md" ".ai-setting/team-webhook.json")
   if [ "$MCP_ENABLED" = true ]; then
     managed_paths+=(".mcp.json")
   fi
