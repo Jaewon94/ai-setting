@@ -88,11 +88,8 @@ cmd_plugin_install() {
   if [ -f "$plugin_dir/hooks/hooks.json" ] && [ -f "$target/.claude/settings.json" ]; then
     local merged
     merged="$(jq -s '
-      def merge_hooks:
-        reduce .[] as $item ({}; . * $item);
       .[0] as $base | .[1].hooks as $new_hooks |
-      $base * {hooks: ($base.hooks // {} | to_entries | map({key: .key, value: .value}) |
-        from_entries) * ($new_hooks // {})}
+      $base * {hooks: (($base.hooks // {}) * ($new_hooks // {}))}
     ' "$target/.claude/settings.json" "$plugin_dir/hooks/hooks.json" 2>/dev/null)"
     if [ $? -eq 0 ] && [ -n "$merged" ]; then
       echo "$merged" > "$target/.claude/settings.json"
