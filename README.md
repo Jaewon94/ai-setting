@@ -115,6 +115,7 @@ init.sh 실행
 - `bin.ai-setting` CLI 엔트리
 - `npm run pack:check`로 패키지 메타데이터 dry-run 검증
 - `npm run plugin:validate`로 Claude Code plugin / marketplace 검증
+- 실제 배포 전 체크리스트: `docs/deployment-checklist.md`
 
 ### Claude Code 플러그인 마켓플레이스
 
