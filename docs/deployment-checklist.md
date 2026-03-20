@@ -12,7 +12,7 @@
 
 배포 채널:
 
-- npm (`npx ai-setting ...`)
+- npm (`npx @jaewon94/ai-setting ...`)
 - GitHub 공개 저장소
 - Homebrew tap
 - GitHub Release workflow
@@ -30,7 +30,7 @@
 | release workflow | ✅ 준비됨 | `.github/workflows/release.yml` |
 | Homebrew formula 초안 | ✅ 준비됨 | `Formula/ai-setting.rb` |
 | LICENSE / SECURITY / 이슈 템플릿 | ✅ 준비됨 | 루트 및 `.github/ISSUE_TEMPLATE/` |
-| 공개 저장소 전환 | ⏳ 미실행 | GitHub Settings 필요 |
+| 공개 저장소 전환 | ✅ 완료 | GitHub public 확인 |
 | npm publish | ⏳ 미실행 | npm 계정/토큰 필요 |
 | brew tap 등록 | ⏳ 미실행 | 별도 tap repo 필요 |
 
@@ -84,23 +84,23 @@ git log --oneline -5
 ## 2. npm 배포
 
 목적:
-- 사용자가 `npx ai-setting ...`로 바로 사용할 수 있게 함
+- 사용자가 `npx @jaewon94/ai-setting ...`로 바로 사용할 수 있게 함
 
 실행 순서:
 
 ```bash
 npm login
 npm pack --dry-run
-npm publish
+npm publish --access public
 ```
 
 체크리스트:
 
 - [ ] npm 계정 로그인 완료
-- [ ] 패키지 이름 `ai-setting` 사용 가능 여부 확인
+- [ ] 패키지 이름 `@jaewon94/ai-setting` 확인
 - [ ] `npm pack --dry-run`에 불필요 파일이 포함되지 않는지 확인
 - [ ] 로컬 npm cache 권한 문제가 없는지 확인
-- [ ] `npm publish` 성공
+- [ ] `npm publish --access public` 성공
 
 문제 대응 메모:
 
@@ -110,12 +110,12 @@ npm publish
 배포 후 검증:
 
 ```bash
-npx ai-setting --help
+npx @jaewon94/ai-setting --help
 ```
 
 확인 포인트:
 
-- [ ] `npx ai-setting --help` 정상 출력
+- [ ] `npx @jaewon94/ai-setting --help` 정상 출력
 - [ ] README / homepage / repository 링크 정상
 - [ ] 패키지 버전이 `1.0.0`으로 노출됨
 
@@ -181,7 +181,7 @@ ai-setting --help
 
 ## 5. 배포 후 확인
 
-- [ ] `npx ai-setting --help` 확인
+- [ ] `npx @jaewon94/ai-setting --help` 확인
 - [ ] `brew install` 경로 확인
 - [ ] GitHub README에 설치 방법 업데이트
 - [ ] 필요 시 `docs/roadmap.md`에서 Phase 10 완료 처리
@@ -195,7 +195,7 @@ ai-setting --help
 2. `npm pack --dry-run`
 3. npm cache 권한/패키지 이름/NPM_TOKEN 확인
 4. GitHub 저장소 public 전환
-5. `npm publish`
+5. `npm publish --access public`
 6. `git tag v1.0.0 && git push origin v1.0.0`
 7. Homebrew tap 정리 및 formula 반영
 8. `docs/roadmap.md`의 Phase 10 상태 업데이트

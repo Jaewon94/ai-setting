@@ -113,10 +113,18 @@ init.sh 실행
 
 [package.json](package.json)은 npm 배포 준비가 완료된 상태입니다.
 - v1.0.0, MIT 라이선스
+- npm 패키지명: `@jaewon94/ai-setting`
 - `bin.ai-setting` CLI 엔트리
 - `npm run pack:check`로 패키지 메타데이터 dry-run 검증
 - `npm run plugin:validate`로 Claude Code plugin / marketplace 검증
 - 실제 배포 전 체크리스트: `docs/deployment-checklist.md`
+
+npm 배포 후 사용 예시:
+
+```bash
+npx @jaewon94/ai-setting --help
+npx @jaewon94/ai-setting /path/to/my-new-project
+```
 
 ### Claude Code 플러그인 마켓플레이스
 
