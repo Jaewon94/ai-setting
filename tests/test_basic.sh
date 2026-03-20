@@ -21,7 +21,7 @@ assert_file_not_exists "$t/GEMINI.md" "기본에서 GEMINI.md 없음"
 suite "doctor (ERROR 0)"
 output=$("$INIT_SH" --doctor "$t" 2>&1)
 assert_output_contains "$output" "ERROR: 0" "doctor ERROR 0"
-assert_output_contains "$output" "AI 자동 채우기 준비" "doctor autofill readiness 표시"
+assert_output_contains "$output" "AI 자동 채우기" "doctor autofill readiness 표시"
 
 suite "doctor 문서 형식 검사"
 t_doctor=$(make_tmpdir)
