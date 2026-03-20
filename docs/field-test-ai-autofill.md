@@ -63,10 +63,10 @@
 - Codex fallback이 현재 CLI 구조에 맞게 정리됨
 - git 저장소가 아닌 새 프로젝트에서도 `--skip-git-repo-check`로 비대화 실행이 가능해짐
 - AI 자동 채우기 실패 시에도 문서 뼈대와 추적성 구조는 안전하게 보존됨
+- Claude Code가 응답 없이 오래 대기하면 기본 `20s` 후 Codex fallback으로 넘어가도록 보강함
 
 ### 남는 과제
 
-- Claude Code 경로는 장시간 대기 시 자동 fallback으로 넘어가는 timeout이 아직 없음
 - 자동 채우기 성공 시 실제 placeholder가 얼마나 잘 채워지는지는 추가 field test가 필요함
 - Codex 경로는 CLI 문법은 맞췄지만, 로그인 상태나 네트워크 제약에 따라 실패할 수 있음
 
@@ -76,4 +76,4 @@
 
 - 이번 검증으로 **Codex fallback 호출 방식에 실제 호환성 문제가 있었다는 점**을 확인했고, 현재 CLI 기준으로 수정함
 - 또한 **AI 자동 채우기 실패가 초기화 전체 실패로 이어지지 않도록 설계되어 있음**을 다시 확인함
-- 다음 개선 우선순위는 `Claude Code hang 시 timeout 후 Codex fallback` 같은 운영 안전장치 추가임
+- 이어서 **Claude Code hang 시 timeout 후 Codex fallback** 운영 안전장치도 추가함

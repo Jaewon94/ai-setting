@@ -27,6 +27,36 @@ source "$SCRIPT_DIR/lib/profile.sh"
 source "$SCRIPT_DIR/lib/sync.sh"
 source "$SCRIPT_DIR/lib/plugin.sh"
 
+run_with_timeout() {
+  local timeout_seconds="$1"
+  shift
+
+  "$@" &
+  local command_pid=$!
+
+  (
+    sleep "$timeout_seconds"
+    if kill -0 "$command_pid" 2>/dev/null; then
+      kill -TERM "$command_pid" 2>/dev/null || true
+      sleep 1
+      kill -0 "$command_pid" 2>/dev/null && kill -KILL "$command_pid" 2>/dev/null || true
+    fi
+  ) &
+  local watcher_pid=$!
+
+  wait "$command_pid"
+  local status=$?
+
+  kill "$watcher_pid" 2>/dev/null || true
+  wait "$watcher_pid" 2>/dev/null || true
+
+  if [ "$status" -eq 143 ] || [ "$status" -eq 137 ]; then
+    return 124
+  fi
+
+  return "$status"
+}
+
 # 서브커맨드 전처리
 UPDATE_MODE=false
 SYNC_MODE=false
@@ -848,6 +878,7 @@ elif [ "$TEMPLATES_COPIED" = false ]; then
   echo -e "  ${YELLOW}새 템플릿이 없음 (이미 존재) — 건너뜀${NC}"
 else
   AI_SUCCESS=false
+  CLAUDE_TIMEOUT_SECONDS="${AI_SETTING_CLAUDE_TIMEOUT_SEC:-20}"
   echo "  mode: ${PROJECT_CONTEXT_MODE} (${PROJECT_CONTEXT_REASON})"
   if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ] && [ "$HAS_USER_GUIDANCE" = true ]; then
     echo "  blank-start with guidance: 사용자 힌트를 바탕으로 초안을 시도합니다"
@@ -861,12 +892,17 @@ else
 
   # 시도 1: Claude Code
   if command -v claude &> /dev/null; then
-    echo "  🔄 Claude Code로 프로젝트 분석 중..."
-    if cd "$TARGET" && claude -p "$AI_PROMPT" --allowedTools Write,Edit,Read,Glob,Grep 2>/dev/null; then
+    echo "  🔄 Claude Code로 프로젝트 분석 중... (timeout: ${CLAUDE_TIMEOUT_SECONDS}s)"
+    if cd "$TARGET" && run_with_timeout "$CLAUDE_TIMEOUT_SECONDS" claude -p "$AI_PROMPT" --allowedTools Write,Edit,Read,Glob,Grep 2>/dev/null; then
       AI_SUCCESS=true
       echo "  ✅ Claude Code가 프로젝트 문서를 자동 생성했습니다"
     else
-      echo -e "  ${YELLOW}  Claude Code 실행 실패 — Codex로 시도합니다${NC}"
+      claude_status=$?
+      if [ "$claude_status" -eq 124 ]; then
+        echo -e "  ${YELLOW}  Claude Code timeout (${CLAUDE_TIMEOUT_SECONDS}s) — Codex로 시도합니다${NC}"
+      else
+        echo -e "  ${YELLOW}  Claude Code 실행 실패 — Codex로 시도합니다${NC}"
+      fi
     fi
   else
     echo -e "  ${YELLOW}  Claude Code 미설치 — Codex로 시도합니다${NC}"
