@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Bootstrap Claude Code, Codex, Cursor, Gemini CLI, and Copilot project settings.",
   "bin": {
-    "ai-setting": "./bin/ai-setting"
+    "ai-setting": "bin/ai-setting"
   },
   "files": [
     ".claude-plugin/",
