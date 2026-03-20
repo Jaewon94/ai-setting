@@ -105,6 +105,7 @@ init.sh 실행
 - `docs/field-test-kobot.md`
 - `docs/field-test-research-traceability.md`
 - `docs/field-test-ai-autofill.md`
+- `docs/field-test-python-backend.md`
 
 ### 로컬 CLI 래퍼
 

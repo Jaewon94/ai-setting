@@ -47,6 +47,7 @@
   - `docs/field-test-kobot.md`
   - `docs/field-test-research-traceability.md`
   - `docs/field-test-ai-autofill.md`
+  - `docs/field-test-python-backend.md`
 - [ ] release 대상 커밋이 `main`에 반영됐는지 확인
 
 권장 검증 명령:
