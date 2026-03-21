@@ -20,7 +20,7 @@
 - [x] Phase 5: 고급 hooks (branch 보호, async test, compact backup, session context, team webhook)
 - [x] Phase 6: 커뮤니티 & 배포 (CI/CD, npm 준비, brew formula, LICENSE, SECURITY, issue templates)
 
-### 현재 상태 (v1.0.0, 2026-03-20 기준)
+### 현재 상태 (v1.0.1, 2026-03-21 기준)
 
 ```
 init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → Claude autofill (timeout) → Codex fallback → 수동 안내
@@ -35,10 +35,10 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 | **안전** | doctor, dry-run, diff, backup-all, reapply |
 | **동기화** | `--link`(파일), `--link-dir`(디렉토리), update, sync(manifest), settings.local.json override, `--sync-conflict` |
 | **플러그인** | ai-setting-core/strict/team, `plugin list\|install\|uninstall\|check-update\|upgrade` |
-| **배포** | package.json v1.0.0, MIT, CI/CD, release workflow, brew formula |
+| **배포** | package.json v1.0.1, MIT, CI/CD, release workflow (npm auto-publish), brew formula |
 | **문서** | BEHAVIORAL_CORE.md, CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md, research-notes.md, decisions.md 템플릿 |
 | **신뢰성** | research-notes / decisions 추적성 구조, doctor 문서 형식 검사, session/backup 반영 |
-| **검증** | `./tests/run_all.sh` 기준 105개 회귀 테스트, field test 3건 문서화 |
+| **검증** | `./tests/run_all.sh` 기준 회귀 테스트 (test_hooks.sh 38건 포함), field test 4건 문서화 |
 
 ### 1차 고도화 상세 (아카이브)
 
@@ -104,7 +104,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 **Phase 3 (프로필)**: standard/minimal/strict/team, 프로필별 hooks/agents/skills 차등 적용
 **Phase 4 (플러그인)**: marketplace.json, core/strict/team 분리, plugin CLI (list/install/uninstall/check-update/upgrade)
 **Phase 5 (고급 hooks)**: branch 보호, async test, compact backup, session context, team webhook
-**Phase 6 (배포)**: CI/CD, npm v1.0.0, brew formula, MIT LICENSE, SECURITY.md, issue templates
+**Phase 6 (배포)**: CI/CD, npm v1.0.1, brew formula, MIT LICENSE, SECURITY.md, issue templates
 
 </details>
 
@@ -120,7 +120,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - [x] Phase 7: init.sh 모듈 분리
 - [x] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
 - [x] Phase 9: 테스트 자동화
-- [ ] Phase 10: 실제 배포 실행 (npm 배포 완료, Homebrew 추후 반영 예정)
+- [x] Phase 10: 실제 배포 실행 (npm v1.0.1 배포 완료, Homebrew 추후 반영 예정)
 - [x] Phase 11: MCP preset 확장
 - [x] Phase 12: 커뮤니티 플러그인 생태계 (가이드 문서)
 - [x] Phase 13: archetype별 템플릿 특화
@@ -133,12 +133,15 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - `BEHAVIORAL_CORE.md` 공통 행동 코어 도입 완료
 - `docs/research-notes.md` / `docs/decisions.md` 추적성 구조와 doctor 검증 완료
 - Claude timeout 후 Codex fallback까지 포함한 AI autofill 안정화 완료
-- npm scoped package `@jaewon94/ai-setting@1.0.0` publish 완료
-- tag push 기반 Homebrew tap 자동 반영 workflow 준비 완료
+- npm scoped package `@jaewon94/ai-setting@1.0.1` publish 완료 (v1.0.0 bin CRLF 문제 수정)
+- tag push 기반 npm auto-publish + GitHub Release 자동화 동작 확인
+- Homebrew tap 자동 반영 workflow 준비 완료 (tap repo 생성 대기)
+- ISS-010~025 전수 검증 이슈 16건 일괄 수정 (보안, 크로스플랫폼, monorepo, merge 중복 등)
 - 실전 검증 문서:
   - `docs/field-test-kobot.md`
   - `docs/field-test-research-traceability.md`
   - `docs/field-test-ai-autofill.md`
+  - `docs/field-test-python-backend.md`
 
 ---
 
@@ -320,11 +323,11 @@ tests/
 | 항목 | 준비 상태 | 실행 시 할 일 |
 |------|-----------|--------------|
 | `git push` | ✅ origin에 push 완료 | — |
-| `npm publish` | ✅ package.json v1.0.0 준비 완료 | `npm login` → `npm publish` |
-| GitHub repo | ⏳ private | Settings에서 public 전환 |
-| brew tap | ✅ Formula 파일 존재 | `homebrew-ai-setting` repo 생성 후 formula 등록 |
-| CI | ✅ workflow 파일 존재 | public 전환 후 자동 실행됨 |
-| sync-conf.dev | ⏳ | public 전환 후 등록 |
+| `npm publish` | ✅ v1.0.1 배포 완료 | tag push 시 자동 publish |
+| GitHub repo | ✅ public | — |
+| brew tap | ⏳ workflow 준비됨 | tap repo 생성 + secret 설정 필요 |
+| CI | ✅ 동작 중 | lint + test 자동 실행 |
+| sync-conf.dev | ⏳ | 등록 대기 |
 
 #### 실행 시점 기준
 

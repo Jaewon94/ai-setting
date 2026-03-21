@@ -21,7 +21,9 @@ ai-setting generates configuration files for AI coding tools. Security-relevant 
 
 When using ai-setting in your projects:
 
-1. Review generated hook scripts before enabling them
-2. Use `--dry-run` to preview changes before applying
-3. Use `--doctor` to verify your setup
-4. Keep `settings.local.json` out of version control if it contains sensitive overrides
+1. **jq 필수**: 보안 hook(protect-files, block-dangerous-commands)은 jq가 없으면 fail-closed로 동작합니다. `--doctor`에서 jq 미설치는 ERROR로 표시됩니다
+2. Review generated hook scripts before enabling them
+3. Use `--dry-run` to preview changes before applying
+4. Use `--doctor` to verify your setup
+5. Keep `settings.local.json` out of version control if it contains sensitive overrides
+6. `--doctor`가 settings.local.json에서 과도한 permission을 감지하면 정리를 권장합니다

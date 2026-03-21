@@ -346,6 +346,22 @@ fi
 - ISS-007: 포맷터 경로 자동 조정 ✅
 - ISS-008: research-notes / decisions 추적성 구조 ✅
 - ISS-009: AI 자동 채우기 fallback 안정화 ✅
+- ISS-010: npm bin CRLF 수정 ✅
+- ISS-011: jq fail-closed ✅
+- ISS-012: eval 제거 ✅
+- ISS-013: Notification 크로스플랫폼 ✅
+- ISS-014: merge hook 중복 ✅
+- ISS-015: .gitignore 자동 추가 ✅
+- ISS-016: skip-ai 플레이스홀더 ✅
+- ISS-017: merge PostToolUse 중복 ✅
+- ISS-018: format-on-write monorepo 경로 ✅
+- ISS-019: async-test monorepo 감지 ✅
+- ISS-020: 프로젝트명 미치환 ✅
+- ISS-021: skill 플레이스홀더 ✅
+- ISS-022: doctor permission 경고 ✅
+- ISS-023: research MCP fallback ✅
+- ISS-024: serena uvx 경고 ✅
+- ISS-025: skip-ai 범용 템플릿 ✅
 
 ## 보류 메모
 

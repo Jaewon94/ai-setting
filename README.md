@@ -99,7 +99,7 @@ init.sh 실행
 - `BEHAVIORAL_CORE.md` 공통 행동 코어 도입
 - `docs/research-notes.md` + `docs/decisions.md` 기반 출처 추적 구조
 - AI autofill 안정화: Codex CLI 최신 호출 방식 반영, Claude timeout 후 Codex fallback
-- 검증 상태: `./tests/run_all.sh` 기준 `107/107 PASS`
+- 검증 상태: `./tests/run_all.sh` 기준 전체 PASS (test_hooks.sh 38건 포함)
 
 실전 검증 문서:
 - `docs/field-test-kobot.md`
@@ -111,13 +111,13 @@ init.sh 실행
 
 `bin/ai-setting`은 저장소 루트의 `init.sh`를 감싸는 얇은 래퍼입니다. 덕분에 저장소 안에서는 `./bin/ai-setting ...` 형태로 일관되게 실행할 수 있고, 이후 npm/brew 같은 배포 채널로 확장할 때도 같은 커맨드 이름을 유지할 수 있습니다.
 
-[package.json](package.json)은 npm 배포까지 완료된 상태입니다.
-- v1.0.0, MIT 라이선스
+[package.json](package.json)은 npm 배포된 상태입니다.
+- v1.0.1, MIT 라이선스
 - npm 패키지명: `@jaewon94/ai-setting`
 - `bin.ai-setting` CLI 엔트리
 - `npm run pack:check`로 패키지 메타데이터 dry-run 검증
 - `npm run plugin:validate`로 Claude Code plugin / marketplace 검증
-- `npm publish --access public` 완료
+- `v*` tag push 시 GitHub Actions로 자동 npm publish + GitHub Release
 - 실제 배포 전 체크리스트: `docs/deployment-checklist.md`
 
 npm 배포 후 사용 예시:
@@ -140,7 +140,7 @@ Homebrew 자동화를 쓰려면 GitHub repo 설정에 아래가 필요합니다.
 - repository secret `HOMEBREW_TAP_GH_TOKEN`
   설명: tap repo에 push 가능한 GitHub token
 
-Formula 생성은 [render-homebrew-formula.sh](/Users/jaewon/my-project/ai-setting/scripts/render-homebrew-formula.sh)로 관리합니다.
+Formula 생성은 [render-homebrew-formula.sh](scripts/render-homebrew-formula.sh)로 관리합니다.
 
 ### Claude Code 플러그인 마켓플레이스
 
@@ -238,7 +238,7 @@ claude plugin install ai-setting-core@jaewon-ai-setting --scope project
 # 웹 + Docker 프로젝트: core + web + infra
 /path/to/ai-setting/init.sh --mcp-preset web,infra /path/to/my-new-project
 
-# AI 자동 채우기 건너뛰기 (복사만)
+# AI 자동 채우기 건너뛰기 (복사 + rule-based 치환만)
 /path/to/ai-setting/init.sh --skip-ai /path/to/my-new-project
 
 # 프로젝트 로컬 MCP 생성 건너뛰기
@@ -547,12 +547,12 @@ blank-start에서도 의도를 미리 줄 수 있음:
 `init.sh --doctor /path/to/project`로 현재 상태를 점검할 수 있습니다.
 
 진단 항목:
-- 필수 바이너리: `jq`, `npx`, `uvx`, `claude`, `codex`, `gemini`
+- 필수 바이너리: `jq` (없으면 ERROR — 보안 hook 동작 불가), `npx`, `uvx`, `claude`, `codex`, `gemini`
 - AI 자동 채우기 준비 상태: `claude --version`, `codex exec --help` 기준 실행 가능 여부와 fallback 체인 상태
 - 핵심 파일: `.claude/settings.json`, profile별 hooks, `.cursor/rules/ai-setting.mdc`, `.gemini/settings.json`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/pull_request_template.md`(team), `.codex/config.toml`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `docs/decisions.md`, `docs/research-notes.md`
 - team profile에서는 `.ai-setting/team-webhook.json`도 함께 확인
 - `.mcp.json` JSON 유효성
-- `.claude/settings.local.json` 존재 시 JSON 유효성
+- `.claude/settings.local.json` 존재 시 JSON 유효성 + 과도한 permission 경고
 - 템플릿/skill placeholder 잔존 여부
 - 공유 자산 모드가 `copy`인지 `symlink`인지
 - async test 명령이 명시되었는지 또는 자동 감지가 가능한지
@@ -632,7 +632,7 @@ ai-setting/
 ├── bin/
 │   └── ai-setting                         # 로컬 CLI 래퍼 (`init.sh` 실행)
 ├── init.sh                               # 🚀 초기화 스크립트
-├── package.json                          # 로컬 npm 패키지 scaffold (`private`)
+├── package.json                          # npm 패키지 (@jaewon94/ai-setting)
 ├── claude/
 │   ├── settings.json                      # standard profile 템플릿
 │   ├── settings.minimal.json              # minimal profile 템플릿
@@ -709,13 +709,25 @@ ai-setting/
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml                        # CI 파이프라인 (lint, smoke, profile, sync 테스트)
-│   │   └── release.yml                   # 자동 릴리스 (npm publish + GitHub Release)
+│   │   ├── release.yml                   # 자동 릴리스 (npm publish + GitHub Release)
+│   │   └── homebrew.yml                  # Homebrew tap formula 자동 갱신
 │   └── ISSUE_TEMPLATE/                   # bug report, feature request 템플릿
 ├── Formula/
 │   └── ai-setting.rb                     # Homebrew formula
 ├── LICENSE                               # MIT
 ├── SECURITY.md                           # 보안 정책
 ├── .npmignore                            # npm 배포 제외 파일
+├── .gitignore                            # OS/IDE/런타임 제외 패턴
+├── .gitattributes                        # 셸 스크립트 LF 강제, diff 설정
+├── tests/
+│   ├── run_all.sh                        # 전체 테스트 실행
+│   ├── test_helper.sh                    # 테스트 프레임워크
+│   ├── test_basic.sh                     # 기본 기능 테스트
+│   ├── test_profiles.sh                  # 프로필 테스트
+│   ├── test_tools.sh                     # 도구 선택 테스트
+│   ├── test_detect.sh                    # archetype/stack 감지 테스트
+│   ├── test_sync.sh                      # sync/plugin 테스트
+│   └── test_hooks.sh                     # hook 보안/크로스플랫폼 테스트
 └── README.md
 ```
 
@@ -735,7 +747,7 @@ ai-setting/
 | **team-webhook-notify.sh** | Stop(team) | 선택적으로 Slack/Discord 웹훅에 완료 알림 전송 |
 | **auto-format** | 파일 편집 후 | Python→ruff, TS/JS→prettier 자동 포맷 |
 | **test-check** | 작업 완료 시 | 코드 변경 후 테스트 실행 여부 확인 |
-| **notification** | 입력 필요 시 | macOS 데스크톱 알림 |
+| **notification** | 입력 필요 시 | 크로스플랫폼 데스크톱 알림 (macOS/Windows/Linux) |
 | **session-reminder** | compact 시 | CLAUDE.md/AGENTS.md 읽기 리마인더 |
 
 ### Agents — 서브에이전트
@@ -804,7 +816,7 @@ chmod 777    mkfs    > /dev/sda    fork bomb
 ### 비동기 테스트 훅 (async-test.sh)
 
 - `standard`, `strict`, `team` profile에서만 활성화됩니다.
-- 우선순위는 `.ai-setting/test-command` → `AI_SETTING_ASYNC_TEST_CMD` → 자동 감지(Python/Go/Rust 1차)입니다.
+- 우선순위는 `.ai-setting/test-command` → `AI_SETTING_ASYNC_TEST_CMD` → 자동 감지(Python/Go/Rust + monorepo 하위 디렉토리 탐색)입니다.
 - 상태 파일은 `.claude/context/async-test-status.md`, 로그는 `.claude/context/async-test.log`에 남습니다.
 - 이미 실행 중인 테스트가 있으면 중복 실행하지 않고 기존 job을 유지합니다.
 - JavaScript/TypeScript 프로젝트는 테스트 러너 옵션이 제각각이라 1차에서는 `.ai-setting/test-command`를 명시하는 쪽을 권장합니다.

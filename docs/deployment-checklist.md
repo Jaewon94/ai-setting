@@ -1,8 +1,8 @@
 # Phase 10: 실제 배포 체크리스트
 
-**기준일**: 2026-03-20  
-**대상 버전**: `v1.0.0`  
-**상태**: npm 배포 완료, GitHub Release 확인 및 Homebrew 추후 반영 예정
+**기준일**: 2026-03-21
+**대상 버전**: `v1.0.1`
+**상태**: npm v1.0.1 배포 완료 (tag push 자동 배포), GitHub Release 생성됨, Homebrew 추후 반영 예정
 
 ---
 
@@ -31,7 +31,7 @@
 | Homebrew formula 초안 | ✅ 준비됨 | `Formula/ai-setting.rb` |
 | LICENSE / SECURITY / 이슈 템플릿 | ✅ 준비됨 | 루트 및 `.github/ISSUE_TEMPLATE/` |
 | 공개 저장소 전환 | ✅ 완료 | GitHub public 확인 |
-| npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.0.0` publish 완료 |
+| npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.0.1` tag push 자동 배포 |
 | brew tap 등록 | ⏸ 보류 | 추후 tap repo 생성 시 반영 |
 
 ---
@@ -115,9 +115,9 @@ npx @jaewon94/ai-setting --help
 
 확인 포인트:
 
-- [ ] `npx @jaewon94/ai-setting --help` 정상 출력
+- [ ] `npx @jaewon94/ai-setting --help` 정상 출력 (v1.0.0은 CRLF 문제로 실패, v1.0.1에서 수정)
 - [ ] README / homepage / repository 링크 정상
-- [x] 패키지 버전이 `1.0.0`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
+- [x] 패키지 버전이 `1.0.1`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
 
 ---
 
@@ -129,8 +129,8 @@ npx @jaewon94/ai-setting --help
 실행 순서:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
 체크리스트:
@@ -138,13 +138,13 @@ git push origin v1.0.0
 - [x] 태그가 `package.json` 버전과 일치
 - [x] GitHub repository secret `NPM_TOKEN` 준비
 - [x] `.github/workflows/release.yml`이 동작할 조건 충족
-- [ ] GitHub Release 페이지에 자동 릴리스 노트 생성 확인
+- [x] GitHub Release 페이지에 자동 릴리스 노트 생성 확인
 
 확인 포인트:
 
-- [ ] Release가 생성됨
-- [ ] 릴리스 노트가 최신 기능 반영
-- [ ] npm publish 단계가 의도대로 실행됨
+- [x] Release가 생성됨 (v1.0.1)
+- [x] 릴리스 노트가 최신 기능 반영
+- [x] npm publish 단계가 의도대로 실행됨 (release.yml 쉘 따옴표 수정 후 정상 동작)
 
 ---
 
@@ -198,7 +198,7 @@ ai-setting --help
 3. npm cache 권한/패키지 이름/NPM_TOKEN 확인
 4. GitHub 저장소 public 전환
 5. `npm publish --access public`
-6. `git tag v1.0.0 && git push origin v1.0.0`
+6. `git tag v<version> && git push origin v<version>`
 7. 필요 시 Homebrew tap 정리 및 formula 반영
 8. `docs/roadmap.md`의 Phase 10 상태 업데이트
 
