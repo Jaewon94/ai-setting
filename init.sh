@@ -707,35 +707,41 @@ else
   echo -e "  ${YELLOW}${MSG_INIT_CLAUDEMD_SKIP}${NC}"
 fi
 
-# archetype partial 삽입 (마커 기반 중복 방지 + 기존 비마커 섹션 제거)
+# archetype partial 삽입 (마커 기반 중복 방지, 사용자 커스텀 보호)
 ARCHETYPE_PARTIAL="$TEMPLATE_DIR/archetype/${PROJECT_ARCHETYPE}.partial.md"
 ARCHETYPE_MARKER="<!-- ai-setting:archetype-rules -->"
 if [ -f "$ARCHETYPE_PARTIAL" ] && [ -f "$TARGET/CLAUDE.md" ] && [ "$DRY_RUN" != true ]; then
-  # 기존 마커 블록 제거
   if grep -qF "$ARCHETYPE_MARKER" "$TARGET/CLAUDE.md" 2>/dev/null; then
+    # 마커가 있으면 → 기존 마커 블록을 제거 후 재삽입 (관리 영역 교체)
     sed -i "/$ARCHETYPE_MARKER/,\$d" "$TARGET/CLAUDE.md"
-  fi
-
-  # 기존 비마커 archetype 섹션도 제거 (en/ko 양쪽 heading 모두 체크)
-  _en_partial="$SCRIPT_DIR/templates/en/archetype/${PROJECT_ARCHETYPE}.partial.md"
-  _ko_partial="$SCRIPT_DIR/templates/ko/archetype/${PROJECT_ARCHETYPE}.partial.md"
-  for _check_partial in "$_en_partial" "$_ko_partial"; do
-    if [ -f "$_check_partial" ]; then
-      _heading="$(head -1 "$_check_partial")"
-      if [ -n "$_heading" ] && grep -qF "$_heading" "$TARGET/CLAUDE.md" 2>/dev/null; then
-        # heading부터 다음 ## heading 또는 파일 끝까지 제거
-        _escaped="$(echo "$_heading" | sed 's/[[\.*^$()+?{|]/\\&/g')"
-        sed -i "/^${_escaped}\$/,/^## /{/^## /!d;}" "$TARGET/CLAUDE.md"
-        sed -i "/^${_escaped}\$/d" "$TARGET/CLAUDE.md"
+    echo "" >> "$TARGET/CLAUDE.md"
+    echo "$ARCHETYPE_MARKER" >> "$TARGET/CLAUDE.md"
+    cat "$ARCHETYPE_PARTIAL" >> "$TARGET/CLAUDE.md"
+    printf "$MSG_INIT_ARCHETYPE_DONE\n" "$PROJECT_ARCHETYPE"
+  else
+    # 마커가 없으면 → 기존 archetype heading이 있는지 확인 (en/ko 양쪽)
+    _has_existing=false
+    for _check_partial in "$SCRIPT_DIR/templates/en/archetype/${PROJECT_ARCHETYPE}.partial.md" "$SCRIPT_DIR/templates/ko/archetype/${PROJECT_ARCHETYPE}.partial.md"; do
+      if [ -f "$_check_partial" ]; then
+        _heading="$(head -1 "$_check_partial")"
+        if [ -n "$_heading" ] && grep -qF "$_heading" "$TARGET/CLAUDE.md" 2>/dev/null; then
+          _has_existing=true
+          break
+        fi
       fi
-    fi
-  done
+    done
 
-  # 마커 블록으로 삽입
-  echo "" >> "$TARGET/CLAUDE.md"
-  echo "$ARCHETYPE_MARKER" >> "$TARGET/CLAUDE.md"
-  cat "$ARCHETYPE_PARTIAL" >> "$TARGET/CLAUDE.md"
-  printf "$MSG_INIT_ARCHETYPE_DONE\n" "$PROJECT_ARCHETYPE"
+    if [ "$_has_existing" = true ]; then
+      # 사용자가 작성한 archetype 섹션이 이미 있음 → 건드리지 않음
+      :
+    else
+      # 아무 것도 없음 → 신규 삽입
+      echo "" >> "$TARGET/CLAUDE.md"
+      echo "$ARCHETYPE_MARKER" >> "$TARGET/CLAUDE.md"
+      cat "$ARCHETYPE_PARTIAL" >> "$TARGET/CLAUDE.md"
+      printf "$MSG_INIT_ARCHETYPE_DONE\n" "$PROJECT_ARCHETYPE"
+    fi
+  fi
 elif [ -f "$ARCHETYPE_PARTIAL" ] && [ "$DRY_RUN" = true ]; then
   dry_run_note "$(printf "$MSG_INIT_ARCHETYPE_DRYRUN" "$PROJECT_ARCHETYPE")"
 fi

@@ -1,6 +1,6 @@
 {
   "name": "@jaewon94/ai-setting",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Bootstrap Claude Code, Codex, Cursor, Gemini CLI, and Copilot project settings.",
   "bin": {
     "ai-setting": "bin/ai-setting.js"
