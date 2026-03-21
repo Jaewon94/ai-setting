@@ -586,6 +586,7 @@ else
   fi
   write_claude_mcp_config "$TARGET/.mcp.json"
   echo "  ✅ Claude MCP config 생성됨 (.mcp.json)"
+  check_mcp_commands
 fi
 
 # ============================================================
@@ -778,6 +779,17 @@ else
   fi
 fi
 
+# .gitignore에 런타임 데이터 패턴 추가 (ISS-015)
+if [ "$DRY_RUN" != true ]; then
+  gitignore_path="$TARGET/.gitignore"
+  gitignore_patterns=(".claude/context/" ".claude.backup.*")
+  for pat in "${gitignore_patterns[@]}"; do
+    if [ ! -f "$gitignore_path" ] || ! grep -qF "$pat" "$gitignore_path" 2>/dev/null; then
+      echo "$pat" >> "$gitignore_path"
+    fi
+  done
+fi
+
 # ============================================================
 # 6단계: AI로 템플릿 자동 채우기 (Claude Code → Codex → 수동)
 # ============================================================
@@ -815,6 +827,136 @@ EOF
 )
   AI_SKILL_TASK="4. .claude/skills/ 안의 SKILL.md 파일들에서 {{중괄호}} 플레이스홀더({{TEST_CMD}}, {{LINT_CMD}}, {{DEPLOY_BACKEND_CMD}} 등)를 프로젝트에 맞는 실제 명령어로 교체해줘."
 fi
+
+# --skip-ai여도 감지된 프로젝트 정보로 기본 플레이스홀더를 치환하는 함수
+fill_rule_based_placeholders() {
+  local test_backend_cmd="" test_frontend_cmd="" lint_cmd="" deploy_backend_cmd=""
+  local deploy_frontend_cmd="" test_cmd="" deploy_cmd=""
+
+  # archetype + stack 기반 명령 매핑
+  case "$PROJECT_ARCHETYPE" in
+    backend-api|worker-batch|data-automation)
+      case "$PROJECT_STACK" in
+        *python*|*fastapi*|*django*|*flask*)
+          test_backend_cmd="pytest -q"
+          lint_cmd="ruff check ."
+          if [ -f "$TARGET/uv.lock" ] || [ -f "$TARGET/backend/uv.lock" ]; then
+            test_backend_cmd="uv run pytest -q"
+            lint_cmd="uv run ruff check ."
+          fi
+          deploy_backend_cmd="# TODO: 프로젝트에 맞는 배포 명령을 설정하세요"
+          ;;
+        *go*)
+          test_backend_cmd="go test ./..."
+          lint_cmd="golangci-lint run"
+          ;;
+        *node*|*express*|*nest*)
+          test_backend_cmd="npm test"
+          lint_cmd="npx eslint ."
+          ;;
+      esac
+      ;;
+    frontend-web)
+      case "$PROJECT_STACK" in
+        *next*|*react*|*vue*|*svelte*)
+          test_frontend_cmd="npm test"
+          lint_cmd="npx eslint ."
+          deploy_frontend_cmd="npm run build"
+          ;;
+      esac
+      ;;
+    cli-tool)
+      case "$PROJECT_STACK" in
+        *python*) test_cmd="pytest -q"; lint_cmd="ruff check ." ;;
+        *go*) test_cmd="go test ./..."; lint_cmd="golangci-lint run" ;;
+        *node*) test_cmd="npm test"; lint_cmd="npx eslint ." ;;
+      esac
+      ;;
+  esac
+
+  # monorepo 구조 감지: backend/ + frontend/ 분리
+  if [ -d "$TARGET/backend" ] && [ -d "$TARGET/frontend" ]; then
+    if [ -z "$test_backend_cmd" ] && [ -f "$TARGET/backend/pyproject.toml" ]; then
+      test_backend_cmd="cd backend && pytest -q"
+      if [ -f "$TARGET/backend/uv.lock" ]; then
+        test_backend_cmd="cd backend && uv run pytest -q"
+      fi
+    fi
+    if [ -z "$test_frontend_cmd" ] && [ -f "$TARGET/frontend/package.json" ]; then
+      test_frontend_cmd="cd frontend && npm test"
+    fi
+  fi
+
+  # 기본값 설정
+  test_cmd="${test_cmd:-${test_backend_cmd:-${test_frontend_cmd:-"# TODO: 테스트 명령을 설정하세요"}}}"
+  lint_cmd="${lint_cmd:-"# TODO: 린트 명령을 설정하세요"}"
+  deploy_backend_cmd="${deploy_backend_cmd:-"# TODO: 백엔드 배포 명령을 설정하세요"}"
+  deploy_frontend_cmd="${deploy_frontend_cmd:-"# TODO: 프론트엔드 배포 명령을 설정하세요"}"
+  deploy_cmd="${deploy_cmd:-"# TODO: 배포 명령을 설정하세요"}"
+
+  # 치환 대상 파일들
+  local files_to_process=()
+  [ -f "$TARGET/docs/decisions.md" ] && files_to_process+=("$TARGET/docs/decisions.md")
+  [ -f "$TARGET/docs/research-notes.md" ] && files_to_process+=("$TARGET/docs/research-notes.md")
+
+  # skills 디렉토리의 SKILL.md 파일들
+  if [ -d "$TARGET/.claude/skills" ]; then
+    while IFS= read -r -d '' f; do
+      files_to_process+=("$f")
+    done < <(find "$TARGET/.claude/skills" -name "SKILL.md" -print0 2>/dev/null)
+  fi
+
+  local replaced=0
+  local file
+
+  for file in "${files_to_process[@]}"; do
+    local changed=false
+
+    # [프로젝트명] 치환
+    if grep -q '\[프로젝트명\]' "$file" 2>/dev/null; then
+      sed -i "s/\[프로젝트명\]/${PROJECT_NAME}/g" "$file"
+      changed=true
+    fi
+
+    # {{...}} 플레이스홀더 치환
+    if grep -q '{{TEST_BACKEND_CMD}}' "$file" 2>/dev/null; then
+      sed -i "s|{{TEST_BACKEND_CMD}}|${test_backend_cmd}|g" "$file"
+      changed=true
+    fi
+    if grep -q '{{TEST_FRONTEND_CMD}}' "$file" 2>/dev/null; then
+      sed -i "s|{{TEST_FRONTEND_CMD}}|${test_frontend_cmd}|g" "$file"
+      changed=true
+    fi
+    if grep -q '{{TEST_CMD}}' "$file" 2>/dev/null; then
+      sed -i "s|{{TEST_CMD}}|${test_cmd}|g" "$file"
+      changed=true
+    fi
+    if grep -q '{{LINT_CMD}}' "$file" 2>/dev/null; then
+      sed -i "s|{{LINT_CMD}}|${lint_cmd}|g" "$file"
+      changed=true
+    fi
+    if grep -q '{{DEPLOY_BACKEND_CMD}}' "$file" 2>/dev/null; then
+      sed -i "s|{{DEPLOY_BACKEND_CMD}}|${deploy_backend_cmd}|g" "$file"
+      changed=true
+    fi
+    if grep -q '{{DEPLOY_FRONTEND_CMD}}' "$file" 2>/dev/null; then
+      sed -i "s|{{DEPLOY_FRONTEND_CMD}}|${deploy_frontend_cmd}|g" "$file"
+      changed=true
+    fi
+    if grep -q '{{DEPLOY_CMD}}' "$file" 2>/dev/null; then
+      sed -i "s|{{DEPLOY_CMD}}|${deploy_cmd}|g" "$file"
+      changed=true
+    fi
+
+    if [ "$changed" = true ]; then
+      replaced=$((replaced + 1))
+    fi
+  done
+
+  if [ "$replaced" -gt 0 ]; then
+    echo "  ✅ rule-based 치환 완료 (${replaced}개 파일)"
+  fi
+}
 
 AI_PROMPT=$(cat <<EOF
 이 프로젝트를 아래 규칙으로 분석해.
@@ -868,6 +1010,8 @@ if [ "$UPDATE_MODE" = true ]; then
   echo -e "  ${YELLOW}update 모드에서는 AI 자동 채우기를 건너뜁니다${NC}"
 elif [ "$SKIP_AI" = true ]; then
   echo -e "  ${YELLOW}--skip-ai 옵션으로 건너뜀${NC}"
+  # rule-based 치환: AI 없이도 감지된 프로젝트 정보로 플레이스홀더 교체
+  fill_rule_based_placeholders
 elif [ "$DRY_RUN" = true ]; then
   echo -e "  ${YELLOW}--dry-run 모드에서는 AI 자동 채우기를 실행하지 않습니다${NC}"
 elif [ "$PROJECT_CONTEXT_MODE" = "blank-start" ] && [ "$HAS_USER_GUIDANCE" = false ]; then

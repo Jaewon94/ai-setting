@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh",
+            "_source": "ai-setting"
           }
         ]
       },
@@ -15,7 +16,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-dangerous-commands.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-dangerous-commands.sh",
+            "_source": "ai-setting"
           }
         ]
       }
@@ -26,11 +28,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-on-write.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-on-write.sh",
+            "_source": "ai-setting"
           },
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/async-test.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/async-test.sh",
+            "_source": "ai-setting"
           }
         ]
       }
@@ -41,7 +45,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'"
+            "command": "if command -v osascript >/dev/null 2>&1; then osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'; elif command -v powershell.exe >/dev/null 2>&1; then powershell.exe -Command \"[void](New-Object -ComObject Wscript.Shell).Popup('Claude Code needs your attention',3,'Claude Code',64)\" 2>/dev/null || true; elif command -v notify-send >/dev/null 2>&1; then notify-send 'Claude Code' 'Claude Code needs your attention'; fi",
+            "_source": "ai-setting"
           }
         ]
       }
@@ -51,15 +56,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-context.sh write standard"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-context.sh write standard",
+            "_source": "ai-setting"
           },
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/compact-backup.sh write standard"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/compact-backup.sh write standard",
+            "_source": "ai-setting"
           },
           {
             "type": "prompt",
-            "prompt": "Check if the last task involved code changes. If so, verify: 1) Were tests mentioned or run? 2) Were there any obvious issues left unaddressed? If tests should have been run but weren't, respond with {\"ok\": false, \"reason\": \"Please run the relevant tests to verify these changes work correctly.\"}. Otherwise respond with {\"ok\": true}."
+            "prompt": "Check if the last task involved code changes. If so, verify: 1) Were tests mentioned or run? 2) Were there any obvious issues left unaddressed? If tests should have been run but weren't, respond with {\"ok\": false, \"reason\": \"Please run the relevant tests to verify these changes work correctly.\"}. Otherwise respond with {\"ok\": true}.",
+            "_source": "ai-setting"
           }
         ]
       }
@@ -70,7 +78,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-context.sh read standard"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-context.sh read standard",
+            "_source": "ai-setting"
           }
         ]
       }

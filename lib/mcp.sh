@@ -138,6 +138,34 @@ EOF
   esac
 }
 
+check_mcp_commands() {
+  local commands_to_check=()
+  local preset
+
+  for preset in "${MCP_PRESETS[@]}"; do
+    case "$preset" in
+      core)
+        commands_to_check+=("npx" "uvx")
+        ;;
+      web|infra|local)
+        commands_to_check+=("npx")
+        ;;
+    esac
+  done
+
+  local seen=()
+  local cmd
+  for cmd in "${commands_to_check[@]}"; do
+    if contains_value "$cmd" "${seen[@]:-}"; then
+      continue
+    fi
+    seen+=("$cmd")
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+      echo -e "  ${YELLOW}⚠ MCP 서버에 필요한 '$cmd'가 PATH에 없습니다. 해당 MCP 서버가 실행되지 않을 수 있습니다.${NC}"
+    fi
+  done
+}
+
 CLAUDE_MCP_FIRST=true
 
 append_claude_mcp_server() {

@@ -10,9 +10,12 @@ tools: WebSearch, WebFetch, Read, Grep, Glob
 새 라이브러리, 기술 결정, 에러 해결 시 공식 문서와 최신 정보를 조사한다.
 
 ## 도구
-- 웹 검색 MCP (brave-search 등): 웹 검색 (베스트 프랙티스, 에러 해결)
+- WebFetch (내장): URL에서 직접 콘텐츠 가져오기 — MCP 없이도 항상 사용 가능
+- WebSearch (MCP 필요): 웹 검색 — MCP 서버(brave-search 등)가 설정되어 있을 때만 동작
 - 공식 문서 MCP (upstash-context 등): 라이브러리 공식 문서 조회
 - 브라우저 MCP (playwright 등): 공식 문서 페이지 직접 접근 (필요 시)
+
+> **MCP 미설정 시**: WebSearch 대신 WebFetch로 공식 문서 URL을 직접 조회하거나, 로컬 파일(Read, Grep, Glob)로 조사 범위를 한정합니다.
 
 ## 작업 흐름
 1. 조사 대상 명확화 (라이브러리명, 버전, 구체적 질문)

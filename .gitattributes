@@ -1,0 +1,13 @@
+# Ensure shell scripts and bin entries always use LF line endings
+# This prevents CRLF issues when running on Unix/macOS (e.g., npx, npm exec)
+bin/* text eol=lf
+*.sh text eol=lf
+*.toml text eol=lf
+
+# JSON and markdown — auto (platform native)
+*.json text auto
+*.md text auto
+
+# Deny binary diff for lock files
+package-lock.json -diff
+pnpm-lock.yaml -diff

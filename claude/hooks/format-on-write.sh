@@ -122,6 +122,21 @@ main() {
     exit 0
   fi
 
+  # 절대 경로 → PROJECT_DIR 기준 상대 경로로 정규화 (Windows/Git Bash 혼용 대응)
+  # Windows 절대 경로: C:\Users\... 또는 /c/Users/...
+  file_path="${file_path//\\//}"  # 백슬래시 → 슬래시
+  local normalized_project_dir="${PROJECT_DIR//\\//}"
+  if [[ "$file_path" == "$normalized_project_dir/"* ]]; then
+    file_path="${file_path#"$normalized_project_dir"/}"
+  elif [[ "$file_path" == /* ]] || [[ "$file_path" =~ ^[A-Za-z]: ]]; then
+    # /c/Users/... 형태의 Git Bash 경로 처리
+    local git_bash_project_dir
+    git_bash_project_dir="$(cd "$PROJECT_DIR" && pwd)"
+    if [[ "$file_path" == "$git_bash_project_dir/"* ]]; then
+      file_path="${file_path#"$git_bash_project_dir"/}"
+    fi
+  fi
+
   case "$file_path" in
     *.py|*.pyi)
       run_python_formatter "$file_path"

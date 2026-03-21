@@ -2,6 +2,11 @@
 # protect-files.sh — Block edits to sensitive files
 # PreToolUse hook for Edit|Write tools
 
+if ! command -v jq >/dev/null 2>&1; then
+  echo "BLOCKED: jq is not installed — cannot verify tool input safely." >&2
+  exit 2
+fi
+
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 

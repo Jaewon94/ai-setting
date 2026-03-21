@@ -91,10 +91,13 @@ merge_claude_settings_template() {
 
   local merged
   merged="$(jq -s '
+    def is_managed: ._source == "ai-setting";
+    def strip_managed_hooks:
+      if . == null then [] else [.[] | .hooks = [(.hooks // [])[] | select(is_managed | not)]] | [.[] | select((.hooks | length) > 0)] end;
     def hook_key:
       (.matcher // "") + "|" + ((.hooks // []) | map(.type + ":" + (.command // .prompt // "")) | join("|"));
     def merge_hook_arrays($base; $incoming):
-      (($base // []) + ($incoming // []) | unique_by(hook_key));
+      (($base | strip_managed_hooks) + ($incoming // []) | unique_by(hook_key));
     def merge_hooks_map($base; $incoming):
       reduce (($incoming // {}) | keys_unsorted[]) as $event ($base // {};
         .[$event] = merge_hook_arrays(.[$event]; $incoming[$event])

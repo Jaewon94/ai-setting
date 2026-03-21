@@ -43,7 +43,7 @@ run_doctor() {
   if command -v jq &> /dev/null; then
     doctor_ok "jq 설치됨"
   else
-    doctor_warn "jq 미설치 — hooks JSON 파싱 및 .mcp.json 검증이 제한됨"
+    doctor_error "jq 미설치 — 보안 hook(protect-files, block-dangerous-commands)이 동작하지 않습니다"
   fi
 
   if command -v npx &> /dev/null; then
@@ -102,6 +102,12 @@ run_doctor() {
   if [ -f "$target/.claude/settings.local.json" ]; then
     if command -v jq &>/dev/null && jq empty "$target/.claude/settings.local.json" >/dev/null 2>&1; then
       doctor_ok ".claude/settings.local.json 존재 (유효한 JSON)"
+      # 과도한 permission 경고 (ISS-022)
+      local perm_count
+      perm_count=$(jq '[.permissions // {} | .allow // [] | .[] | select(test("curl|wget|pip install|npm install|chmod|chown|sudo"))] | length' "$target/.claude/settings.local.json" 2>/dev/null || echo 0)
+      if [ "$perm_count" -gt 0 ]; then
+        doctor_warn "settings.local.json에 잠재적으로 과도한 permission이 ${perm_count}개 감지됨 — 정리를 권장합니다"
+      fi
     elif command -v jq &>/dev/null; then
       doctor_error ".claude/settings.local.json JSON 형식이 올바르지 않음"
     else

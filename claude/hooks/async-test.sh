@@ -121,6 +121,39 @@ detect_auto_command() {
     return 0
   fi
 
+  # monorepo: 하위 디렉토리에서 테스트 환경 탐색
+  local subdir
+  for subdir in backend server api app; do
+    if [ -d "$PROJECT_DIR/$subdir" ]; then
+      if [ -f "$PROJECT_DIR/$subdir/uv.lock" ] && { [ -d "$PROJECT_DIR/$subdir/tests" ] || [ -f "$PROJECT_DIR/$subdir/pyproject.toml" ]; }; then
+        ASYNC_TEST_COMMAND="cd $subdir && uv run pytest -q"
+        ASYNC_TEST_COMMAND_SOURCE="auto-monorepo-python-uv"
+        return 0
+      fi
+      if { [ -d "$PROJECT_DIR/$subdir/tests" ] || [ -f "$PROJECT_DIR/$subdir/pytest.ini" ]; } && { [ -f "$PROJECT_DIR/$subdir/pyproject.toml" ] || [ -f "$PROJECT_DIR/$subdir/requirements.txt" ]; }; then
+        ASYNC_TEST_COMMAND="cd $subdir && pytest -q"
+        ASYNC_TEST_COMMAND_SOURCE="auto-monorepo-python-pytest"
+        return 0
+      fi
+      if [ -f "$PROJECT_DIR/$subdir/go.mod" ]; then
+        ASYNC_TEST_COMMAND="cd $subdir && go test ./..."
+        ASYNC_TEST_COMMAND_SOURCE="auto-monorepo-go"
+        return 0
+      fi
+    fi
+  done
+
+  # monorepo: frontend 하위 디렉토리
+  for subdir in frontend web client; do
+    if [ -d "$PROJECT_DIR/$subdir" ] && [ -f "$PROJECT_DIR/$subdir/package.json" ]; then
+      if grep -q '"vitest\|"jest\|"test"' "$PROJECT_DIR/$subdir/package.json" 2>/dev/null; then
+        ASYNC_TEST_COMMAND="cd $subdir && npm test --if-present"
+        ASYNC_TEST_COMMAND_SOURCE="auto-monorepo-node"
+        return 0
+      fi
+    fi
+  done
+
   return 1
 }
 
@@ -153,7 +186,7 @@ run_background_test() {
 
   if (
     cd "$PROJECT_DIR"
-    eval "${ASYNC_TEST_COMMAND:-}"
+    bash -c "${ASYNC_TEST_COMMAND:-}"
   ) >"$LOG_FILE" 2>&1; then
     exit_code=0
   else
