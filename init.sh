@@ -707,14 +707,31 @@ else
   echo -e "  ${YELLOW}${MSG_INIT_CLAUDEMD_SKIP}${NC}"
 fi
 
-# archetype partial 삽입 (마커 기반 중복 방지)
+# archetype partial 삽입 (마커 기반 중복 방지 + 기존 비마커 섹션 제거)
 ARCHETYPE_PARTIAL="$TEMPLATE_DIR/archetype/${PROJECT_ARCHETYPE}.partial.md"
 ARCHETYPE_MARKER="<!-- ai-setting:archetype-rules -->"
 if [ -f "$ARCHETYPE_PARTIAL" ] && [ -f "$TARGET/CLAUDE.md" ] && [ "$DRY_RUN" != true ]; then
+  # 기존 마커 블록 제거
   if grep -qF "$ARCHETYPE_MARKER" "$TARGET/CLAUDE.md" 2>/dev/null; then
-    # 기존 마커 블록을 교체 (마커부터 파일 끝까지 제거 후 재삽입)
     sed -i "/$ARCHETYPE_MARKER/,\$d" "$TARGET/CLAUDE.md"
   fi
+
+  # 기존 비마커 archetype 섹션도 제거 (en/ko 양쪽 heading 모두 체크)
+  _en_partial="$SCRIPT_DIR/templates/en/archetype/${PROJECT_ARCHETYPE}.partial.md"
+  _ko_partial="$SCRIPT_DIR/templates/ko/archetype/${PROJECT_ARCHETYPE}.partial.md"
+  for _check_partial in "$_en_partial" "$_ko_partial"; do
+    if [ -f "$_check_partial" ]; then
+      _heading="$(head -1 "$_check_partial")"
+      if [ -n "$_heading" ] && grep -qF "$_heading" "$TARGET/CLAUDE.md" 2>/dev/null; then
+        # heading부터 다음 ## heading 또는 파일 끝까지 제거
+        _escaped="$(echo "$_heading" | sed 's/[[\.*^$()+?{|]/\\&/g')"
+        sed -i "/^${_escaped}\$/,/^## /{/^## /!d;}" "$TARGET/CLAUDE.md"
+        sed -i "/^${_escaped}\$/d" "$TARGET/CLAUDE.md"
+      fi
+    fi
+  done
+
+  # 마커 블록으로 삽입
   echo "" >> "$TARGET/CLAUDE.md"
   echo "$ARCHETYPE_MARKER" >> "$TARGET/CLAUDE.md"
   cat "$ARCHETYPE_PARTIAL" >> "$TARGET/CLAUDE.md"

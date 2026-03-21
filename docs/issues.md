@@ -777,27 +777,20 @@ fi
 
 **발견일**: 2026-03-22
 **심각도**: 중간
-**상태**: ✅ 수정 완료 (2026-03-22) — HTML 마커 기반 중복 방지
+**상태**: ✅ 수정 완료 (2026-03-22) — 마커 기반 교체 + 기존 비마커 섹션(en/ko) 자동 제거
+**상태**: ⚠️ 부분 수정 (v1.1.5) — 마커 기반 교체 도입, 잔존 문제 있음
 
-**문제**:
-- `ai-setting --merge` 재적용 시 CLAUDE.md에 archetype 규칙(API 규칙 등)이 **기존 내용 확인 없이 다시 삽입**됨
-- StoryForge의 경우 "## API 규칙" 섹션이 3번 중복 생성됨 (첫 적용 1번 + 재적용마다 추가)
-- `_source` 태그 기반 관리는 settings.json에만 적용되고, CLAUDE.md/AGENTS.md 삽입에는 중복 방지 로직 없음
+**v1.1.5 수정 내용**:
+- `<!-- ai-setting:archetype-rules -->` 마커 기반 교체로 재적용 시 중복 방지됨 ✅
 
-**재현**:
-```bash
-# 첫 적용
-ai-setting --tools claude --merge --skip-ai .
-# CLAUDE.md에 "## API 규칙" 1개 삽입 ✓
+**잔존 문제**:
+- 기존에 사용자가 작성한 한국어 "## API 규칙"은 그대로 두고 영문 "## API Rules"를 마커 블록으로 추가 삽입
+- 결과: 동일 내용의 한국어 + 영문 2개 공존 (의미 중복)
+- init.sh가 기존 CLAUDE.md에 동일 의미의 섹션이 이미 있는지 확인하지 않음
 
-# 재적용
-ai-setting --tools claude --merge --skip-ai .
-# CLAUDE.md에 "## API 규칙" 2개 → 3개로 증가 ✗
-```
-
-**수정 제안**:
-- archetype 규칙 삽입 전에 `grep -q "## API 규칙"` 등으로 이미 존재하는지 확인
-- 또는 삽입된 블록에 `<!-- ai-setting:archetype-rules -->` 마커를 붙여 재적용 시 교체
+**추가 수정 제안**:
+- archetype 삽입 시 기존 내용에 동일 heading이 있으면 skip하거나, 마커 블록만 삽입하고 중복 heading 생략
+- 또는 마커 교체 시 기존 비마커 섹션도 함께 제거하는 옵션 제공
 
 ---
 
