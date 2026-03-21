@@ -8,5 +8,7 @@ Use `docs/decisions.md` for technical decision history.
 Before substantial changes, confirm the build, test, and lint commands from `CLAUDE.md`.
 Keep code changes and documentation updates in sync.
 
+<!-- @file imports: Cursor에서 수정 예정 (https://forum.cursor.com/t/does-file-syntax-works-in-mdc-rules/135663) -->
+<!-- 동작하면 아래 참조가 자동으로 AGENTS.md/CLAUDE.md 내용을 포함합니다 -->
 @AGENTS.md
 @CLAUDE.md

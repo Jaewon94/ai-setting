@@ -390,11 +390,13 @@ manifest 예시:
 
 기본 실행만으로 아래 도구용 파일도 함께 생성됩니다.
 
-| 도구 | 생성 파일 | 메모 |
-|------|-----------|------|
-| Cursor | `.cursor/rules/ai-setting.mdc` | `AGENTS.md`, `CLAUDE.md`를 import하는 always-apply rule |
-| Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | `GEMINI.md`가 `BEHAVIORAL_CORE.md`, `CLAUDE.md`, `AGENTS.md`를 import |
-| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | 저장소 공통 규칙 + 경로별 instructions |
+| 도구 | 생성 파일 | @파일 참조 | 메모 |
+|------|-----------|-----------|------|
+| Cursor | `.cursor/rules/ai-setting.mdc` | ⏳ 미동작 (Cursor 수정 예정) | always-apply rule, globs 기반 경로별 규칙은 동작 |
+| Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | ✅ 동작 | `@./path/to/file.md` 구문으로 import |
+| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | ❌ 미지원 | 독립 파일, `applyTo` 경로별 instructions 동작 |
+| Codex CLI | `.codex/config.toml`, `AGENTS.md` | — (자동 읽기) | AGENTS.md를 디렉토리 계층에서 자동 발견/읽기 |
+| Claude Code | `CLAUDE.md`, `.claude/` | ✅ 동작 | `@path/to/file` 구문, 최대 5단계 재귀 |
 
 ## 적용 후 확인
 

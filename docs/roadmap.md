@@ -460,25 +460,28 @@ templates/
 - AGENTS.md/CLAUDE.md를 참조할 수 있으면 참조, 못 하면 도구별 규칙 변환 생성
 - `--local-llm` 또는 `--tool aider` 같은 옵션으로 선택적 생성
 
-### Phase 15: 설정 참조 방식 전수 검증
+### Phase 15: 설정 참조 방식 전수 검증 (✅ 검증 완료, 2026-03-22)
 
 > "각 도구가 실제로 @파일 참조를 지원하는지 검증하고, 안 되는 건 대안을 찾는다"
 
-검증 대상:
+검증 결과:
 
-| 도구 | 검증 항목 | 현재 가정 |
-|------|-----------|-----------|
-| Gemini CLI | GEMINI.md에서 `@CLAUDE.md` 참조가 실제로 동작하는가 | 동작할 것으로 가정 |
-| Copilot | copilot-instructions.md에서 외부 파일 참조가 가능한가 | 독립 파일일 가능성 |
-| Codex CLI | AGENTS.md 자동 읽기 확인됨, CODEX.md 불필요로 제거 | ✅ 검증 완료 |
-| Cursor | .mdc의 `@file` 참조 범위와 제한 | 공식 문서 확인 완료 |
-| Aider | `--read` 플래그로 CLAUDE.md 주입이 가능한가 | 미확인 |
-| Continue | config.json에서 docs 디렉토리 참조가 가능한가 | 미확인 |
+| 도구 | @파일 참조 | 검증 결과 | 대응 |
+|------|-----------|-----------|------|
+| Claude Code | ✅ 동작 | `@path/to/file` 구문, 최대 5단계 재귀 | 그대로 유지 |
+| Gemini CLI | ✅ 동작 | `@./path/to/file.md` 구문 지원 | 그대로 유지 |
+| Cursor | ⏳ 미동작 | 공식 문서에 있지만 Cursor 팀 확인 "곧 수정 예정" | @참조 유지 + 주석 표기 (ISS-027) |
+| Copilot | ❌ 미지원 | 독립 파일만 가능, `applyTo` 경로별 instructions 동작 | 이미 독립 파일로 구현됨 |
+| Codex CLI | — (자동 읽기) | AGENTS.md 디렉토리 계층 자동 발견 | 그대로 유지 |
+| Aider | 미확인 | Phase 14에서 검증 예정 | — |
+| Continue | 미확인 | Phase 14에서 검증 예정 | — |
 
-작업:
-1. 각 도구를 **실제 설치하고 테스트**하여 참조 동작 여부 확인
-2. 동작하지 않는 도구는 **규칙 변환 생성** 방식으로 전환
-3. 결과를 README와 로드맵에 명시 (지원 수준 표에 "참조" vs "독립" 구분)
+출처:
+- Cursor: https://forum.cursor.com/t/does-file-syntax-works-in-mdc-rules/135663
+- Gemini: https://google-gemini.github.io/gemini-cli/docs/cli/gemini-md.html
+- Copilot: https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot
+- Claude Code: https://code.claude.com/docs/en/memory
+- Codex: https://developers.openai.com/codex/guides/agents-md
 
 ### Phase 16: 통합 설정 아키텍처
 

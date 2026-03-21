@@ -363,6 +363,27 @@ fi
 - ISS-024: serena uvx 경고 ✅
 - ISS-025: skip-ai 범용 템플릿 ✅
 - ISS-026: npx Windows bash shebang ✅
+- ISS-027: Cursor @file 참조 미동작 (Cursor 측 수정 대기)
+
+### ISS-027: Cursor .mdc 파일의 @file 참조가 동작하지 않음 (⏳ 외부 대기)
+
+**발견일**: 2026-03-22 (Phase 15 참조 검증)
+**심각도**: 중간
+**상태**: ⏳ Cursor 측 수정 대기
+
+**문제**:
+- `.cursor/rules/ai-setting.mdc`에서 `@AGENTS.md`, `@CLAUDE.md` 참조를 사용
+- Cursor 공식 문서에는 `@file` 구문이 문서화되어 있지만 실제로 동작하지 않음
+- Cursor 팀(deanrie)이 포럼에서 "아직 동작하지 않으며 곧 수정 예정"이라고 확인
+
+**대응**:
+- `@` 참조는 유지하되, 주석으로 미동작 상태를 명시
+- 규칙 본문에 핵심 안내를 인라인으로 포함하여 참조 없이도 동작하도록 보완
+- Cursor 측 수정 시 자동으로 동작 시작
+
+**출처**: https://forum.cursor.com/t/does-file-syntax-works-in-mdc-rules/135663
+
+---
 
 ### ISS-026: npx 실행 시 Windows에서 bash shebang 인식 실패 (✅ 수정 완료)
 
