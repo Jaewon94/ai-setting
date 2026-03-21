@@ -2,13 +2,21 @@
 # block-dangerous-commands.sh — Block dangerous bash commands
 # PreToolUse hook for Bash tool
 
-if ! command -v jq >/dev/null 2>&1; then
+JQ_BIN=""
+if command -v jq >/dev/null 2>&1; then
+  JQ_BIN="jq"
+elif [ -f "$HOME/jq.exe" ]; then
+  JQ_BIN="$HOME/jq.exe"
+elif [ -f "/usr/local/bin/jq" ]; then
+  JQ_BIN="/usr/local/bin/jq"
+fi
+if [ -z "$JQ_BIN" ]; then
   echo "BLOCKED: jq is not installed — cannot verify tool input safely." >&2
   exit 2
 fi
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+COMMAND=$(echo "$INPUT" | $JQ_BIN -r '.tool_input.command // empty')
 
 DANGEROUS_PATTERNS=(
   "rm -rf /"

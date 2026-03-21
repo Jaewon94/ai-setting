@@ -365,6 +365,25 @@ fi
 - ISS-026: npx Windows bash shebang ✅
 - ISS-027: Cursor @file 참조 미동작 (Cursor 측 수정 대기)
 - ISS-028: git 프로젝트 백업 스킵 ✅
+- ISS-029: jq PATH fallback ✅
+
+### ISS-029: 보안 hook의 jq 탐색이 PATH만 확인 — Windows fallback 경로 누락 (✅ 수정 완료)
+
+**발견일**: 2026-03-22 (StoryForge 실전 적용)
+**심각도**: 높음
+**상태**: ✅ 수정 완료 (2026-03-22)
+
+**문제**:
+- `protect-files.sh`, `block-dangerous-commands.sh`가 `command -v jq`만 체크
+- Windows에서 jq가 `$HOME/jq.exe`에 수동 다운로드되어 있어도 PATH에 없으면 실패
+- 결과: 보안 hook이 모든 작업을 차단 (fail-closed)
+
+**수정**:
+- jq 탐색을 다단계 fallback으로 변경: `command -v jq` → `$HOME/jq.exe` → `/usr/local/bin/jq`
+- 찾은 경로를 `$JQ_BIN` 변수에 저장하여 이후 호출에서 사용
+- claude/hooks/, plugins/ai-setting-core/scripts/ 양쪽 모두 반영
+
+---
 
 ### ISS-027: Cursor .mdc 파일의 @file 참조가 동작하지 않음 (⏳ 외부 대기)
 

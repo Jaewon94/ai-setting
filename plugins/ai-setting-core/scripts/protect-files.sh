@@ -2,13 +2,21 @@
 # protect-files.sh — Block edits to sensitive files
 # PreToolUse hook for Edit|Write tools
 
-if ! command -v jq >/dev/null 2>&1; then
+JQ_BIN=""
+if command -v jq >/dev/null 2>&1; then
+  JQ_BIN="jq"
+elif [ -f "$HOME/jq.exe" ]; then
+  JQ_BIN="$HOME/jq.exe"
+elif [ -f "/usr/local/bin/jq" ]; then
+  JQ_BIN="/usr/local/bin/jq"
+fi
+if [ -z "$JQ_BIN" ]; then
   echo "BLOCKED: jq is not installed — cannot verify tool input safely." >&2
   exit 2
 fi
 
 INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+FILE_PATH=$(echo "$INPUT" | $JQ_BIN -r '.tool_input.file_path // empty')
 
 # 디렉토리 패턴 (경로에 포함되면 차단)
 DIR_PATTERNS=(
