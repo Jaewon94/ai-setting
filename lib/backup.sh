@@ -38,7 +38,7 @@ snapshot_managed_path() {
   BACKUP_ALL_CREATED=true
 
   if [ "$DRY_RUN" = true ]; then
-    dry_run_note "backup-all 스냅샷: ${source_path} -> ${backup_path}"
+    dry_run_note "$(printf "$MSG_BACKUP_DRYRUN_SNAPSHOT" "$source_path" "$backup_path")"
     return
   fi
 
@@ -57,8 +57,8 @@ perform_backup_all() {
   BACKUP_ALL_CREATED=false
   BACKUP_SNAPSHOT_DIR="$TARGET/.ai-setting.backup.$RUN_TIMESTAMP"
 
-  echo -e "${CYAN}backup-all:${NC} 관리 대상 전체 스냅샷 생성"
-  echo "  📦 경로: ${BACKUP_SNAPSHOT_DIR}"
+  echo -e "${CYAN}${MSG_BACKUP_ALL_TITLE}${NC}"
+  printf "$MSG_BACKUP_ALL_PATH\n" "$BACKUP_SNAPSHOT_DIR"
 
   for rel_path in "${BACKUP_MANAGED_PATHS[@]}"; do
     snapshot_managed_path "$rel_path"
@@ -66,12 +66,12 @@ perform_backup_all() {
 
   if [ "$BACKUP_ALL_CREATED" = true ]; then
     if [ "$DRY_RUN" = true ]; then
-      echo "  ✅ backup-all 스냅샷 생성 예정"
+      echo "$MSG_BACKUP_ALL_PLANNED"
     else
-      echo "  ✅ backup-all 스냅샷 생성됨"
+      echo "$MSG_BACKUP_ALL_CREATED"
     fi
   else
-    echo -e "  ${YELLOW}관리 대상 기존 파일이 없어 백업할 내용이 없습니다${NC}"
+    echo -e "  ${YELLOW}${MSG_BACKUP_ALL_NOTHING}${NC}"
   fi
 
   echo ""
@@ -87,17 +87,17 @@ backup_existing_path() {
   fi
 
   if [ "$BACKUP_ALL" = true ] && [ "$BACKUP_ALL_CREATED" = true ]; then
-    echo -e "${YELLOW}  ⚠ ${label} 이미 존재 — backup-all snapshot에 포함됨${NC}"
-    echo -e "  📦 snapshot: ${BACKUP_SNAPSHOT_DIR}"
+    echo -e "${YELLOW}  ⚠ $(printf "$MSG_BACKUP_EXISTING_IN_SNAPSHOT" "$label")${NC}"
+    printf "$MSG_BACKUP_EXISTING_SNAPSHOT_PATH\n" "$BACKUP_SNAPSHOT_DIR"
     return
   fi
 
   backup_path="${path}.backup.${RUN_TIMESTAMP}"
-  echo -e "${YELLOW}  ⚠ ${label} 이미 존재 — 백업 후 덮어쓰기${NC}"
-  echo -e "  📦 백업: ${backup_path}"
+  echo -e "${YELLOW}  ⚠ $(printf "$MSG_BACKUP_EXISTING_OVERWRITE" "$label")${NC}"
+  printf "$MSG_BACKUP_EXISTING_PATH\n" "$backup_path"
 
   if [ "$DRY_RUN" = true ]; then
-    dry_run_note "백업 생성: ${backup_path}"
+    dry_run_note "$(printf "$MSG_BACKUP_DRYRUN_CREATE" "$backup_path")"
   elif [ -d "$path" ]; then
     cp -r "$path" "$backup_path"
   else
@@ -134,7 +134,7 @@ join_existing_paths() {
   done
 
   if [ "${#matches[@]}" -eq 0 ]; then
-    echo "없음"
+    echo "$MSG_BACKUP_NONE"
     return
   fi
 

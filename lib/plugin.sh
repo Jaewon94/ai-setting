@@ -1,28 +1,28 @@
-#\!/bin/bash
+#!/bin/bash
 # lib/plugin.sh — 플러그인 list/install/uninstall/check-update/upgrade
 
 cmd_plugin_list() {
   local marketplace="$SCRIPT_DIR/.claude-plugin/marketplace.json"
 
   if [ ! -f "$marketplace" ]; then
-    echo -e "${RED}오류: marketplace.json을 찾을 수 없습니다${NC}" >&2
+    echo -e "${RED}${MSG_PLUGIN_ERR_NO_MARKETPLACE}${NC}" >&2
     return 1
   fi
 
   if ! command -v jq &>/dev/null; then
-    echo -e "${RED}오류: jq가 필요합니다${NC}" >&2
+    echo -e "${RED}${MSG_PLUGIN_ERR_JQ_REQUIRED}${NC}" >&2
     return 1
   fi
 
   local target="${1:-.}"
   local installed_file="$target/.ai-setting/installed-plugins.json"
 
-  echo -e "${CYAN}━━━ Available Plugins ━━━${NC}"
+  echo -e "${CYAN}${MSG_PLUGIN_AVAILABLE_TITLE}${NC}"
   jq -r '.plugins[] | "  \(.name) v\(.version) — \(.description)"' "$marketplace"
 
   if [ -f "$installed_file" ]; then
     echo ""
-    echo -e "${CYAN}━━━ Installed Plugins ━━━${NC}"
+    echo -e "${CYAN}${MSG_PLUGIN_INSTALLED_TITLE}${NC}"
     jq -r 'to_entries[] | "  \(.key) v\(.value.version) — installed \(.value.installed_at)"' "$installed_file"
   fi
 }
@@ -33,7 +33,7 @@ cmd_plugin_install() {
   local marketplace="$SCRIPT_DIR/.claude-plugin/marketplace.json"
 
   if ! command -v jq &>/dev/null; then
-    echo -e "${RED}오류: jq가 필요합니다${NC}" >&2
+    echo -e "${RED}${MSG_PLUGIN_ERR_JQ_REQUIRED}${NC}" >&2
     return 1
   fi
 
@@ -41,7 +41,7 @@ cmd_plugin_install() {
   plugin_source="$(jq -r --arg name "$plugin_name" '.plugins[] | select(.name == $name) | .source' "$marketplace")"
 
   if [ -z "$plugin_source" ]; then
-    echo -e "${RED}오류: 플러그인 '${plugin_name}'을 찾을 수 없습니다${NC}" >&2
+    printf "${RED}${MSG_PLUGIN_ERR_NOT_FOUND}${NC}\n" "$plugin_name" >&2
     return 1
   fi
 
@@ -49,7 +49,7 @@ cmd_plugin_install() {
   local plugin_version
   plugin_version="$(jq -r --arg name "$plugin_name" '.plugins[] | select(.name == $name) | .version' "$marketplace")"
 
-  echo -e "${CYAN}━━━ Plugin Install: ${plugin_name} v${plugin_version} ━━━${NC}"
+  printf "${CYAN}${MSG_PLUGIN_INSTALL_TITLE}${NC}\n" "$plugin_name" "$plugin_version"
 
   # Copy hooks scripts
   if [ -d "$plugin_dir/scripts" ]; then
@@ -58,7 +58,7 @@ cmd_plugin_install() {
       [ -f "$script" ] || continue
       cp "$script" "$target/.claude/hooks/"
       chmod +x "$target/.claude/hooks/$(basename "$script")"
-      echo "  ✅ hook 스크립트 설치: $(basename "$script")"
+      printf "${MSG_PLUGIN_HOOK_INSTALLED}\n" "$(basename "$script")"
     done
   fi
 
@@ -68,7 +68,7 @@ cmd_plugin_install() {
     for agent in "$plugin_dir/agents/"*.md; do
       [ -f "$agent" ] || continue
       cp "$agent" "$target/.claude/agents/"
-      echo "  ✅ agent 설치: $(basename "$agent")"
+      printf "${MSG_PLUGIN_AGENT_INSTALLED}\n" "$(basename "$agent")"
     done
   fi
 
@@ -80,7 +80,7 @@ cmd_plugin_install() {
       skill_name="$(basename "$skill_dir")"
       mkdir -p "$target/.claude/skills/$skill_name"
       cp "$skill_dir"* "$target/.claude/skills/$skill_name/" 2>/dev/null || true
-      echo "  ✅ skill 설치: $skill_name"
+      printf "${MSG_PLUGIN_SKILL_INSTALLED}\n" "$skill_name"
     done
   fi
 
@@ -93,7 +93,7 @@ cmd_plugin_install() {
     ' "$target/.claude/settings.json" "$plugin_dir/hooks/hooks.json" 2>/dev/null)"
     if [ $? -eq 0 ] && [ -n "$merged" ]; then
       echo "$merged" > "$target/.claude/settings.json"
-      echo "  ✅ hooks.json → settings.json merge 완료"
+      echo "${MSG_PLUGIN_HOOKS_MERGED}"
     fi
   fi
 
@@ -112,7 +112,7 @@ cmd_plugin_install() {
   fi
 
   echo ""
-  echo -e "${GREEN}✅ ${plugin_name} v${plugin_version} 설치 완료${NC}"
+  printf "${GREEN}${MSG_PLUGIN_INSTALL_OK}${NC}\n" "$plugin_name" "$plugin_version"
 }
 
 cmd_plugin_uninstall() {
@@ -121,7 +121,7 @@ cmd_plugin_uninstall() {
   local marketplace="$SCRIPT_DIR/.claude-plugin/marketplace.json"
 
   if ! command -v jq &>/dev/null; then
-    echo -e "${RED}오류: jq가 필요합니다${NC}" >&2
+    echo -e "${RED}${MSG_PLUGIN_ERR_JQ_REQUIRED}${NC}" >&2
     return 1
   fi
 
@@ -129,13 +129,13 @@ cmd_plugin_uninstall() {
   plugin_source="$(jq -r --arg name "$plugin_name" '.plugins[] | select(.name == $name) | .source' "$marketplace")"
 
   if [ -z "$plugin_source" ]; then
-    echo -e "${RED}오류: 플러그인 '${plugin_name}'을 찾을 수 없습니다${NC}" >&2
+    printf "${RED}${MSG_PLUGIN_ERR_NOT_FOUND}${NC}\n" "$plugin_name" >&2
     return 1
   fi
 
   local plugin_dir="$SCRIPT_DIR/$plugin_source"
 
-  echo -e "${CYAN}━━━ Plugin Uninstall: ${plugin_name} ━━━${NC}"
+  printf "${CYAN}${MSG_PLUGIN_UNINSTALL_TITLE}${NC}\n" "$plugin_name"
 
   # Remove hooks scripts
   if [ -d "$plugin_dir/scripts" ]; then
@@ -144,7 +144,7 @@ cmd_plugin_uninstall() {
       local target_script="$target/.claude/hooks/$(basename "$script")"
       if [ -f "$target_script" ]; then
         rm "$target_script"
-        echo "  🗑 hook 스크립트 제거: $(basename "$script")"
+        printf "${MSG_PLUGIN_HOOK_REMOVED}\n" "$(basename "$script")"
       fi
     done
   fi
@@ -156,7 +156,7 @@ cmd_plugin_uninstall() {
       local target_agent="$target/.claude/agents/$(basename "$agent")"
       if [ -f "$target_agent" ]; then
         rm "$target_agent"
-        echo "  🗑 agent 제거: $(basename "$agent")"
+        printf "${MSG_PLUGIN_AGENT_REMOVED}\n" "$(basename "$agent")"
       fi
     done
   fi
@@ -169,7 +169,7 @@ cmd_plugin_uninstall() {
   fi
 
   echo ""
-  echo -e "${GREEN}✅ ${plugin_name} 제거 완료${NC}"
+  printf "${GREEN}${MSG_PLUGIN_UNINSTALL_OK}${NC}\n" "$plugin_name"
 }
 
 cmd_plugin_check_update() {
@@ -178,16 +178,16 @@ cmd_plugin_check_update() {
   local installed_file="$target/.ai-setting/installed-plugins.json"
 
   if ! command -v jq &>/dev/null; then
-    echo -e "${RED}오류: jq가 필요합니다${NC}" >&2
+    echo -e "${RED}${MSG_PLUGIN_ERR_JQ_REQUIRED}${NC}" >&2
     return 1
   fi
 
   if [ ! -f "$installed_file" ]; then
-    echo "설치된 플러그인이 없습니다."
+    echo "${MSG_PLUGIN_NO_INSTALLED}"
     return 0
   fi
 
-  echo -e "${CYAN}━━━ Plugin Update Check ━━━${NC}"
+  echo -e "${CYAN}${MSG_PLUGIN_CHECK_TITLE}${NC}"
   local has_update=false
 
   while IFS= read -r name; do
@@ -197,21 +197,21 @@ cmd_plugin_check_update() {
     latest_ver="$(jq -r --arg n "$name" '.plugins[] | select(.name == $n) | .version' "$marketplace")"
 
     if [ -z "$latest_ver" ]; then
-      echo "  ${name}: marketplace에서 찾을 수 없음"
+      printf "${MSG_PLUGIN_NOT_IN_MARKETPLACE}\n" "$name"
       continue
     fi
 
     if [ "$installed_ver" != "$latest_ver" ]; then
-      echo -e "  ${YELLOW}${name}: ${installed_ver} → ${latest_ver} (업데이트 가능)${NC}"
+      printf "${YELLOW}${MSG_PLUGIN_UPDATE_AVAILABLE}${NC}\n" "$name" "$installed_ver" "$latest_ver"
       has_update=true
     else
-      echo "  ${name}: ${installed_ver} (최신)"
+      printf "${MSG_PLUGIN_UP_TO_DATE}\n" "$name" "$installed_ver"
     fi
   done < <(jq -r 'keys[]' "$installed_file")
 
   if [ "$has_update" = true ]; then
     echo ""
-    echo "업데이트하려면: ai-setting plugin upgrade <name> <target>"
+    echo "${MSG_PLUGIN_UPGRADE_HINT}"
   fi
 }
 
@@ -219,7 +219,7 @@ cmd_plugin_upgrade() {
   local plugin_name="$1"
   local target="${2:-.}"
 
-  echo "기존 플러그인 제거 후 재설치합니다..."
+  echo "${MSG_PLUGIN_UPGRADE_START}"
   cmd_plugin_uninstall "$plugin_name" "$target"
   cmd_plugin_install "$plugin_name" "$target"
 }

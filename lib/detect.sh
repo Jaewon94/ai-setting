@@ -80,8 +80,8 @@ detect_project_stack() {
     PROJECT_STACK="PHP"
     PROJECT_STACK_SIGNALS="composer.json"
   else
-    PROJECT_STACK="미감지"
-    PROJECT_STACK_SIGNALS="없음"
+    PROJECT_STACK="$MSG_DETECT_STACK_UNKNOWN"
+    PROJECT_STACK_SIGNALS="$MSG_DETECT_SIGNALS_NONE"
   fi
 }
 
@@ -223,7 +223,7 @@ detect_project_archetype() {
     PROJECT_ARCHETYPE="library-sdk"
     PROJECT_ARCHETYPE_SIGNALS="src, examples"
     PROJECT_ARCHETYPE_REASON="실행 앱보다 공개 API/예제 중심 구조로 보임"
-  elif [ "$backend_count" -ge 1 ] || { [ "$PROJECT_CONTEXT_MODE" = "code-first" ] && [ "$PROJECT_STACK" != "미감지" ] && [ "$frontend_count" -eq 0 ]; }; then
+  elif [ "$backend_count" -ge 1 ] || { [ "$PROJECT_CONTEXT_MODE" = "code-first" ] && [ "$PROJECT_STACK" != "$MSG_DETECT_STACK_UNKNOWN" ] && [ "$frontend_count" -eq 0 ]; }; then
     PROJECT_ARCHETYPE="backend-api"
     PROJECT_ARCHETYPE_SIGNALS="$(join_existing_paths "$base" "${backend_markers[@]}")"
     if [ "$PROJECT_ARCHETYPE_SIGNALS" = "없음" ]; then

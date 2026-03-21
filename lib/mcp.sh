@@ -7,7 +7,7 @@ add_mcp_preset() {
     core|web|infra|local)
       ;;
     *)
-      echo -e "${RED}오류: 알 수 없는 MCP preset '$preset'${NC}" >&2
+      printf "${RED}${MSG_MCP_ERR_UNKNOWN_PRESET}${NC}\n" "$preset" >&2
       usage
       exit 1
       ;;
@@ -82,7 +82,7 @@ append_codex_mcp_preset() {
   local file="$2"
 
   if [ "$DRY_RUN" = true ]; then
-    dry_run_note "Codex MCP preset 추가: ${preset} -> ${file}"
+    dry_run_note "$(printf "$MSG_MCP_DRYRUN_CODEX" "$preset" "$file")"
     return
   fi
 
@@ -161,7 +161,7 @@ check_mcp_commands() {
     fi
     seen+=("$cmd")
     if ! command -v "$cmd" >/dev/null 2>&1; then
-      echo -e "  ${YELLOW}⚠ MCP 서버에 필요한 '$cmd'가 PATH에 없습니다. 해당 MCP 서버가 실행되지 않을 수 있습니다.${NC}"
+      printf "  ${YELLOW}$(printf "$MSG_MCP_WARN_COMMAND_MISSING" "$cmd")${NC}\n"
     fi
   done
 }
@@ -191,7 +191,7 @@ write_claude_mcp_config() {
   local preset
 
   if [ "$DRY_RUN" = true ]; then
-    dry_run_note "Claude MCP config 생성: ${file}"
+    dry_run_note "$(printf "$MSG_MCP_DRYRUN_CLAUDE" "$file")"
     return
   fi
 

@@ -132,32 +132,32 @@ run_sync_manifest() {
   local child_mode_label=""
 
   if [ ! -f "$manifest_path" ]; then
-    echo -e "${RED}오류: sync manifest를 찾을 수 없습니다: ${manifest_path}${NC}" >&2
-    echo -e "힌트: templates/projects.manifest.template 을 복사해 manifest를 만든 뒤 다시 실행하세요." >&2
+    printf "${RED}${MSG_SYNC_ERR_NOT_FOUND}${NC}\n" "$manifest_path" >&2
+    echo -e "${MSG_SYNC_ERR_HINT}" >&2
     return 1
   fi
 
   manifest_path="$(cd "$(dirname "$manifest_path")" && pwd)/$(basename "$manifest_path")"
   manifest_dir="$(dirname "$manifest_path")"
 
-  echo -e "${CYAN}━━━ AI Setting Sync ━━━${NC}"
-  echo -e "소스: ${SCRIPT_DIR}"
-  echo -e "manifest: ${manifest_path}"
-  echo -e "sync mode: ${SYNC_MODE_KIND}"
-  echo -e "Claude 프로필: ${CLAUDE_PROFILE}"
+  echo -e "${CYAN}${MSG_SYNC_TITLE}${NC}"
+  printf "${MSG_SYNC_SOURCE}\n" "$SCRIPT_DIR"
+  printf "${MSG_SYNC_MANIFEST}\n" "$manifest_path"
+  printf "${MSG_SYNC_MODE}\n" "$SYNC_MODE_KIND"
+  printf "${MSG_SYNC_CLAUDE_PROFILE}\n" "$CLAUDE_PROFILE"
   if [ "$LINK_MODE" = true ]; then
-    echo -e "공유 자산 모드: symlink"
+    echo -e "${MSG_SYNC_ASSET_SYMLINK}"
   else
-    echo -e "공유 자산 모드: copy"
+    echo -e "${MSG_SYNC_ASSET_COPY}"
   fi
   if [ "$DRY_RUN" = true ]; then
-    echo -e "실행 모드: dry-run"
+    echo -e "${MSG_SYNC_EXEC_DRYRUN}"
   fi
   if [ "$BACKUP_ALL" = true ]; then
-    echo -e "백업 모드: backup-all"
+    echo -e "${MSG_SYNC_BACKUP_ALL}"
   fi
   if [ "$REAPPLY_MODE" = true ]; then
-    echo -e "재적용 모드: reapply"
+    echo -e "${MSG_SYNC_REAPPLY}"
   fi
   echo ""
 
@@ -186,11 +186,11 @@ run_sync_manifest() {
       [ -n "$MANIFEST_LINE_MCP_PRESET" ] && opts_display+="mcp-preset=${MANIFEST_LINE_MCP_PRESET} "
       [ -n "$MANIFEST_LINE_ARCHETYPE" ] && opts_display+="archetype=${MANIFEST_LINE_ARCHETYPE} "
       [ -n "$MANIFEST_LINE_STACK" ] && opts_display+="stack=${MANIFEST_LINE_STACK} "
-      echo -e "  옵션: ${opts_display}"
+      printf "${MSG_SYNC_LINE_OPTS}\n" "$opts_display"
     fi
 
     if [ ! -d "$target_path" ]; then
-      echo -e "  ${YELLOW}⚠ 대상 디렉토리가 없어 건너뜁니다${NC}"
+      echo -e "  ${YELLOW}${MSG_SYNC_SKIP_DIR}${NC}"
       skipped_count=$((skipped_count + 1))
       echo ""
       continue
@@ -198,19 +198,19 @@ run_sync_manifest() {
 
     detect_sync_conflicts "$target_path" "$per_project_profile"
     if [ "$SYNC_CONFLICT_COUNT" -gt 0 ]; then
-      echo -e "  ${YELLOW}⚠ 충돌 감지 (${SYNC_CONFLICT_COUNT}개): ${SYNC_CONFLICT_FILES[*]}${NC}"
+      printf "  ${YELLOW}${MSG_SYNC_CONFLICT_DETECTED}${NC}\n" "$SYNC_CONFLICT_COUNT" "${SYNC_CONFLICT_FILES[*]}"
       case "$SYNC_CONFLICT_STRATEGY" in
         skip)
-          echo -e "  ${YELLOW}→ --sync-conflict=skip: 이 프로젝트를 건너뜁니다${NC}"
+          echo -e "  ${YELLOW}${MSG_SYNC_CONFLICT_SKIP}${NC}"
           skipped_count=$((skipped_count + 1))
           echo ""
           continue
           ;;
         backup)
-          echo -e "  → --sync-conflict=backup: 백업 후 덮어쓰기"
+          echo -e "${MSG_SYNC_CONFLICT_BACKUP}"
           ;;
         overwrite)
-          echo -e "  → --sync-conflict=overwrite: 직접 덮어쓰기"
+          echo -e "${MSG_SYNC_CONFLICT_OVERWRITE}"
           ;;
       esac
     fi
@@ -261,18 +261,18 @@ run_sync_manifest() {
 
     child_command+=("$target_path")
 
-    echo "  → ${child_mode_label} 적용 시작"
+    printf "${MSG_SYNC_APPLY_START}\n" "$child_mode_label"
     if "${child_command[@]}"; then
       success_count=$((success_count + 1))
-      echo "  ✅ 완료"
+      echo "${MSG_SYNC_APPLY_OK}"
     else
       failure_count=$((failure_count + 1))
-      echo -e "  ${RED}✗ 실패${NC}"
+      echo -e "${RED}${MSG_SYNC_APPLY_FAIL}${NC}"
     fi
     echo ""
   done < "$manifest_path"
 
-  echo -e "${CYAN}━━━ Sync Summary ━━━${NC}"
+  echo -e "${CYAN}${MSG_SYNC_SUMMARY_TITLE}${NC}"
   echo "  manifest entries: ${total}"
   echo "  success: ${success_count}"
   echo "  skipped: ${skipped_count}"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# lib/fileops.sh — 파일/디렉토리 생성, 복사, 심링크, 권한 변경
+# lib/fileops.sh — file/directory creation, copy, symlink, permission
 
 resolve_copy_destination() {
   local src="$1"
@@ -17,9 +17,9 @@ run_mkdir_p() {
 
   if [ "$DRY_RUN" = true ]; then
     if [ -d "$path" ]; then
-      dry_run_note "디렉토리 유지: ${path}"
+      dry_run_note "$(printf "$MSG_FILEOPS_DRYRUN_DIR_KEEP" "$path")"
     else
-      dry_run_note "디렉토리 생성: ${path}"
+      dry_run_note "$(printf "$MSG_FILEOPS_DRYRUN_DIR_CREATE" "$path")"
     fi
   else
     mkdir -p "$path"
@@ -34,7 +34,7 @@ run_remove_path() {
   fi
 
   if [ "$DRY_RUN" = true ]; then
-    dry_run_note "관리 경로 정리: ${path}"
+    dry_run_note "$(printf "$MSG_FILEOPS_DRYRUN_REMOVE" "$path")"
   else
     rm -rf "$path"
   fi
@@ -49,9 +49,9 @@ run_copy() {
 
   if [ "$DRY_RUN" = true ]; then
     if [ -e "$final_path" ]; then
-      dry_run_note "파일 덮어쓰기: ${final_path}"
+      dry_run_note "$(printf "$MSG_FILEOPS_DRYRUN_OVERWRITE" "$final_path")"
     else
-      dry_run_note "파일 생성: ${final_path}"
+      dry_run_note "$(printf "$MSG_FILEOPS_DRYRUN_FILE_CREATE" "$final_path")"
     fi
   else
     cp "$src" "$dst"
@@ -67,9 +67,9 @@ run_symlink() {
 
   if [ "$DRY_RUN" = true ]; then
     if [ -L "$final_path" ]; then
-      dry_run_note "심링크 갱신: ${final_path} -> ${src}"
+      dry_run_note "$(printf "$MSG_FILEOPS_DRYRUN_SYMLINK_UPDATE" "$final_path" "$src")"
     else
-      dry_run_note "심링크 생성: ${final_path} -> ${src}"
+      dry_run_note "$(printf "$MSG_FILEOPS_DRYRUN_SYMLINK_CREATE" "$final_path" "$src")"
     fi
     return
   fi
@@ -82,7 +82,7 @@ run_chmod_file() {
   local path="$1"
 
   if [ "$DRY_RUN" = true ]; then
-    dry_run_note "권한 변경: chmod +x ${path}"
+    dry_run_note "$(printf "$MSG_FILEOPS_DRYRUN_CHMOD" "$path")"
   else
     chmod +x "$path"
   fi

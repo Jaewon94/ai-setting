@@ -70,13 +70,13 @@ merge_claude_settings_template() {
   fi
 
   if ! command -v jq &>/dev/null; then
-    echo -e "${YELLOW}  ⚠ jq가 없어 --merge를 적용할 수 없습니다. 기본 settings.json을 덮어씁니다${NC}"
+    echo -e "${YELLOW}  $MSG_PROFILE_MERGE_NOJQ_WARN${NC}"
     install_shared_asset "$settings_template" "$settings_path"
     return
   fi
 
   if [ "$DRY_RUN" = true ]; then
-    dry_run_note "기존 settings.json 유지 + profile hook merge: ${settings_path}"
+    dry_run_note "$(printf "$MSG_PROFILE_MERGE_DRYRUN" "$settings_path")"
     return
   fi
 
@@ -86,7 +86,7 @@ merge_claude_settings_template() {
     cp "$resolved" "$settings_path.tmp"
     rm "$settings_path"
     mv "$settings_path.tmp" "$settings_path"
-    echo -e "  ${YELLOW}⚠ settings.json 심링크를 파일로 전환 (--merge 적용 위해)${NC}"
+    echo -e "  ${YELLOW}$MSG_PROFILE_MERGE_SYMLINK_WARN${NC}"
   fi
 
   local merged
@@ -115,9 +115,9 @@ merge_claude_settings_template() {
   ' "$settings_path" "$settings_template" 2>/dev/null)"
   if [ $? -eq 0 ] && [ -n "$merged" ]; then
     echo "$merged" > "$settings_path"
-    echo -e "  ✅ 기존 settings.json 유지 + profile hook merge 완료"
+    echo -e "$MSG_PROFILE_MERGE_OK"
   else
-    echo -e "  ${RED}✗ --merge 적용 실패 (JSON 형식 확인 필요)${NC}"
+    echo -e "${RED}$MSG_PROFILE_MERGE_FAIL${NC}"
     return 1
   fi
 }
@@ -131,12 +131,12 @@ merge_settings_local() {
   fi
 
   if ! command -v jq &>/dev/null; then
-    echo -e "${YELLOW}  ⚠ jq가 없어 settings.local.json merge를 건너뜁니다${NC}"
+    echo -e "${YELLOW}  $MSG_PROFILE_LOCAL_NOJQ_WARN${NC}"
     return
   fi
 
   if [ "$DRY_RUN" = true ]; then
-    dry_run_note "settings.local.json merge 적용: ${local_path}"
+    dry_run_note "$(printf "$MSG_PROFILE_LOCAL_DRYRUN" "$local_path")"
     return
   fi
 
@@ -146,16 +146,16 @@ merge_settings_local() {
     cp "$resolved" "$settings_path.tmp"
     rm "$settings_path"
     mv "$settings_path.tmp" "$settings_path"
-    echo -e "  ${YELLOW}⚠ settings.json 심링크를 파일로 전환 (local override 적용 위해)${NC}"
+    echo -e "  ${YELLOW}$MSG_PROFILE_LOCAL_SYMLINK_WARN${NC}"
   fi
 
   local merged
   merged="$(jq -s '.[0] * .[1]' "$settings_path" "$local_path" 2>/dev/null)"
   if [ $? -eq 0 ] && [ -n "$merged" ]; then
     echo "$merged" > "$settings_path"
-    echo -e "  ✅ settings.local.json merge 적용 완료"
+    echo -e "$MSG_PROFILE_LOCAL_OK"
   else
-    echo -e "  ${RED}✗ settings.local.json merge 실패 (JSON 형식 확인 필요)${NC}"
+    echo -e "${RED}$MSG_PROFILE_LOCAL_FAIL${NC}"
   fi
 }
 
@@ -290,26 +290,26 @@ cmd_add_tool() {
   detect_project_stack "$TARGET"
   detect_project_archetype "$TARGET"
 
-  echo -e "${CYAN}━━━ Add Tool: ${tool_name} ━━━${NC}"
-  echo -e "대상: ${TARGET}"
+  printf "${CYAN}$(printf "$MSG_ADDTOOL_TITLE" "$tool_name")${NC}\n"
+  printf "$MSG_ADDTOOL_TARGET\n" "$TARGET"
 
   case "$tool_name" in
     cursor)
       copy_cursor_assets
-      echo -e "${GREEN}✅ Cursor 설정 추가 완료${NC}"
+      echo -e "${GREEN}$MSG_ADDTOOL_CURSOR_OK${NC}"
       echo "  .cursor/rules/*.mdc"
       ;;
     gemini)
       copy_gemini_assets
       if [ ! -f "$TARGET/GEMINI.md" ]; then
         run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
-        echo "  GEMINI.md 생성됨"
+        echo "$MSG_ADDTOOL_GEMINIMD_CREATED"
       fi
-      echo -e "${GREEN}✅ Gemini CLI 설정 추가 완료${NC}"
+      echo -e "${GREEN}$MSG_ADDTOOL_GEMINI_OK${NC}"
       ;;
     copilot)
       copy_copilot_assets
-      echo -e "${GREEN}✅ GitHub Copilot 설정 추가 완료${NC}"
+      echo -e "${GREEN}$MSG_ADDTOOL_COPILOT_OK${NC}"
       echo "  .github/copilot-instructions.md"
       ;;
     codex)
@@ -318,16 +318,16 @@ cmd_add_tool() {
         for preset in "${MCP_PRESETS[@]:-core}"; do
           append_codex_mcp_preset "$preset" "$TARGET/.codex/config.toml"
         done
-        echo "  MCP preset 적용됨"
+        echo "$MSG_ADDTOOL_CODEX_MCP"
       fi
-      echo -e "${GREEN}✅ Codex CLI 설정 추가 완료${NC}"
+      echo -e "${GREEN}$MSG_ADDTOOL_CODEX_OK${NC}"
       ;;
     claude)
-      echo -e "${YELLOW}claude는 기본 설치에 포함됩니다. init.sh를 사용하세요.${NC}"
+      echo -e "${YELLOW}$MSG_ADDTOOL_CLAUDE_HINT${NC}"
       ;;
     *)
-      echo -e "${RED}오류: 알 수 없는 도구 '${tool_name}'${NC}" >&2
-      echo "지원 도구: claude, codex, cursor, gemini, copilot"
+      printf "${RED}$MSG_ADDTOOL_ERR_UNKNOWN${NC}\n" "$tool_name" >&2
+      echo "$MSG_ADDTOOL_SUPPORTED"
       return 1
       ;;
   esac

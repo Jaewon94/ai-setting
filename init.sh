@@ -27,6 +27,9 @@ source "$SCRIPT_DIR/lib/profile.sh"
 source "$SCRIPT_DIR/lib/sync.sh"
 source "$SCRIPT_DIR/lib/plugin.sh"
 
+# i18n: locale 로드 (--lang 플래그보다 먼저 기본값 로드, 이후 재로드 가능)
+load_locale "$SCRIPT_DIR"
+
 run_with_timeout() {
   local timeout_seconds="$1"
   shift
@@ -97,8 +100,8 @@ fi
 # add-tool 모드는 옵션 파싱 불필요 — 바로 실행
 if [ "${ADD_TOOL_MODE:-false}" = true ]; then
   if [ -z "$ADD_TOOL_NAME" ]; then
-    echo -e "${RED}오류: add-tool <tool> [target] 형식으로 사용하세요${NC}" >&2
-    echo "지원 도구: codex, cursor, gemini, copilot"
+    echo -e "${RED}${MSG_INIT_ERR_ADDTOOL_USAGE}${NC}" >&2
+    echo "$MSG_INIT_ERR_ADDTOOL_SUPPORTED"
     exit 1
   fi
   cmd_add_tool "$ADD_TOOL_NAME" "$ADD_TOOL_TARGET"
@@ -113,14 +116,14 @@ if [ "$PLUGIN_MODE" = true ]; then
       ;;
     install)
       if [ -z "$PLUGIN_NAME" ]; then
-        echo -e "${RED}오류: plugin install <name> [target] 형식으로 사용하세요${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_PLUGIN_INSTALL_USAGE}${NC}" >&2
         exit 1
       fi
       cmd_plugin_install "$PLUGIN_NAME" "$PLUGIN_TARGET"
       ;;
     uninstall)
       if [ -z "$PLUGIN_NAME" ]; then
-        echo -e "${RED}오류: plugin uninstall <name> [target] 형식으로 사용하세요${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_PLUGIN_UNINSTALL_USAGE}${NC}" >&2
         exit 1
       fi
       cmd_plugin_uninstall "$PLUGIN_NAME" "$PLUGIN_TARGET"
@@ -130,14 +133,14 @@ if [ "$PLUGIN_MODE" = true ]; then
       ;;
     upgrade)
       if [ -z "$PLUGIN_NAME" ]; then
-        echo -e "${RED}오류: plugin upgrade <name> [target] 형식으로 사용하세요${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_PLUGIN_UPGRADE_USAGE}${NC}" >&2
         exit 1
       fi
       cmd_plugin_upgrade "$PLUGIN_NAME" "$PLUGIN_TARGET"
       ;;
     *)
-      echo -e "${RED}오류: 알 수 없는 plugin 서브커맨드: ${PLUGIN_SUBCOMMAND}${NC}" >&2
-      echo "사용법: ai-setting plugin {list|install|uninstall|check-update|upgrade} [name] [target]"
+      printf "${RED}${MSG_INIT_ERR_UNKNOWN_PLUGIN_SUB}${NC}\n" "$PLUGIN_SUBCOMMAND" >&2
+      echo "$MSG_INIT_ERR_PLUGIN_USAGE"
       exit 1
       ;;
   esac
@@ -173,7 +176,7 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --profile)
       if [ -z "${2:-}" ]; then
-        echo -e "${RED}오류: --profile 뒤에 값이 필요합니다${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_PROFILE_VALUE}${NC}" >&2
         usage
         exit 1
       fi
@@ -200,7 +203,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     --tools)
       if [ -z "${2:-}" ]; then
-        echo -e "${RED}오류: --tools 뒤에 값이 필요합니다 (예: claude,cursor)${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_TOOLS_VALUE}${NC}" >&2
         exit 1
       fi
       IFS=',' read -r -a TOOLS <<< "$2"
@@ -211,7 +214,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     --sync-mode)
       if [ -z "${2:-}" ]; then
-        echo -e "${RED}오류: --sync-mode 뒤에 값이 필요합니다${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_SYNCMODE_VALUE}${NC}" >&2
         usage
         exit 1
       fi
@@ -221,12 +224,12 @@ while [ "$#" -gt 0 ]; do
       ;;
     --sync-conflict)
       if [ -z "${2:-}" ]; then
-        echo -e "${RED}오류: --sync-conflict 뒤에 값이 필요합니다 (overwrite|skip|backup)${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_SYNCCONFLICT_VALUE}${NC}" >&2
         exit 1
       fi
       case "$2" in
         overwrite|skip|backup) SYNC_CONFLICT_STRATEGY="$2" ;;
-        *) echo -e "${RED}오류: --sync-conflict 값은 overwrite, skip, backup 중 하나여야 합니다${NC}" >&2; exit 1 ;;
+        *) echo -e "${RED}${MSG_INIT_ERR_SYNCCONFLICT_INVALID}${NC}" >&2; exit 1 ;;
       esac
       shift
       ;;
@@ -247,7 +250,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     --project-name)
       if [ -z "${2:-}" ]; then
-        echo -e "${RED}오류: --project-name 뒤에 값이 필요합니다${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_PROJECTNAME_VALUE}${NC}" >&2
         usage
         exit 1
       fi
@@ -256,7 +259,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     --archetype)
       if [ -z "${2:-}" ]; then
-        echo -e "${RED}오류: --archetype 뒤에 값이 필요합니다${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_ARCHETYPE_VALUE}${NC}" >&2
         usage
         exit 1
       fi
@@ -265,7 +268,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     --stack)
       if [ -z "${2:-}" ]; then
-        echo -e "${RED}오류: --stack 뒤에 값이 필요합니다${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_STACK_VALUE}${NC}" >&2
         usage
         exit 1
       fi
@@ -275,13 +278,18 @@ while [ "$#" -gt 0 ]; do
     --skip-ai)
       SKIP_AI=true
       ;;
+    --lang)
+      AI_SETTING_LANG="$2"
+      load_locale "$SCRIPT_DIR"
+      shift
+      ;;
     --no-mcp)
       MCP_ENABLED=false
       USER_MCP_PRESET_SPECIFIED=true
       ;;
     --mcp-preset)
       if [ -z "${2:-}" ]; then
-        echo -e "${RED}오류: --mcp-preset 뒤에 값이 필요합니다${NC}" >&2
+        echo -e "${RED}${MSG_INIT_ERR_MCPPRESET_VALUE}${NC}" >&2
         usage
         exit 1
       fi
@@ -301,21 +309,21 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     --*)
-      echo -e "${RED}오류: 알 수 없는 옵션 '$1'${NC}" >&2
+      printf "${RED}${MSG_INIT_ERR_UNKNOWN_OPTION}${NC}\n" "$1" >&2
       usage
       exit 1
       ;;
     *)
       if [ "$SYNC_MODE" = true ]; then
         if [ -n "$SYNC_MANIFEST" ]; then
-          echo -e "${RED}오류: sync manifest 경로는 하나만 지정할 수 있습니다${NC}" >&2
+          echo -e "${RED}${MSG_INIT_ERR_SYNC_MANIFEST_DUP}${NC}" >&2
           usage
           exit 1
         fi
         SYNC_MANIFEST="$1"
       else
         if [ -n "$TARGET" ]; then
-          echo -e "${RED}오류: 프로젝트 경로는 하나만 지정할 수 있습니다${NC}" >&2
+          echo -e "${RED}${MSG_INIT_ERR_TARGET_DUP}${NC}" >&2
           usage
           exit 1
         fi
@@ -337,27 +345,27 @@ if [ "$DIFF_MODE" = true ]; then
   MODE_COUNT=$((MODE_COUNT + 1))
 fi
 if [ "$MODE_COUNT" -gt 1 ]; then
-  echo -e "${RED}오류: --doctor, --dry-run, --diff 중 하나만 사용할 수 있습니다${NC}" >&2
+  echo -e "${RED}${MSG_INIT_ERR_MODE_EXCLUSIVE}${NC}" >&2
   usage
   exit 1
 fi
 if [ "$SYNC_MODE" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = true ]; }; then
-  echo -e "${RED}오류: sync 명령은 --doctor 또는 --diff와 함께 사용할 수 없습니다${NC}" >&2
+  echo -e "${RED}${MSG_INIT_ERR_SYNC_EXCLUSIVE}${NC}" >&2
   usage
   exit 1
 fi
 if [ "$UPDATE_MODE" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = true ]; }; then
-  echo -e "${RED}오류: update 모드는 --doctor 또는 --diff와 함께 사용할 수 없습니다${NC}" >&2
+  echo -e "${RED}${MSG_INIT_ERR_UPDATE_EXCLUSIVE}${NC}" >&2
   usage
   exit 1
 fi
 if [ "$BACKUP_ALL" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = true ]; }; then
-  echo -e "${RED}오류: --backup-all은 --doctor 또는 --diff와 함께 사용할 수 없습니다${NC}" >&2
+  echo -e "${RED}${MSG_INIT_ERR_BACKUP_EXCLUSIVE}${NC}" >&2
   usage
   exit 1
 fi
 if [ "$REAPPLY_MODE" = true ] && { [ "$DOCTOR_MODE" = true ] || [ "$DIFF_MODE" = true ]; }; then
-  echo -e "${RED}오류: --reapply는 --doctor 또는 --diff와 함께 사용할 수 없습니다${NC}" >&2
+  echo -e "${RED}${MSG_INIT_ERR_REAPPLY_EXCLUSIVE}${NC}" >&2
   usage
   exit 1
 fi
@@ -407,53 +415,53 @@ if [ "$DIFF_MODE" = true ]; then
   fi
 fi
 
-echo -e "${CYAN}━━━ AI Setting Init ━━━${NC}"
-echo -e "소스: ${SCRIPT_DIR}"
-echo -e "대상: ${TARGET}"
-echo -e "Claude 프로필: ${CLAUDE_PROFILE}"
+echo -e "${CYAN}${MSG_INIT_TITLE}${NC}"
+printf "${MSG_INIT_SOURCE}\n" "$SCRIPT_DIR"
+printf "${MSG_INIT_TARGET}\n" "$TARGET"
+printf "${MSG_INIT_CLAUDE_PROFILE}\n" "$CLAUDE_PROFILE"
 if [ "$LINK_MODE" = true ]; then
-  echo -e "공유 자산 모드: symlink"
+  echo -e "$MSG_INIT_ASSET_SYMLINK"
 else
-  echo -e "공유 자산 모드: copy"
+  echo -e "$MSG_INIT_ASSET_COPY"
 fi
 if [ "$MERGE_SETTINGS" = true ]; then
-  echo -e "Claude settings 처리: merge"
+  echo -e "$MSG_INIT_SETTINGS_MERGE"
 fi
-echo -e "MCP preset: ${MCP_PRESET_LABEL}"
-echo -e "MCP 추천: ${RECOMMENDED_MCP_PRESET_LABEL}"
-echo -e "프로젝트명: ${PROJECT_NAME}"
-echo -e "해석 모드: ${PROJECT_CONTEXT_MODE}"
-echo -e "프로젝트 유형: ${PROJECT_ARCHETYPE}"
-echo -e "주 스택: ${PROJECT_STACK}"
+printf "${MSG_INIT_MCP_PRESET}\n" "$MCP_PRESET_LABEL"
+printf "${MSG_INIT_MCP_RECOMMENDED}\n" "$RECOMMENDED_MCP_PRESET_LABEL"
+printf "${MSG_INIT_PROJECT_NAME}\n" "$PROJECT_NAME"
+printf "${MSG_INIT_CONTEXT_MODE}\n" "$PROJECT_CONTEXT_MODE"
+printf "${MSG_INIT_PROJECT_TYPE}\n" "$PROJECT_ARCHETYPE"
+printf "${MSG_INIT_MAIN_STACK}\n" "$PROJECT_STACK"
 if [ "$HAS_USER_GUIDANCE" = true ]; then
-  echo -e "사용자 힌트: project-name=${USER_PROJECT_NAME_HINT:-없음}, archetype=${USER_ARCHETYPE_HINT:-없음}, stack=${USER_STACK_HINT:-없음}"
+  printf "${MSG_INIT_USER_HINTS}\n" "${USER_PROJECT_NAME_HINT:-none}" "${USER_ARCHETYPE_HINT:-none}" "${USER_STACK_HINT:-none}"
 fi
 if [ "$AUTO_MCP" = true ]; then
   if [ "$AUTO_MCP_APPLIED" = true ]; then
-    echo -e "MCP 자동 추천 적용: on"
+    echo -e "$MSG_INIT_AUTOMCP_ON"
   else
-    echo -e "MCP 자동 추천 적용: 요청됨 (명시 preset 또는 --no-mcp 우선)"
+    echo -e "$MSG_INIT_AUTOMCP_PREEMPTED"
   fi
 fi
 if [ "$UPDATE_MODE" = true ]; then
-  echo -e "명령 모드: update"
+  echo -e "$MSG_INIT_MODE_UPDATE"
 fi
 if [ "$DRY_RUN" = true ]; then
-  echo -e "실행 모드: dry-run"
+  echo -e "$MSG_INIT_MODE_DRYRUN"
 fi
 if [ "$BACKUP_ALL" = true ]; then
-  echo -e "백업 모드: backup-all"
+  echo -e "$MSG_INIT_MODE_BACKUP"
 fi
 if [ "$REAPPLY_MODE" = true ]; then
-  echo -e "재적용 모드: reapply"
+  echo -e "$MSG_INIT_MODE_REAPPLY"
 fi
 echo ""
 
 # jq 의존성 체크 (hooks가 jq로 JSON 파싱)
 if ! command -v jq &> /dev/null; then
-  echo -e "${YELLOW}⚠ jq가 설치되어 있지 않습니다.${NC}"
-  echo -e "  hooks(protect-files, block-dangerous-commands, async-test)가 정상 동작하려면 jq가 필요합니다."
-  echo -e "  설치: brew install jq (macOS) / sudo apt install jq (Linux)"
+  echo -e "${YELLOW}${MSG_INIT_JQ_WARN}${NC}"
+  echo -e "$MSG_INIT_JQ_DETAIL"
+  echo -e "$MSG_INIT_JQ_INSTALL"
   echo ""
 fi
 
@@ -464,7 +472,7 @@ fi
 # ============================================================
 # 1단계: Claude Code 설정 복사
 # ============================================================
-echo -e "${GREEN}[1/7]${NC} Claude Code 설정 복사 (.claude/)"
+echo -e "${GREEN}${MSG_INIT_STEP1}${NC}"
 
 if [ -d "$TARGET/.claude" ]; then
   backup_existing_path "$TARGET/.claude" ".claude/"
@@ -476,57 +484,57 @@ copy_claude_profile_assets
 if [ "$CLAUDE_PROFILE" = "minimal" ]; then
   if [ "$DRY_RUN" = true ]; then
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ minimal profile 심링크 적용 예정 (settings 1개, hooks 1개)"
+      echo "$MSG_INIT_STEP1_MINIMAL_LINK_PLANNED"
     else
-      echo "  ✅ minimal profile 적용 예정 (settings 1개, hooks 1개)"
+      echo "$MSG_INIT_STEP1_MINIMAL_PLANNED"
     fi
   else
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ minimal profile 심링크 적용됨 (settings 1개, hooks 1개)"
+      echo "$MSG_INIT_STEP1_MINIMAL_LINK_DONE"
     else
-      echo "  ✅ minimal profile 적용됨 (settings 1개, hooks 1개)"
+      echo "$MSG_INIT_STEP1_MINIMAL_DONE"
     fi
   fi
 elif [ "$CLAUDE_PROFILE" = "strict" ]; then
   if [ "$DRY_RUN" = true ]; then
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ strict profile 심링크 적용 예정 (settings 1개, hooks 6개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_STRICT_LINK_PLANNED"
     else
-      echo "  ✅ strict profile 적용 예정 (settings 1개, hooks 6개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_STRICT_PLANNED"
     fi
   else
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ strict profile 심링크 적용됨 (settings 1개, hooks 6개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_STRICT_LINK_DONE"
     else
-      echo "  ✅ strict profile 적용됨 (settings 1개, hooks 6개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_STRICT_DONE"
     fi
   fi
 elif [ "$CLAUDE_PROFILE" = "team" ]; then
   if [ "$DRY_RUN" = true ]; then
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ team profile 심링크 적용 예정 (settings 1개, hooks 7개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_TEAM_LINK_PLANNED"
     else
-      echo "  ✅ team profile 적용 예정 (settings 1개, hooks 7개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_TEAM_PLANNED"
     fi
   else
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ team profile 심링크 적용됨 (settings 1개, hooks 7개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_TEAM_LINK_DONE"
     else
-      echo "  ✅ team profile 적용됨 (settings 1개, hooks 7개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_TEAM_DONE"
     fi
   fi
 else
   if [ "$DRY_RUN" = true ]; then
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ standard profile 심링크 적용 예정 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_STANDARD_LINK_PLANNED"
     else
-      echo "  ✅ standard profile 적용 예정 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_STANDARD_PLANNED"
     fi
   else
     if [ "$LINK_MODE" = true ]; then
-      echo "  ✅ standard profile 심링크 적용됨 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_STANDARD_LINK_DONE"
     else
-      echo "  ✅ standard profile 적용됨 (settings 1개, hooks 5개, agents 4개, skills 5개)"
+      echo "$MSG_INIT_STEP1_STANDARD_DONE"
     fi
   fi
 fi
@@ -535,44 +543,44 @@ fi
 # 2단계: 추가 AI 도구 설정 복사
 # ============================================================
 if tool_enabled "cursor" || tool_enabled "gemini" || tool_enabled "copilot"; then
-  echo -e "${GREEN}[2/7]${NC} 추가 AI 도구 설정 복사"
+  echo -e "${GREEN}${MSG_INIT_STEP2}${NC}"
 
   if tool_enabled "cursor"; then
     copy_cursor_assets
-    echo "  ✅ Cursor rule 적용됨 (.cursor/rules/)"
+    echo "$MSG_INIT_STEP2_CURSOR"
   fi
 
   if tool_enabled "gemini"; then
     copy_gemini_assets
-    echo "  ✅ Gemini settings 적용됨 (.gemini/settings.json)"
+    echo "$MSG_INIT_STEP2_GEMINI"
   fi
 
   if tool_enabled "copilot"; then
     copy_copilot_assets
-    echo "  ✅ Copilot instructions 적용됨 (.github/copilot-instructions.md)"
+    echo "$MSG_INIT_STEP2_COPILOT"
   fi
 else
-  echo -e "${GREEN}[2/7]${NC} 추가 AI 도구 — 건너뜀 (--tools 또는 --all로 추가 가능)"
+  echo -e "${GREEN}${MSG_INIT_STEP2_SKIP}${NC}"
 fi
 
 # ============================================================
 # 3단계: Codex 설정 복사
 # ============================================================
 if tool_enabled "codex"; then
-  echo -e "${GREEN}[3/7]${NC} Codex CLI 설정 복사 (.codex/)"
+  echo -e "${GREEN}${MSG_INIT_STEP3}${NC}"
   copy_codex_assets
-  echo "  ✅ config.toml"
+  echo "$MSG_INIT_STEP3_OK"
 else
-  echo -e "${GREEN}[3/7]${NC} Codex CLI — 건너뜀 (add-tool codex 로 추가 가능)"
+  echo -e "${GREEN}${MSG_INIT_STEP3_SKIP}${NC}"
 fi
 
 # ============================================================
 # 4단계: 프로젝트 로컬 MCP preset 생성
 # ============================================================
-echo -e "${GREEN}[4/7]${NC} 프로젝트 로컬 MCP preset 생성"
+echo -e "${GREEN}${MSG_INIT_STEP4}${NC}"
 
 if [ "$MCP_ENABLED" = false ]; then
-  echo -e "  ${YELLOW}--no-mcp 옵션으로 건너뜀${NC}"
+  echo -e "  ${YELLOW}${MSG_INIT_STEP4_NOMCP}${NC}"
 else
   if [ -f "$TARGET/.mcp.json" ]; then
     backup_existing_path "$TARGET/.mcp.json" ".mcp.json"
@@ -582,17 +590,17 @@ else
     for preset in "${MCP_PRESETS[@]}"; do
       append_codex_mcp_preset "$preset" "$TARGET/.codex/config.toml"
     done
-    echo "  ✅ Codex MCP preset 적용됨 ($MCP_PRESET_LABEL)"
+    printf "$MSG_INIT_STEP4_CODEX_MCP\n" "$MCP_PRESET_LABEL"
   fi
   write_claude_mcp_config "$TARGET/.mcp.json"
-  echo "  ✅ Claude MCP config 생성됨 (.mcp.json)"
+  echo "$MSG_INIT_STEP4_CLAUDE_MCP"
   check_mcp_commands
 fi
 
 # ============================================================
 # 5단계: 프로젝트 문서 템플릿 복사
 # ============================================================
-echo -e "${GREEN}[5/7]${NC} 템플릿 복사"
+echo -e "${GREEN}${MSG_INIT_STEP5}${NC}"
 
 TEMPLATES_COPIED=false
 
@@ -600,38 +608,38 @@ if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/BEHAVIORAL_CORE.md" ]; then
   backup_existing_path "$TARGET/BEHAVIORAL_CORE.md" "BEHAVIORAL_CORE.md"
   run_copy "$SCRIPT_DIR/templates/BEHAVIORAL_CORE.md.template" "$TARGET/BEHAVIORAL_CORE.md"
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ BEHAVIORAL_CORE.md 재생성 예정"
+    echo "$MSG_INIT_BEHAVIORAL_REAPPLY_PLANNED"
   else
-    echo "  ✅ BEHAVIORAL_CORE.md 재생성됨"
+    echo "$MSG_INIT_BEHAVIORAL_REAPPLY_DONE"
   fi
   TEMPLATES_COPIED=true
 elif [ ! -f "$TARGET/BEHAVIORAL_CORE.md" ]; then
   run_copy "$SCRIPT_DIR/templates/BEHAVIORAL_CORE.md.template" "$TARGET/BEHAVIORAL_CORE.md"
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ BEHAVIORAL_CORE.md 생성 예정"
+    echo "$MSG_INIT_BEHAVIORAL_PLANNED"
   else
-    echo "  ✅ BEHAVIORAL_CORE.md 생성됨"
+    echo "$MSG_INIT_BEHAVIORAL_DONE"
   fi
   TEMPLATES_COPIED=true
 else
-  echo -e "  ${YELLOW}⚠ BEHAVIORAL_CORE.md 이미 존재 — 건너뜀${NC}"
+  echo -e "  ${YELLOW}${MSG_INIT_BEHAVIORAL_SKIP}${NC}"
 fi
 
 if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/CLAUDE.md" ]; then
   backup_existing_path "$TARGET/CLAUDE.md" "CLAUDE.md"
   run_copy "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ CLAUDE.md 재생성 예정"
+    echo "$MSG_INIT_CLAUDEMD_REAPPLY_PLANNED"
   else
-    echo "  ✅ CLAUDE.md 재생성됨"
+    echo "$MSG_INIT_CLAUDEMD_REAPPLY_DONE"
   fi
   TEMPLATES_COPIED=true
 elif [ ! -f "$TARGET/CLAUDE.md" ]; then
   run_copy "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"
-  echo "  ✅ CLAUDE.md 생성됨"
+  echo "$MSG_INIT_CLAUDEMD_DONE"
   TEMPLATES_COPIED=true
 else
-  echo -e "  ${YELLOW}⚠ CLAUDE.md 이미 존재 — 건너뜀${NC}"
+  echo -e "  ${YELLOW}${MSG_INIT_CLAUDEMD_SKIP}${NC}"
 fi
 
 # archetype partial 삽입
@@ -640,31 +648,31 @@ if [ -f "$ARCHETYPE_PARTIAL" ] && [ -f "$TARGET/CLAUDE.md" ] && [ "$DRY_RUN" != 
   if ! grep -qF "## Frontend 규칙\|## API 규칙\|## CLI 규칙\|## Worker/Batch 규칙\|## 데이터/자동화 규칙\|## 라이브러리/SDK 규칙\|## 인프라/IaC 규칙" "$TARGET/CLAUDE.md" 2>/dev/null; then
     echo "" >> "$TARGET/CLAUDE.md"
     cat "$ARCHETYPE_PARTIAL" >> "$TARGET/CLAUDE.md"
-    echo "  ✅ archetype 규칙 삽입됨 (${PROJECT_ARCHETYPE})"
+    printf "$MSG_INIT_ARCHETYPE_DONE\n" "$PROJECT_ARCHETYPE"
   fi
 elif [ -f "$ARCHETYPE_PARTIAL" ] && [ "$DRY_RUN" = true ]; then
-  dry_run_note "archetype 규칙 삽입 예정 (${PROJECT_ARCHETYPE})"
+  dry_run_note "$(printf "$MSG_INIT_ARCHETYPE_DRYRUN" "$PROJECT_ARCHETYPE")"
 fi
 
 if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/AGENTS.md" ]; then
   backup_existing_path "$TARGET/AGENTS.md" "AGENTS.md"
   run_copy "$SCRIPT_DIR/templates/AGENTS.md.template" "$TARGET/AGENTS.md"
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ AGENTS.md 재생성 예정"
+    echo "$MSG_INIT_AGENTSMD_REAPPLY_PLANNED"
   else
-    echo "  ✅ AGENTS.md 재생성됨"
+    echo "$MSG_INIT_AGENTSMD_REAPPLY_DONE"
   fi
   TEMPLATES_COPIED=true
 elif [ ! -f "$TARGET/AGENTS.md" ]; then
   run_copy "$SCRIPT_DIR/templates/AGENTS.md.template" "$TARGET/AGENTS.md"
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ AGENTS.md 생성 예정"
+    echo "$MSG_INIT_AGENTSMD_PLANNED"
   else
-    echo "  ✅ AGENTS.md 생성됨"
+    echo "$MSG_INIT_AGENTSMD_DONE"
   fi
   TEMPLATES_COPIED=true
 else
-  echo -e "  ${YELLOW}⚠ AGENTS.md 이미 존재 — 건너뜀${NC}"
+  echo -e "  ${YELLOW}${MSG_INIT_AGENTSMD_SKIP}${NC}"
 fi
 
 if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/docs/research-notes.md" ]; then
@@ -672,36 +680,36 @@ if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/docs/research-notes.md" ]; then
   run_mkdir_p "$TARGET/docs"
   run_copy "$SCRIPT_DIR/templates/research-notes.md.template" "$TARGET/docs/research-notes.md"
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ docs/research-notes.md 재생성 예정"
+    echo "$MSG_INIT_RESEARCH_REAPPLY_PLANNED"
   else
-    echo "  ✅ docs/research-notes.md 재생성됨"
+    echo "$MSG_INIT_RESEARCH_REAPPLY_DONE"
   fi
   TEMPLATES_COPIED=true
 elif [ ! -f "$TARGET/docs/research-notes.md" ]; then
   run_mkdir_p "$TARGET/docs"
   run_copy "$SCRIPT_DIR/templates/research-notes.md.template" "$TARGET/docs/research-notes.md"
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ docs/research-notes.md 생성 예정"
+    echo "$MSG_INIT_RESEARCH_PLANNED"
   else
-    echo "  ✅ docs/research-notes.md 생성됨"
+    echo "$MSG_INIT_RESEARCH_DONE"
   fi
   TEMPLATES_COPIED=true
 else
-  echo -e "  ${YELLOW}⚠ docs/research-notes.md 이미 존재 — 건너뜀${NC}"
+  echo -e "  ${YELLOW}${MSG_INIT_RESEARCH_SKIP}${NC}"
 fi
 
 if tool_enabled "gemini"; then
   if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/GEMINI.md" ]; then
     backup_existing_path "$TARGET/GEMINI.md" "GEMINI.md"
     run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
-    echo "  ✅ GEMINI.md 재생성됨"
+    echo "$MSG_INIT_GEMINIMD_REAPPLY_DONE"
     TEMPLATES_COPIED=true
   elif [ ! -f "$TARGET/GEMINI.md" ]; then
     run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
-    echo "  ✅ GEMINI.md 생성됨"
+    echo "$MSG_INIT_GEMINIMD_DONE"
     TEMPLATES_COPIED=true
   else
-    echo -e "  ${YELLOW}⚠ GEMINI.md 이미 존재 — 건너뜀${NC}"
+    echo -e "  ${YELLOW}${MSG_INIT_GEMINIMD_SKIP}${NC}"
   fi
 fi
 
@@ -710,14 +718,14 @@ if tool_enabled "copilot"; then
   if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.github/copilot-instructions.md" ]; then
     backup_existing_path "$TARGET/.github/copilot-instructions.md" ".github/copilot-instructions.md"
     run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
-    echo "  ✅ .github/copilot-instructions.md 재생성됨"
+    echo "$MSG_INIT_COPILOTMD_REAPPLY_DONE"
     TEMPLATES_COPIED=true
   elif [ ! -f "$TARGET/.github/copilot-instructions.md" ]; then
     run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
-    echo "  ✅ .github/copilot-instructions.md 생성됨"
+    echo "$MSG_INIT_COPILOTMD_DONE"
     TEMPLATES_COPIED=true
   else
-    echo -e "  ${YELLOW}⚠ .github/copilot-instructions.md 이미 존재 — 건너뜀${NC}"
+    echo -e "  ${YELLOW}${MSG_INIT_COPILOTMD_SKIP}${NC}"
   fi
 fi
 
@@ -727,19 +735,19 @@ if [ "$CLAUDE_PROFILE" = "team" ]; then
     backup_existing_path "$TARGET/.github/pull_request_template.md" ".github/pull_request_template.md"
     run_copy "$SCRIPT_DIR/templates/pull_request_template.md.template" "$TARGET/.github/pull_request_template.md"
     if [ "$DRY_RUN" = true ]; then
-      echo "  ✅ .github/pull_request_template.md 재생성 예정"
+      echo "$MSG_INIT_PR_TEMPLATE_REAPPLY_PLANNED"
     else
-      echo "  ✅ .github/pull_request_template.md 재생성됨"
+      echo "$MSG_INIT_PR_TEMPLATE_REAPPLY_DONE"
     fi
   elif [ ! -f "$TARGET/.github/pull_request_template.md" ]; then
     run_copy "$SCRIPT_DIR/templates/pull_request_template.md.template" "$TARGET/.github/pull_request_template.md"
     if [ "$DRY_RUN" = true ]; then
-      echo "  ✅ .github/pull_request_template.md 생성 예정"
+      echo "$MSG_INIT_PR_TEMPLATE_PLANNED"
     else
-      echo "  ✅ .github/pull_request_template.md 생성됨"
+      echo "$MSG_INIT_PR_TEMPLATE_DONE"
     fi
   else
-    echo -e "  ${YELLOW}⚠ .github/pull_request_template.md 이미 존재 — 건너뜀${NC}"
+    echo -e "  ${YELLOW}${MSG_INIT_PR_TEMPLATE_SKIP}${NC}"
   fi
 
   run_mkdir_p "$TARGET/.ai-setting"
@@ -747,19 +755,19 @@ if [ "$CLAUDE_PROFILE" = "team" ]; then
     backup_existing_path "$TARGET/.ai-setting/team-webhook.json" ".ai-setting/team-webhook.json"
     run_copy "$SCRIPT_DIR/templates/team-webhook.json.template" "$TARGET/.ai-setting/team-webhook.json"
     if [ "$DRY_RUN" = true ]; then
-      echo "  ✅ .ai-setting/team-webhook.json 재생성 예정"
+      echo "$MSG_INIT_WEBHOOK_REAPPLY_PLANNED"
     else
-      echo "  ✅ .ai-setting/team-webhook.json 재생성됨"
+      echo "$MSG_INIT_WEBHOOK_REAPPLY_DONE"
     fi
   elif [ ! -f "$TARGET/.ai-setting/team-webhook.json" ]; then
     run_copy "$SCRIPT_DIR/templates/team-webhook.json.template" "$TARGET/.ai-setting/team-webhook.json"
     if [ "$DRY_RUN" = true ]; then
-      echo "  ✅ .ai-setting/team-webhook.json 생성 예정"
+      echo "$MSG_INIT_WEBHOOK_PLANNED"
     else
-      echo "  ✅ .ai-setting/team-webhook.json 생성됨"
+      echo "$MSG_INIT_WEBHOOK_DONE"
     fi
   else
-    echo -e "  ${YELLOW}⚠ .ai-setting/team-webhook.json 이미 존재 — 건너뜀${NC}"
+    echo -e "  ${YELLOW}${MSG_INIT_WEBHOOK_SKIP}${NC}"
   fi
 fi
 
@@ -767,15 +775,15 @@ run_mkdir_p "$TARGET/docs"
 if [ ! -f "$TARGET/docs/decisions.md" ]; then
   run_copy "$SCRIPT_DIR/templates/decisions.md.template" "$TARGET/docs/decisions.md"
   if [ "$DRY_RUN" = true ]; then
-    echo "  ✅ docs/decisions.md 생성 예정"
+    echo "$MSG_INIT_DECISIONS_PLANNED"
   else
-    echo "  ✅ docs/decisions.md 생성됨"
+    echo "$MSG_INIT_DECISIONS_DONE"
   fi
 else
   if [ "$REAPPLY_MODE" = true ]; then
-    echo -e "  ${YELLOW}⚠ docs/decisions.md는 사용자 기록 파일로 간주되어 유지합니다${NC}"
+    echo -e "  ${YELLOW}${MSG_INIT_DECISIONS_REAPPLY_SKIP}${NC}"
   else
-    echo -e "  ${YELLOW}⚠ docs/decisions.md 이미 존재 — 건너뜀${NC}"
+    echo -e "  ${YELLOW}${MSG_INIT_DECISIONS_SKIP}${NC}"
   fi
 fi
 
@@ -793,7 +801,7 @@ fi
 # ============================================================
 # 6단계: AI로 템플릿 자동 채우기 (Claude Code → Codex → 수동)
 # ============================================================
-echo -e "${GREEN}[6/7]${NC} AI로 프로젝트 문서 자동 생성"
+echo -e "${GREEN}${MSG_INIT_STEP6}${NC}"
 
 if [ "$CLAUDE_PROFILE" = "minimal" ]; then
   AI_PROFILE_GUIDANCE=$(cat <<'EOF'
@@ -954,7 +962,7 @@ fill_rule_based_placeholders() {
   done
 
   if [ "$replaced" -gt 0 ]; then
-    echo "  ✅ rule-based 치환 완료 (${replaced}개 파일)"
+    printf "$MSG_INIT_AI_RULE_BASED_OK\n" "$replaced"
   fi
 }
 
@@ -1007,76 +1015,76 @@ EOF
 )
 
 if [ "$UPDATE_MODE" = true ]; then
-  echo -e "  ${YELLOW}update 모드에서는 AI 자동 채우기를 건너뜁니다${NC}"
+  echo -e "  ${YELLOW}${MSG_INIT_AI_UPDATE_SKIP}${NC}"
 elif [ "$SKIP_AI" = true ]; then
-  echo -e "  ${YELLOW}--skip-ai 옵션으로 건너뜀${NC}"
+  echo -e "  ${YELLOW}${MSG_INIT_AI_SKIPAI}${NC}"
   # rule-based 치환: AI 없이도 감지된 프로젝트 정보로 플레이스홀더 교체
   fill_rule_based_placeholders
 elif [ "$DRY_RUN" = true ]; then
-  echo -e "  ${YELLOW}--dry-run 모드에서는 AI 자동 채우기를 실행하지 않습니다${NC}"
+  echo -e "  ${YELLOW}${MSG_INIT_AI_DRYRUN_SKIP}${NC}"
 elif [ "$PROJECT_CONTEXT_MODE" = "blank-start" ] && [ "$HAS_USER_GUIDANCE" = false ]; then
   echo "  mode: ${PROJECT_CONTEXT_MODE} (${PROJECT_CONTEXT_REASON})"
-  echo -e "  ${YELLOW}프로젝트 근거가 거의 없어 AI 자동 채우기를 건너뜁니다${NC}"
-  echo "  README, package.json, pyproject.toml, src/ 같은 신호가 생긴 뒤 다시 실행하세요"
+  echo -e "  ${YELLOW}${MSG_INIT_AI_BLANKSTART_SKIP}${NC}"
+  echo "  $MSG_INIT_AI_BLANKSTART_HINT"
 elif [ "$TEMPLATES_COPIED" = false ]; then
-  echo -e "  ${YELLOW}새 템플릿이 없음 (이미 존재) — 건너뜀${NC}"
+  echo -e "  ${YELLOW}${MSG_INIT_AI_NO_TEMPLATES}${NC}"
 else
   AI_SUCCESS=false
   CLAUDE_TIMEOUT_SECONDS="${AI_SETTING_CLAUDE_TIMEOUT_SEC:-20}"
   echo "  mode: ${PROJECT_CONTEXT_MODE} (${PROJECT_CONTEXT_REASON})"
   if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ] && [ "$HAS_USER_GUIDANCE" = true ]; then
-    echo "  blank-start with guidance: 사용자 힌트를 바탕으로 초안을 시도합니다"
+    echo "  $MSG_INIT_AI_GUIDED_BLANKSTART"
   fi
   echo "  archetype: ${PROJECT_ARCHETYPE} (${PROJECT_ARCHETYPE_REASON})"
   echo "  stack: ${PROJECT_STACK} [${PROJECT_STACK_SIGNALS}]"
   if [ "$HAS_USER_GUIDANCE" = true ]; then
-    echo "  user hints: project-name=${USER_PROJECT_NAME_HINT:-없음}, archetype=${USER_ARCHETYPE_HINT:-없음}, stack=${USER_STACK_HINT:-없음}"
+    printf "  ${MSG_INIT_USER_HINTS}\n" "${USER_PROJECT_NAME_HINT:-none}" "${USER_ARCHETYPE_HINT:-none}" "${USER_STACK_HINT:-none}"
   fi
   echo "  signals: docs=[${PROJECT_DOC_SIGNALS}] | impl=[${PROJECT_IMPLEMENTATION_SIGNALS}] | tests=[${PROJECT_TEST_SIGNALS}] | ops=[${PROJECT_OPS_SIGNALS}]"
 
   # 시도 1: Claude Code
   if command -v claude &> /dev/null; then
-    echo "  🔄 Claude Code로 프로젝트 분석 중... (timeout: ${CLAUDE_TIMEOUT_SECONDS}s)"
+    printf "  ${MSG_INIT_AI_CLAUDE_RUNNING}\n" "$CLAUDE_TIMEOUT_SECONDS"
     if cd "$TARGET" && run_with_timeout "$CLAUDE_TIMEOUT_SECONDS" claude -p "$AI_PROMPT" --allowedTools Write,Edit,Read,Glob,Grep 2>/dev/null; then
       AI_SUCCESS=true
-      echo "  ✅ Claude Code가 프로젝트 문서를 자동 생성했습니다"
+      echo "$MSG_INIT_AI_CLAUDE_OK"
     else
       claude_status=$?
       if [ "$claude_status" -eq 124 ]; then
-        echo -e "  ${YELLOW}  Claude Code timeout (${CLAUDE_TIMEOUT_SECONDS}s) — Codex로 시도합니다${NC}"
+        printf "  ${YELLOW}${MSG_INIT_AI_CLAUDE_TIMEOUT}${NC}\n" "$CLAUDE_TIMEOUT_SECONDS"
       else
-        echo -e "  ${YELLOW}  Claude Code 실행 실패 — Codex로 시도합니다${NC}"
+        echo -e "  ${YELLOW}${MSG_INIT_AI_CLAUDE_FAIL}${NC}"
       fi
     fi
   else
-    echo -e "  ${YELLOW}  Claude Code 미설치 — Codex로 시도합니다${NC}"
+    echo -e "  ${YELLOW}${MSG_INIT_AI_CLAUDE_MISSING}${NC}"
   fi
 
   # 시도 2: Codex (fallback)
   if [ "$AI_SUCCESS" = false ]; then
     if command -v codex &> /dev/null; then
-      echo "  🔄 Codex로 프로젝트 분석 중..."
+      echo "$MSG_INIT_AI_CODEX_RUNNING"
       if (cd "$TARGET" && codex exec --skip-git-repo-check "$AI_PROMPT") 2>/dev/null; then
         AI_SUCCESS=true
-        echo "  ✅ Codex가 프로젝트 문서를 자동 생성했습니다"
+        echo "$MSG_INIT_AI_CODEX_OK"
       else
-        echo -e "  ${YELLOW}  Codex 실행 실패${NC}"
+        echo -e "  ${YELLOW}${MSG_INIT_AI_CODEX_FAIL}${NC}"
       fi
     else
-      echo -e "  ${YELLOW}  Codex 미설치${NC}"
+      echo -e "  ${YELLOW}${MSG_INIT_AI_CODEX_MISSING}${NC}"
     fi
   fi
 
   # 시도 3: 수동 안내 (최종 fallback)
   if [ "$AI_SUCCESS" = false ]; then
     echo ""
-    echo -e "  ${RED}⚠ AI 자동 생성 실패${NC}"
-    echo -e "  Claude Code와 Codex를 모두 사용할 수 없습니다."
+    echo -e "  ${RED}${MSG_INIT_AI_MANUAL_TITLE}${NC}"
+    echo -e "  $MSG_INIT_AI_MANUAL_DESC"
     echo ""
-    echo -e "  ${CYAN}수동으로 채우는 방법:${NC}"
-    echo "    1. CLAUDE.md, AGENTS.md, GEMINI.md, .github/copilot-instructions.md의 [대괄호] 부분을 직접 채우세요"
-    echo "    2. 또는 Claude Code / Codex 설치 후 프로젝트 디렉토리에서:"
-    echo "       claude \"프로젝트 문서의 [대괄호] 부분을 채워줘\""
+    echo -e "  ${CYAN}${MSG_INIT_AI_MANUAL_HEADER}${NC}"
+    echo "$MSG_INIT_AI_MANUAL_STEP1"
+    echo "$MSG_INIT_AI_MANUAL_STEP2"
+    echo "$MSG_INIT_AI_MANUAL_CMD"
     echo ""
   fi
 fi
@@ -1086,84 +1094,84 @@ fi
 # ============================================================
 echo ""
 if [ "$DRY_RUN" = true ]; then
-  echo -e "${GREEN}[7/7]${NC} dry-run 완료!"
+  echo -e "${GREEN}${MSG_INIT_STEP7_DRYRUN}${NC}"
 else
-  echo -e "${GREEN}[7/7]${NC} 완료!"
+  echo -e "${GREEN}${MSG_INIT_STEP7_DONE}${NC}"
 fi
 echo ""
-echo -e "${CYAN}━━━ 적용된 설정 ━━━${NC}"
+echo -e "${CYAN}${MSG_INIT_SUMMARY_TITLE}${NC}"
 echo ""
-echo "  바로 사용 가능:"
+echo "$MSG_INIT_SUMMARY_READY"
 if [ "$CLAUDE_PROFILE" = "minimal" ]; then
   if [ "$LINK_MODE" = true ]; then
-    echo "    .claude/settings.json     — minimal hooks 2개 (심링크)"
+    echo "$MSG_INIT_SUMMARY_MINIMAL_LINK"
   else
-    echo "    .claude/settings.json     — minimal hooks 2개 (파일보호, 포맷터)"
+    echo "$MSG_INIT_SUMMARY_MINIMAL_COPY"
   fi
-  echo "    .claude/hooks/            — 파일 보호"
+  echo "$MSG_INIT_SUMMARY_MINIMAL_HOOKS"
 elif [ "$CLAUDE_PROFILE" = "strict" ]; then
   if [ "$LINK_MODE" = true ]; then
-    echo "    .claude/settings.json     — strict workflow hooks + branch 보호 (심링크)"
+    echo "$MSG_INIT_SUMMARY_STRICT_LINK"
   else
-    echo "    .claude/settings.json     — strict workflow hooks + branch 보호"
+    echo "$MSG_INIT_SUMMARY_STRICT_COPY"
   fi
-  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + session context + compact backup + main/master 보호"
-  echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
-  echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
+  echo "$MSG_INIT_SUMMARY_STRICT_HOOKS"
+  echo "$MSG_INIT_SUMMARY_STRICT_AGENTS"
+  echo "$MSG_INIT_SUMMARY_STRICT_SKILLS"
 elif [ "$CLAUDE_PROFILE" = "team" ]; then
   if [ "$LINK_MODE" = true ]; then
-    echo "    .claude/settings.json     — team workflow hooks + branch 보호 (심링크)"
+    echo "$MSG_INIT_SUMMARY_TEAM_LINK"
   else
-    echo "    .claude/settings.json     — team workflow hooks + branch 보호"
+    echo "$MSG_INIT_SUMMARY_TEAM_COPY"
   fi
-  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + session context + compact backup + main/master 보호 + team webhook"
-  echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
-  echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
+  echo "$MSG_INIT_SUMMARY_TEAM_HOOKS"
+  echo "$MSG_INIT_SUMMARY_TEAM_AGENTS"
+  echo "$MSG_INIT_SUMMARY_TEAM_SKILLS"
 else
   if [ "$LINK_MODE" = true ]; then
-    echo "    .claude/settings.json     — standard workflow hooks (심링크)"
+    echo "$MSG_INIT_SUMMARY_STANDARD_LINK"
   else
-    echo "    .claude/settings.json     — standard workflow hooks (포맷터, 파일보호, 명령차단, async test, 알림, 종료검사, session context, compact backup)"
+    echo "$MSG_INIT_SUMMARY_STANDARD_COPY"
   fi
-  echo "    .claude/hooks/            — 파일 보호 + 위험 명령 차단 + async test + session context + compact backup"
-  echo "    .claude/agents/           — 보안 리뷰, 설계 검증, 테스트 작성, 리서치"
-  echo "    .claude/skills/           — 배포, 리뷰, 이슈수정, Gap체크, 교차검증"
+  echo "$MSG_INIT_SUMMARY_STANDARD_HOOKS"
+  echo "$MSG_INIT_SUMMARY_STANDARD_AGENTS"
+  echo "$MSG_INIT_SUMMARY_STANDARD_SKILLS"
 fi
 if [ "$LINK_MODE" = true ]; then
-  echo "    .cursor/rules/ai-setting.mdc — Cursor project rules (심링크)"
-  echo "    .gemini/settings.json     — Gemini CLI workspace settings (심링크)"
+  echo "$MSG_INIT_SUMMARY_CURSOR_LINK"
+  echo "$MSG_INIT_SUMMARY_GEMINI_LINK"
 else
-  echo "    .cursor/rules/ai-setting.mdc — Cursor project rules"
-  echo "    .gemini/settings.json     — Gemini CLI workspace settings"
+  echo "$MSG_INIT_SUMMARY_CURSOR"
+  echo "$MSG_INIT_SUMMARY_GEMINI"
 fi
-echo "    .codex/config.toml        — Codex CLI 설정 + 프로젝트 로컬 MCP"
+echo "$MSG_INIT_SUMMARY_CODEX"
 if [ "$MCP_ENABLED" = true ]; then
-  echo "    .mcp.json                 — Claude Code 프로젝트 로컬 MCP"
+  echo "$MSG_INIT_SUMMARY_MCP"
 fi
 echo ""
 
 if [ "$TEMPLATES_COPIED" = true ]; then
-  echo "  프로젝트 맞춤 설정:"
-  echo "    CLAUDE.md                 — 프로젝트 빌드/실행/도메인 설정"
-  echo "    AGENTS.md                 — 아키텍처/스택/코딩 규칙"
-  echo "    GEMINI.md                 — Gemini CLI 프로젝트 컨텍스트"
-  echo "    .github/copilot-instructions.md — GitHub Copilot 저장소 지침"
+  echo "$MSG_INIT_SUMMARY_CUSTOM_HEADER"
+  echo "$MSG_INIT_SUMMARY_CLAUDEMD"
+  echo "$MSG_INIT_SUMMARY_AGENTSMD"
+  echo "$MSG_INIT_SUMMARY_GEMINIMD"
+  echo "$MSG_INIT_SUMMARY_COPILOTMD"
   if [ "$CLAUDE_PROFILE" = "team" ]; then
-    echo "    .github/pull_request_template.md — 팀용 PR 템플릿"
+    echo "$MSG_INIT_SUMMARY_PR_TEMPLATE"
   fi
-  echo "    docs/decisions.md         — 기술 의사결정 기록"
+  echo "$MSG_INIT_SUMMARY_DECISIONS"
 fi
 if [ "$PROJECT_CONTEXT_MODE" = "blank-start" ]; then
   echo ""
-  echo "  다음 단계 추천:"
-  echo "    README.md 또는 프로젝트 manifest/package 파일을 추가한 뒤 init.sh를 다시 실행"
+  echo "$MSG_INIT_SUMMARY_BLANKSTART_HEADER"
+  echo "$MSG_INIT_SUMMARY_BLANKSTART_HINT"
 fi
 if [ "$DRY_RUN" = true ]; then
   echo ""
-  echo "  dry-run: 실제 파일 변경은 적용되지 않았습니다"
+  echo "$MSG_INIT_SUMMARY_DRYRUN"
 fi
 if [ "$UPDATE_MODE" = true ]; then
   echo ""
-  echo "  update: 공유 자산, Codex 설정, 로컬 MCP만 최신 상태로 갱신했습니다"
+  echo "$MSG_INIT_SUMMARY_UPDATE"
 fi
 echo ""

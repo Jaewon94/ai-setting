@@ -6,7 +6,7 @@ install_shared_directory_link() {
   local dst_dir="$2"
 
   if [ "$DRY_RUN" = true ]; then
-    dry_run_note "디렉토리 심링크: ${dst_dir} -> ${src_dir}"
+    dry_run_note "$(printf "$MSG_ASSETS_DRYRUN_DIR_SYMLINK" "$dst_dir" "$src_dir")"
     return
   fi
 
@@ -14,7 +14,7 @@ install_shared_directory_link() {
     rm -rf "$dst_dir"
   fi
   ln -sfn "$src_dir" "$dst_dir"
-  echo -e "  🔗 디렉토리 심링크: $(basename "$dst_dir") -> ${src_dir}"
+  printf "  🔗 $MSG_ASSETS_DIR_SYMLINK\n" "$(basename "$dst_dir")" "$src_dir"
 }
 
 install_shared_asset() {
