@@ -127,6 +127,10 @@ npx @jaewon94/ai-setting --help
 npx @jaewon94/ai-setting /path/to/my-new-project
 ```
 
+> **Windows 참고**: bash가 필요합니다 (hooks가 bash 스크립트).
+> - **Git Bash 터미널에서 실행** (권장)
+> - cmd.exe/PowerShell에서 쓰려면: `npm config set script-shell "C:\Program Files\Git\bin\bash.exe"`
+
 ### 배포 자동화
 
 - `main` push: CI만 실행

@@ -27,18 +27,36 @@ function findBash() {
     } catch {}
   }
 
-  return 'bash';
+  return null;
+}
+
+const bash = findBash();
+
+if (!bash) {
+  console.error(
+    '\n' +
+    'Error: bash not found.\n' +
+    '\n' +
+    'ai-setting requires bash to run. Options:\n' +
+    '  1. Run from Git Bash terminal (recommended)\n' +
+    '  2. Install Git for Windows: https://git-scm.com\n' +
+    '  3. Use WSL: wsl npx @jaewon94/ai-setting ...\n' +
+    '\n' +
+    'If bash is installed but npx fails in cmd.exe/PowerShell, run:\n' +
+    '  npm config set script-shell "C:\\Program Files\\Git\\bin\\bash.exe"\n'
+  );
+  process.exit(1);
 }
 
 try {
-  execFileSync(findBash(), [script, ...args], {
+  execFileSync(bash, [script, ...args], {
     stdio: 'inherit',
     env: { ...process.env, AI_SETTING_USAGE_NAME: 'ai-setting' },
   });
 } catch (err) {
   if (err.status != null) process.exit(err.status);
   console.error(
-    'Error: bash not found. Install Git for Windows (https://git-scm.com) or WSL.'
+    'Error: failed to run init.sh. Make sure bash is available.'
   );
   process.exit(1);
 }
