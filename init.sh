@@ -712,11 +712,16 @@ ARCHETYPE_PARTIAL="$TEMPLATE_DIR/archetype/${PROJECT_ARCHETYPE}.partial.md"
 ARCHETYPE_MARKER="<!-- ai-setting:archetype-rules -->"
 if [ -f "$ARCHETYPE_PARTIAL" ] && [ -f "$TARGET/CLAUDE.md" ] && [ "$DRY_RUN" != true ]; then
   if grep -qF "$ARCHETYPE_MARKER" "$TARGET/CLAUDE.md" 2>/dev/null; then
-    # 마커가 있으면 → 기존 마커 블록을 제거 후 재삽입 (관리 영역 교체)
+    # 마커가 있으면 → 기존 마커 블록의 언어를 감지하여 동일 locale로 교체
+    _use_partial="$ARCHETYPE_PARTIAL"
+    _ko_heading="$(head -1 "$SCRIPT_DIR/templates/ko/archetype/${PROJECT_ARCHETYPE}.partial.md" 2>/dev/null)"
+    if [ -n "$_ko_heading" ] && sed -n "/$ARCHETYPE_MARKER/,\$p" "$TARGET/CLAUDE.md" 2>/dev/null | grep -qF "$_ko_heading"; then
+      _use_partial="$SCRIPT_DIR/templates/ko/archetype/${PROJECT_ARCHETYPE}.partial.md"
+    fi
     sed -i "/$ARCHETYPE_MARKER/,\$d" "$TARGET/CLAUDE.md"
     echo "" >> "$TARGET/CLAUDE.md"
     echo "$ARCHETYPE_MARKER" >> "$TARGET/CLAUDE.md"
-    cat "$ARCHETYPE_PARTIAL" >> "$TARGET/CLAUDE.md"
+    cat "$_use_partial" >> "$TARGET/CLAUDE.md"
     printf "$MSG_INIT_ARCHETYPE_DONE\n" "$PROJECT_ARCHETYPE"
   else
     # 마커가 없으면 → 기존 archetype heading이 있는지 확인 (en/ko 양쪽)
