@@ -364,6 +364,7 @@ fi
 - ISS-025: skip-ai 범용 템플릿 ✅
 - ISS-026: npx Windows bash shebang ✅
 - ISS-027: Cursor @file 참조 미동작 (Cursor 측 수정 대기)
+- ISS-028: git 프로젝트 백업 스킵 ✅
 
 ### ISS-027: Cursor .mdc 파일의 @file 참조가 동작하지 않음 (⏳ 외부 대기)
 
@@ -382,6 +383,23 @@ fi
 - Cursor 측 수정 시 자동으로 동작 시작
 
 **출처**: https://forum.cursor.com/t/does-file-syntax-works-in-mdc-rules/135663
+
+---
+
+### ISS-028: git 프로젝트에서 불필요한 백업 파일 생성 (✅ 수정 완료)
+
+**발견일**: 2026-03-22
+**심각도**: 중간
+**상태**: ✅ 수정 완료 (2026-03-22)
+
+**문제**:
+- init/update 실행 시 `.claude.backup.*`, `.mcp.json.backup.*` 등 백업 파일이 무조건 생성됨
+- git으로 관리되는 프로젝트에서는 `git checkout`으로 복구 가능하므로 백업이 불필요
+- 반복 실행 시 백업 파일이 누적되어 디스크 낭비
+
+**수정 제안**:
+- `.git/` 디렉토리가 있으면 백업을 자동 스킵
+- git이 아닌 프로젝트에서는 기존처럼 백업 유지
 
 ---
 

@@ -86,6 +86,12 @@ backup_existing_path() {
     return
   fi
 
+  # git 프로젝트면 백업 스킵 (git checkout으로 복구 가능)
+  if [ -d "$TARGET/.git" ]; then
+    echo -e "${YELLOW}  ⚠ $(printf "$MSG_BACKUP_EXISTING_OVERWRITE" "$label")${NC}"
+    return
+  fi
+
   if [ "$BACKUP_ALL" = true ] && [ "$BACKUP_ALL_CREATED" = true ]; then
     echo -e "${YELLOW}  ⚠ $(printf "$MSG_BACKUP_EXISTING_IN_SNAPSHOT" "$label")${NC}"
     printf "$MSG_BACKUP_EXISTING_SNAPSHOT_PATH\n" "$BACKUP_SNAPSHOT_DIR"
