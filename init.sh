@@ -465,11 +465,68 @@ if [ "$REAPPLY_MODE" = true ]; then
 fi
 echo ""
 
-# jq 의존성 체크 (hooks가 jq로 JSON 파싱)
-if ! command -v jq &> /dev/null; then
+# jq 의존성 체크 + fallback 탐색 + 자동 설치 제안
+JQ_AVAILABLE=false
+if command -v jq &> /dev/null; then
+  JQ_AVAILABLE=true
+elif [ -f "$HOME/jq.exe" ]; then
+  JQ_AVAILABLE=true
+elif [ -f "/usr/local/bin/jq" ]; then
+  JQ_AVAILABLE=true
+fi
+
+if [ "$JQ_AVAILABLE" = false ]; then
   echo -e "${YELLOW}${MSG_INIT_JQ_WARN}${NC}"
   echo -e "$MSG_INIT_JQ_DETAIL"
-  echo -e "$MSG_INIT_JQ_INSTALL"
+
+  # 자동 설치 제안
+  install_jq=false
+  if [ -t 0 ] && [ "$DRY_RUN" != true ]; then
+    printf "$MSG_INIT_JQ_PROMPT"
+    read -r answer </dev/tty 2>/dev/null || answer="n"
+    case "$answer" in
+      [yY]*) install_jq=true ;;
+    esac
+  fi
+
+  if [ "$install_jq" = true ]; then
+    case "$(uname -s)" in
+      Darwin*)
+        echo -e "$MSG_INIT_JQ_INSTALLING_BREW"
+        if command -v brew &>/dev/null; then
+          brew install jq 2>/dev/null && JQ_AVAILABLE=true
+        else
+          echo -e "${RED}$MSG_INIT_JQ_NO_BREW${NC}"
+        fi
+        ;;
+      Linux*)
+        echo -e "$MSG_INIT_JQ_INSTALLING_APT"
+        if command -v apt-get &>/dev/null; then
+          sudo apt-get install -y jq 2>/dev/null && JQ_AVAILABLE=true
+        elif command -v yum &>/dev/null; then
+          sudo yum install -y jq 2>/dev/null && JQ_AVAILABLE=true
+        else
+          echo -e "${RED}$MSG_INIT_JQ_NO_PKG${NC}"
+        fi
+        ;;
+      MINGW*|MSYS*|CYGWIN*)
+        echo -e "$MSG_INIT_JQ_INSTALLING_WIN"
+        if curl -sL -o "$HOME/jq.exe" "https://github.com/jqlang/jq/releases/latest/download/jq-windows-amd64.exe" 2>/dev/null; then
+          chmod +x "$HOME/jq.exe" 2>/dev/null
+          JQ_AVAILABLE=true
+          echo -e "  ✅ jq installed at $HOME/jq.exe"
+        else
+          echo -e "${RED}$MSG_INIT_JQ_DOWNLOAD_FAIL${NC}"
+        fi
+        ;;
+    esac
+
+    if [ "$JQ_AVAILABLE" = true ]; then
+      echo -e "${GREEN}$MSG_INIT_JQ_INSTALLED${NC}"
+    fi
+  else
+    echo -e "$MSG_INIT_JQ_INSTALL"
+  fi
   echo ""
 fi
 

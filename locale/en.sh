@@ -405,7 +405,15 @@ MSG_INIT_MODE_REAPPLY="Reapply mode: reapply"
 # ============================================================
 MSG_INIT_JQ_WARN="⚠ jq is not installed."
 MSG_INIT_JQ_DETAIL="  hooks (protect-files, block-dangerous-commands, async-test) require jq to work properly."
-MSG_INIT_JQ_INSTALL="  Install: brew install jq (macOS) / sudo apt install jq (Linux)"
+MSG_INIT_JQ_PROMPT="  Install jq automatically? (y/N): "
+MSG_INIT_JQ_INSTALLING_BREW="  Installing jq via Homebrew..."
+MSG_INIT_JQ_INSTALLING_APT="  Installing jq via package manager..."
+MSG_INIT_JQ_INSTALLING_WIN="  Downloading jq for Windows..."
+MSG_INIT_JQ_NO_BREW="  Homebrew not found. Install manually: https://brew.sh"
+MSG_INIT_JQ_NO_PKG="  No supported package manager found. Install jq manually."
+MSG_INIT_JQ_DOWNLOAD_FAIL="  Failed to download jq. Install manually."
+MSG_INIT_JQ_INSTALLED="  ✅ jq installed successfully."
+MSG_INIT_JQ_INSTALL="  Install manually: brew install jq (macOS) / sudo apt install jq (Linux) / download from https://jqlang.github.io/jq/download/"
 
 # ============================================================
 # init.sh — Step 1: Claude Code setup

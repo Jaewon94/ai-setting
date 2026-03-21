@@ -405,7 +405,15 @@ MSG_INIT_MODE_REAPPLY="재적용 모드: reapply"
 # ============================================================
 MSG_INIT_JQ_WARN="⚠ jq가 설치되어 있지 않습니다."
 MSG_INIT_JQ_DETAIL="  hooks(protect-files, block-dangerous-commands, async-test)가 정상 동작하려면 jq가 필요합니다."
-MSG_INIT_JQ_INSTALL="  설치: brew install jq (macOS) / sudo apt install jq (Linux)"
+MSG_INIT_JQ_PROMPT="  jq를 자동으로 설치할까요? (y/N): "
+MSG_INIT_JQ_INSTALLING_BREW="  Homebrew로 jq 설치 중..."
+MSG_INIT_JQ_INSTALLING_APT="  패키지 매니저로 jq 설치 중..."
+MSG_INIT_JQ_INSTALLING_WIN="  Windows용 jq 다운로드 중..."
+MSG_INIT_JQ_NO_BREW="  Homebrew를 찾을 수 없습니다. 수동 설치: https://brew.sh"
+MSG_INIT_JQ_NO_PKG="  지원하는 패키지 매니저가 없습니다. jq를 수동으로 설치하세요."
+MSG_INIT_JQ_DOWNLOAD_FAIL="  jq 다운로드 실패. 수동으로 설치하세요."
+MSG_INIT_JQ_INSTALLED="  ✅ jq 설치 완료."
+MSG_INIT_JQ_INSTALL="  수동 설치: brew install jq (macOS) / sudo apt install jq (Linux) / https://jqlang.github.io/jq/download/ 에서 다운로드"
 
 # ============================================================
 # init.sh — Step 1: Claude Code 설정
