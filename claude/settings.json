@@ -45,7 +45,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if command -v osascript >/dev/null 2>&1; then osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'; elif command -v powershell.exe >/dev/null 2>&1; then powershell.exe -Command \"[void](New-Object -ComObject Wscript.Shell).Popup('Claude Code needs your attention',3,'Claude Code',64)\" 2>/dev/null || true; elif command -v notify-send >/dev/null 2>&1; then notify-send 'Claude Code' 'Claude Code needs your attention'; fi",
+            "command": "if command -v osascript >/dev/null 2>&1; then osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'; elif command -v powershell.exe >/dev/null 2>&1; then powershell.exe -Command \"[void](New-Object -ComObject Wscript.Shell).Popup('Claude Code needs your attention',1,'Claude Code',64)\" 2>/dev/null || true; elif command -v notify-send >/dev/null 2>&1; then notify-send 'Claude Code' 'Claude Code needs your attention'; fi",
             "_source": "ai-setting"
           }
         ]

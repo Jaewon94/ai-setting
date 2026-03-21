@@ -366,6 +366,8 @@ fi
 - ISS-027: Cursor @file 참조 미동작 (Cursor 측 수정 대기)
 - ISS-028: git 프로젝트 백업 스킵 ✅
 - ISS-029: jq PATH fallback + 자동 설치 제안 ✅
+- ISS-030: archetype 규칙 중복 삽입 방지 ✅
+- ISS-031: Windows Notification timeout 단축 ✅
 
 ### ISS-029: 보안 hook의 jq 탐색이 PATH만 확인 — Windows fallback 경로 누락 (✅ 수정 완료)
 
@@ -724,3 +726,87 @@ which uv   # → not found (pip 설치는 했지만 bash PATH에 미포함)
 | **MCP** (5) | 3 (sequential-thinking, context7, playwright) | 1 (docker — Docker 실행 시) | 1 (serena — uvx 없음) |
 
 **총 23개 중 12개 즉시 활용, 9개 조치 후 활용, 2개 현재 사용 불가**
+
+---
+
+## 재적용 후 검증 (2026-03-22)
+
+> ISS-011~024 수정 반영 후 StoryForge에 재적용(`ai-setting --tools claude --merge --skip-ai --mcp-preset core,infra,web`)한 결과.
+
+---
+
+### ISS-029: jq fail-closed 전환 후 Windows에서 모든 Bash/Edit 차단 (✅ 수정 완료)
+
+**발견일**: 2026-03-22
+**심각도**: 치명적 (Critical)
+**상태**: ✅ 수정 완료 (2026-03-22) — jq PATH fallback + 자동 설치 프롬프트 (v1.1.2~v1.1.4)
+
+**문제**:
+- ISS-011 수정으로 `protect-files.sh`와 `block-dangerous-commands.sh`가 jq 미설치 시 `exit 2` (fail-closed)로 변경됨
+- 보안 관점에서는 올바르지만, **jq가 시스템 PATH에 없는 환경에서 Claude Code가 완전히 무력화됨**
+- Windows Git Bash에서는 `winget install jqlang.jq` 후에도 새 셸 세션 전까지 PATH 미반영
+- `$HOME/jq.exe` 수동 다운로드도 `command -v jq`에 잡히지 않음
+
+**영향**: Bash, Edit, Write 도구 전부 차단 → 코드 작성/실행 불가
+
+**임시 해결** (StoryForge에서 직접 적용):
+```bash
+# hook 스크립트 상단의 jq 탐색을 확장
+JQ_BIN=""
+if command -v jq >/dev/null 2>&1; then
+  JQ_BIN="jq"
+elif [ -f "$HOME/jq.exe" ]; then
+  JQ_BIN="$HOME/jq.exe"
+elif [ -f "/usr/local/bin/jq" ]; then
+  JQ_BIN="/usr/local/bin/jq"
+fi
+# 이후 jq 대신 $JQ_BIN 사용
+```
+
+**근본 수정 제안**:
+1. hook 스크립트에 jq 경로 fallback 탐색 내장
+2. `--doctor`에 jq PATH 도달 가능 여부 점검 추가
+3. init.sh에서 jq 미설치 시 경고 + 설치 안내 출력
+4. README에 "jq 필수 의존성" 명시
+
+**근본 원인**: init.sh가 jq 의존성을 사전 점검하지 않고 hook 설치. fail-closed는 보안상 옳지만 의존성 가이드 없이 적용하면 사용 불가.
+
+---
+
+### ISS-030: 재적용 시 CLAUDE.md에 archetype 규칙이 중복 삽입됨 (✅ 수정 완료)
+
+**발견일**: 2026-03-22
+**심각도**: 중간
+**상태**: ✅ 수정 완료 (2026-03-22) — HTML 마커 기반 중복 방지
+
+**문제**:
+- `ai-setting --merge` 재적용 시 CLAUDE.md에 archetype 규칙(API 규칙 등)이 **기존 내용 확인 없이 다시 삽입**됨
+- StoryForge의 경우 "## API 규칙" 섹션이 3번 중복 생성됨 (첫 적용 1번 + 재적용마다 추가)
+- `_source` 태그 기반 관리는 settings.json에만 적용되고, CLAUDE.md/AGENTS.md 삽입에는 중복 방지 로직 없음
+
+**재현**:
+```bash
+# 첫 적용
+ai-setting --tools claude --merge --skip-ai .
+# CLAUDE.md에 "## API 규칙" 1개 삽입 ✓
+
+# 재적용
+ai-setting --tools claude --merge --skip-ai .
+# CLAUDE.md에 "## API 규칙" 2개 → 3개로 증가 ✗
+```
+
+**수정 제안**:
+- archetype 규칙 삽입 전에 `grep -q "## API 규칙"` 등으로 이미 존재하는지 확인
+- 또는 삽입된 블록에 `<!-- ai-setting:archetype-rules -->` 마커를 붙여 재적용 시 교체
+
+---
+
+### ISS-031: Windows Notification powershell Popup이 포커스를 빼앗음 (✅ 수정 완료)
+
+**발견일**: 2026-03-22
+**심각도**: 낮음
+**상태**: ✅ 수정 완료 (2026-03-22) — Popup timeout 3초 → 1초로 단축
+
+**문제**: ISS-013 수정의 Windows 분기(`Wscript.Shell.Popup`)가 모달 팝업으로 포커스를 가져감 (macOS는 알림센터로 비침해)
+
+**수정**: timeout을 1초로 줄여 자동 닫힘으로 포커스 빼앗김 최소화

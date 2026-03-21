@@ -29,9 +29,9 @@ source "$SCRIPT_DIR/lib/plugin.sh"
 
 # i18n: locale 로드 (--lang 플래그보다 먼저 기본값 로드, 이후 재로드 가능)
 load_locale "$SCRIPT_DIR"
-TEMPLATE_DIR="$TEMPLATE_DIR/${AI_SETTING_LOCALE}"
+TEMPLATE_DIR="$SCRIPT_DIR/templates/${AI_SETTING_LOCALE}"
 if [ ! -d "$TEMPLATE_DIR" ]; then
-  TEMPLATE_DIR="$TEMPLATE_DIR/en"
+  TEMPLATE_DIR="$SCRIPT_DIR/templates/en"
 fi
 
 run_with_timeout() {
@@ -285,9 +285,9 @@ while [ "$#" -gt 0 ]; do
     --lang)
       AI_SETTING_LANG="$2"
       load_locale "$SCRIPT_DIR"
-      TEMPLATE_DIR="$TEMPLATE_DIR/${AI_SETTING_LOCALE}"
+      TEMPLATE_DIR="$SCRIPT_DIR/templates/${AI_SETTING_LOCALE}"
       if [ ! -d "$TEMPLATE_DIR" ]; then
-        TEMPLATE_DIR="$TEMPLATE_DIR/en"
+        TEMPLATE_DIR="$SCRIPT_DIR/templates/en"
       fi
       shift
       ;;
@@ -707,14 +707,18 @@ else
   echo -e "  ${YELLOW}${MSG_INIT_CLAUDEMD_SKIP}${NC}"
 fi
 
-# archetype partial 삽입
+# archetype partial 삽입 (마커 기반 중복 방지)
 ARCHETYPE_PARTIAL="$TEMPLATE_DIR/archetype/${PROJECT_ARCHETYPE}.partial.md"
+ARCHETYPE_MARKER="<!-- ai-setting:archetype-rules -->"
 if [ -f "$ARCHETYPE_PARTIAL" ] && [ -f "$TARGET/CLAUDE.md" ] && [ "$DRY_RUN" != true ]; then
-  if ! grep -qF "## Frontend 규칙\|## API 규칙\|## CLI 규칙\|## Worker/Batch 규칙\|## 데이터/자동화 규칙\|## 라이브러리/SDK 규칙\|## 인프라/IaC 규칙" "$TARGET/CLAUDE.md" 2>/dev/null; then
-    echo "" >> "$TARGET/CLAUDE.md"
-    cat "$ARCHETYPE_PARTIAL" >> "$TARGET/CLAUDE.md"
-    printf "$MSG_INIT_ARCHETYPE_DONE\n" "$PROJECT_ARCHETYPE"
+  if grep -qF "$ARCHETYPE_MARKER" "$TARGET/CLAUDE.md" 2>/dev/null; then
+    # 기존 마커 블록을 교체 (마커부터 파일 끝까지 제거 후 재삽입)
+    sed -i "/$ARCHETYPE_MARKER/,\$d" "$TARGET/CLAUDE.md"
   fi
+  echo "" >> "$TARGET/CLAUDE.md"
+  echo "$ARCHETYPE_MARKER" >> "$TARGET/CLAUDE.md"
+  cat "$ARCHETYPE_PARTIAL" >> "$TARGET/CLAUDE.md"
+  printf "$MSG_INIT_ARCHETYPE_DONE\n" "$PROJECT_ARCHETYPE"
 elif [ -f "$ARCHETYPE_PARTIAL" ] && [ "$DRY_RUN" = true ]; then
   dry_run_note "$(printf "$MSG_INIT_ARCHETYPE_DRYRUN" "$PROJECT_ARCHETYPE")"
 fi
