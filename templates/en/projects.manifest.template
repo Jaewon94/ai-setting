@@ -1,0 +1,13 @@
+# AI Setting sync manifest
+# - Write one project path per line
+# - Blank lines and '#' comments are ignored
+# - Relative paths are resolved from this manifest file's location
+# - You can add key=value options after the path to specify per-project settings
+#   Supported options: profile, mcp-preset, archetype, stack
+#   Per-project options take priority over global options (CLI arguments)
+
+# Examples:
+# ../storyforge
+# ../taskrelay  profile=strict  mcp-preset=core,web
+# ../internal-tool  profile=minimal  archetype=cli-tool
+# /Users/jaewon/workspace/data-pipeline  profile=standard  stack=python

@@ -1,0 +1,43 @@
+# Repository Instructions for GitHub Copilot
+
+## Project Summary
+- [one-line project description]
+
+## Behavioral Core
+- State assumptions explicitly when the code or docs do not fully confirm them.
+- Prefer the simplest sufficient change before introducing new abstractions or dependencies.
+- Keep edits local to the requested scope unless wider change is clearly necessary.
+- Decide how success will be checked before editing, then report what was verified.
+
+## Build, Test, Validate
+- Build/Run: [project-specific build or run command]
+- Test: [project-specific test command]
+- Lint/Format: [project-specific lint or format command]
+
+## Code Style
+- Follow the naming conventions and code patterns defined in `AGENTS.md`.
+- Use explicit types for public APIs and function signatures.
+- Prefer standard library solutions before introducing new dependencies.
+- Keep functions focused: one function, one responsibility.
+
+## Naming Conventions
+- Files: follow existing project conventions (kebab-case, snake_case, or camelCase as established).
+- Variables/Functions: descriptive names that reveal intent, no abbreviations.
+- Constants: UPPER_SNAKE_CASE for true constants.
+
+## Forbidden Patterns
+- Do not use `any` type (TypeScript) or bare `except` (Python) in new code.
+- Do not hardcode secrets, API keys, or environment-specific values.
+- Do not commit `.env` files or generated credentials.
+- Do not suppress linter warnings without a comment explaining why.
+
+## PR Review Criteria
+- Every PR should include: clear description, test coverage for changes, no unrelated changes.
+- Breaking changes must be documented in the PR description.
+- Follow the project's PR template if available (`.github/pull_request_template.md`).
+
+## Working Agreements
+- Follow `AGENTS.md` for architecture and coding rules.
+- Follow `CLAUDE.md` for project-specific build, safety, and documentation rules.
+- Update `docs/decisions.md` when a meaningful technical decision changes.
+- [project-specific additional verification or collaboration rules]

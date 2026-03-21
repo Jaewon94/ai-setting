@@ -1,0 +1,13 @@
+## Summary
+- What changed?
+
+## Why
+- Why is this change needed?
+
+## Validation
+- [ ] Relevant tests were run
+- [ ] Lint/format checks were run or intentionally skipped
+- [ ] Related docs were updated
+
+## Risks
+- Known risks, rollout notes, or follow-up items

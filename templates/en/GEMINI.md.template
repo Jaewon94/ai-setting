@@ -1,0 +1,21 @@
+# [project name] - Gemini CLI Context
+
+This file is the project context for Gemini CLI.
+Core rules and execution/verification methods follow the documents below as the primary reference.
+
+@BEHAVIORAL_CORE.md
+@CLAUDE.md
+@AGENTS.md
+
+## Build & Validate
+- Build/run, test, and lint commands follow the "Build & Run" section of `CLAUDE.md`.
+
+## Gemini-specific Notes
+- 200K token context: When analyzing large files, pass the entire file at once instead of splitting.
+- @ mentions: You can directly reference a specific file with `@filename`.
+- Code execution: Only runs in directories allowed by `.gemini/settings.json`'s `codeExecution.allowedDirectories`.
+- [rules to emphasize specifically when using Gemini CLI in this project]
+
+## Safety Rules
+- Follow the safety guards, error handling, and environment variable rules from `CLAUDE.md` as-is.
+- Do not include files specified in `.geminiignore` in the context.

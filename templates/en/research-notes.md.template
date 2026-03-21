@@ -1,0 +1,60 @@
+# [project name] - Research Notes
+
+> Records what was verified from official docs, references, and external sources, and what judgments were based on.
+> Items that led to decisions are referenced from `docs/decisions.md` via related research items.
+
+## Research Log
+
+### R-001: [research topic]
+- **Verified on**: [YYYY-MM-DD]
+- **Purpose**: [why this research was needed]
+- **Sources**:
+  - [document name] — [URL]
+- **Key findings**:
+  - [important fact confirmed from source 1]
+  - [important fact confirmed from source 2]
+- **Judgment/Notes**:
+  - [what judgment was made based on this research]
+- **Related decision**: [D-001 or none]
+
+<!--
+### R-002: [next research topic]
+- **Verified on**:
+- **Purpose**:
+- **Sources**:
+  - [document name] — [URL]
+- **Key findings**:
+  - ...
+- **Judgment/Notes**:
+  - ...
+- **Related decision**:
+-->
+
+## Recording Principles
+
+1. **Source links required** — Include URLs to official docs, specs, and references
+2. **Record verification date** — For information that changes frequently, note when it was confirmed
+3. **Keep summaries brief** — Record only key facts per source; avoid lengthy copy-paste
+4. **Link to decisions** — If it led to an actual choice, connect it to `docs/decisions.md`
+
+## Reference Format
+
+- Research item IDs increment as `R-001`, `R-002`, etc.
+- If it led to a decision, link it as `Related decision: D-xxx`
+- Unify sources in the format `document name — URL` where possible
+
+Example:
+
+```markdown
+### R-003: Copilot path-specific instructions support
+- **Verified on**: 2026-03-20
+- **Purpose**: Determine whether to generate Copilot per-path instruction files
+- **Sources**:
+  - GitHub Docs — https://docs.github.com/...
+- **Key findings**:
+  - Supports the `.github/instructions/*.instructions.md` format
+  - File scope is specified via `applyTo` frontmatter
+- **Judgment/Notes**:
+  - Decided to generate TypeScript / Python / Testing instructions as templates
+- **Related decision**: D-004
+```

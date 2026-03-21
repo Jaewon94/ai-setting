@@ -1,0 +1,95 @@
+# [project name] — AI Agent Context
+
+> [one-line project description]
+
+## Architecture
+
+```
+[architecture diagram]
+```
+
+## Tech Stack
+
+### Backend
+- [backend stack]
+
+### Frontend
+- [frontend stack]
+
+## Behavioral Core
+- Do not state assumptions as facts; make uncertainty explicit.
+- If a simpler solution exists, choose it first.
+- Limit the scope of changes to what is directly related to the request.
+- Define completion criteria and verification methods before making changes.
+- After making changes, report actual results and remaining risks separately.
+
+## Coding Rules
+
+### General Principles
+- **TDD**: Write tests first (Red -> Green -> Refactor)
+- **Library-first**: Check for existing libraries before implementing yourself
+- **Separation of Concerns**: Each layer owns only its responsibility
+  - Router = HTTP only, Service = business logic only, Repository = DB only
+- **SOLID, DRY (at 3+ repetitions), KISS, YAGNI**
+- **Fail Fast**: Reject invalid input at the entry point (Pydantic, zod, etc.)
+- **Prefer immutability**: Return new objects, minimize state mutation
+- **Security defaults**: Authentication required by default, minimal CORS, SQL parameter binding, no hardcoded secrets
+- **Structured logging**: Use structured logging (structlog, etc.), no direct print/logging
+- **Educational comments**: Short comments at structural boundaries and design rationale (no restating code)
+- **Modular design**: Define interfaces (ABC) first, implement as plugins. No direct inter-module dependencies; communicate via events/DI
+- **Preflight**: Before writing code: assess current state -> establish plan -> confirm then execute
+
+### Forbidden
+- God classes/functions (>200 lines, >10 dependencies)
+- Business logic in Router/Component -- separate into Service
+- Reinventing the wheel -- use proven libraries
+- Manual DDL -- always use migration tools (Alembic, etc.)
+- Using new libraries without checking official documentation
+- `any` type (TypeScript)
+- `except: pass`, `except Exception: pass` (except at top-level entry points)
+- Direct AI API calls (must go through abstract interface)
+- Hardcoded API keys, secrets
+- Comment noise -- comments that merely restate the code
+
+### Python Style
+- `ruff` for lint + format
+- Type hints on all functions
+- Async-first (for IO operations)
+- Pydantic v2 for request/response schemas
+- SQLAlchemy 2.0 async style (when using DB)
+
+### TypeScript Style
+- Strict mode, no `any`
+- Functional components + hooks only
+- Maximize use of UI component library default styles, minimize customization
+
+## File Naming
+- Python: `snake_case.py`
+- TypeScript: `kebab-case.tsx` (components), `camelCase.ts` (utils)
+- Tests: `test_*.py` (Python), `*.test.tsx` (TypeScript)
+- Config: `kebab-case.yaml`
+
+## Testing
+
+```bash
+# [project-specific test commands]
+```
+
+- Backend: pytest + pytest-asyncio, mock external dependencies (AI API, external services)
+- Frontend: Vitest + React Testing Library, MSW for API mocks
+- One test = verify one behavior only
+- AAA pattern: Arrange -> Act -> Assert
+
+## Directory Structure
+
+```
+[project directory structure]
+```
+
+## Git Workflow
+- Branches: `feat/description`, `fix/description`
+- Commits: Conventional Commits (feat:, fix:, docs:, refactor:, test:)
+- Run tests before committing
+
+## Key Domain Concepts
+- [project-specific domain concepts]

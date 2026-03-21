@@ -1,0 +1,11 @@
+---
+applyTo: "**/*.py"
+---
+
+# Python Instructions
+
+- Use type hints for function parameters and return values.
+- Catch specific exceptions instead of using bare `except`.
+- Prefer `pathlib.Path` over `os.path` for new file handling code.
+- Keep IO boundaries explicit and keep business logic out of transport layers.
+- Follow error handling and dependency rules in `AGENTS.md`.

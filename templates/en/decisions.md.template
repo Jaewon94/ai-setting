@@ -1,0 +1,61 @@
+# [project name] - Decision Log
+
+> Why we chose this, and why the alternatives didn't work.
+> When you later wonder "why did we do it this way?", check this document.
+
+## Decided
+
+### D-001: [decision title]
+- **Choice**: [what was chosen]
+- **Alternatives**: [alternatives considered]
+- **Related research**: [R-001, R-002 or none]
+- **Verified on**: [YYYY-MM-DD]
+- **Reference documents**:
+  - [document name] — [URL]
+- **Rationale**: [why this was chosen]
+- **Trade-offs**: [downsides/limitations of this choice]
+
+<!--
+### D-002: [next decision]
+- **Choice**:
+- **Alternatives**:
+- **Rationale**:
+- **Trade-offs**:
+-->
+
+## Pending
+
+<!--
+### P-001: [pending item]
+- **Options**: [candidates]
+- **Impact**: [scope affected by this decision]
+- **Deadline**: [when this must be decided by]
+-->
+
+## Decision Principles
+
+1. **Research before deciding** — Only decide after checking official docs/latest information
+2. **Compare at least 2 options** — Never decide after looking at only one
+3. **Record evidence** — Include verification date, source links, and related research items
+4. **Record rationale** — Document not just "what" was chosen but "why"
+5. **Ensure reversibility** — Be more careful with irreversible decisions; move quickly with reversible ones
+
+## Reference Format
+
+- Decision item IDs increment as `D-001`, `D-002`, etc.
+- If a decision is based on research, link it as `Related research: R-xxx`
+- `Reference documents` use the format `document name — URL`
+
+Example:
+
+```markdown
+### D-004: Generate Copilot path-specific instructions by default
+- **Choice**: Generate `.github/instructions/*.instructions.md` templates by default
+- **Alternatives**: Generate only repository-wide instructions
+- **Related research**: R-003
+- **Verified on**: 2026-03-20
+- **Reference documents**:
+  - GitHub Docs — https://docs.github.com/...
+- **Rationale**: Separating per-path rules allows more precise application of guidelines per file type
+- **Trade-offs**: Increases the number of files to manage
+```

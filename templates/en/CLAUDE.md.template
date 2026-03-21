@@ -1,0 +1,103 @@
+# [project name] - Claude Code Settings
+
+## Project Rules
+@BEHAVIORAL_CORE.md
+@AGENTS.md
+
+## Build & Run
+```bash
+# [modify for your project]
+# Run backend
+# Run frontend
+# Run tests
+# Lint
+```
+
+## Library-First Principle
+- Before implementing yourself, first ask "is there a library for this?"
+- Actively leverage existing libraries; minimize custom implementations
+- Before adding a new package: 1) check official docs for the latest stable version, 2) verify it can't be replaced by an existing library
+
+## Dependency Management
+- Do not add external packages if stdlib is sufficient
+- When adding: specify minimum version (e.g., `>=2.0`); the lockfile handles exact version pinning
+- After adding: update related docs (README, library mapping, etc.)
+- Security: make it a habit to check for vulnerabilities (`pip-audit`, `npm audit`, etc.)
+
+## Research Principles
+- Always check official documentation before working with new libraries, tech decisions, security code, or error resolution
+- Work based on latest information, not training data (prevent use of deprecated APIs)
+- Priority: official docs > web search > GitHub code search
+- Cache research results to avoid repetition
+- Record findings based on official docs or external research in `docs/research-notes.md` or `docs/decisions.md` with source and verification date
+
+## Preflight Principles
+- Do not jump straight into writing code
+- First: assess the current state (what's done and what's not)
+- Next: establish a concrete execution plan (what, in what order, how)
+- Then: confirm the plan before executing
+- Leave the plan as a log so "why we proceeded this way" is traceable
+
+## Educational Progress Principles
+- Leave short comments at structural boundaries that need explanation
+- Comments should focus only on "why it's split this way" and "where this value is used"
+- Comments that merely restate the code are forbidden
+- When adding a new module, briefly note the key design rationale
+
+## AI Integration
+- All AI calls must go through an abstract interface (direct API calls forbidden)
+
+## Error Handling Rules
+- All external calls (AI API, DB, Redis, Git) must be wrapped in try/except, catching only specific exceptions
+- `except Exception` is allowed only at top-level entry points
+- Use structured logging -- no direct use of print/logging
+- Distinguish between retryable errors (transient) and non-retryable errors (permanent)
+
+## Environment Variable Rules
+- Load all environment variables in a type-safe manner (pydantic-settings, etc.)
+- Secrets (API keys, etc.) must be stored only in `.env`; hardcoding in code is forbidden
+- If required environment variables are missing, fail at startup with a clear error
+- Document required environment variables via `.env.example`
+
+## Safety Guards
+- Do not retry more than 2 times with the same error pattern -- stop + notify user
+- Immediately block circular dependencies (infinite loops like A->B->A)
+- Set an AI cost budget; warn at 80%, stop at 100%
+- On failure, roll back to the last safe point (git commit)
+- On cascading failures, roll back to a broader scope
+
+## Cross-Verification Principles
+- AI-generated documents/outputs must be verified against actual code/state
+- Spec documents vs actual code (confirm classes/methods exist)
+- Progress/reports vs actual state (DB, git diff)
+- Semantic verification must be done by a different call than the generating AI (no self-verification)
+- On mismatch: error -> block progress, warning -> auto-correct, info -> log
+
+## Gap Detection Principles
+- After establishing a work plan, check "is anything missing?"
+- Implicit Requirements: things the user didn't specify but are obviously needed (e.g., refresh tokens for auth API, brute force prevention)
+- "What If" analysis: attack your own plan's blind spots
+- Scope explosion prevention: maximum 5 suggestions, within 20% of original scope
+- Severity classification: must_have (auto-include), should_have (suggest), nice_to_have (log only)
+
+## Code-Documentation Sync Principles
+- If you changed code, you must also update related documentation
+- Selectively update only the specs/docs of affected modules (don't rewrite everything each time)
+- Track change history based on git diff
+- If a progress document (PROGRESS.md, etc.) exists, always keep it up to date
+
+## Terminology Confusion Prevention
+- If the same term is used in multiple contexts, always clarify the distinction
+- Always make clear which context is meant in code/docs (e.g., "dev environment MCP" vs "product MCP server")
+- When using an abbreviation for the first time, include the full name
+
+## Decision Records
+- Record technical decisions in `docs/decisions.md`
+- Record research notes and source summaries in `docs/research-notes.md`
+- Link research items as `R-xxx` and decision items as `D-xxx`
+- Record not just "what" was chosen but "why", and what the alternatives were
+- Compare at least 2 candidates and document the rationale
+- Be more careful with irreversible decisions; move quickly with reversible ones
+
+## Domain Knowledge
+- [add project-specific document references: @docs/architecture.md, etc.]

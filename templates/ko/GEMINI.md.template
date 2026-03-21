@@ -1,0 +1,21 @@
+# [프로젝트명] - Gemini CLI Context
+
+이 파일은 Gemini CLI용 프로젝트 컨텍스트입니다.
+핵심 규칙과 실행/검증 방식은 아래 문서를 우선 기준으로 삼습니다.
+
+@BEHAVIORAL_CORE.md
+@CLAUDE.md
+@AGENTS.md
+
+## Build & Validate
+- 빌드/실행, 테스트, 린트 명령은 `CLAUDE.md`의 "빌드 & 실행" 섹션을 기준으로 합니다.
+
+## Gemini-specific Notes
+- 200K 토큰 컨텍스트: 대규모 파일 분석 시 분할하지 말고 전체를 한번에 전달하세요.
+- @ 멘션: `@filename` 으로 특정 파일을 직접 참조할 수 있습니다.
+- 코드 실행: `.gemini/settings.json`의 `codeExecution.allowedDirectories`로 허용된 디렉토리에서만 실행됩니다.
+- [프로젝트에서 Gemini CLI를 사용할 때 특히 강조할 규칙]
+
+## Safety Rules
+- `CLAUDE.md`의 안전장치, 에러 처리, 환경변수 규칙을 그대로 따릅니다.
+- `.geminiignore`에 명시된 파일은 컨텍스트에 포함하지 마세요.

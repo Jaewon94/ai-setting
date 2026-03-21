@@ -29,6 +29,10 @@ source "$SCRIPT_DIR/lib/plugin.sh"
 
 # i18n: locale 로드 (--lang 플래그보다 먼저 기본값 로드, 이후 재로드 가능)
 load_locale "$SCRIPT_DIR"
+TEMPLATE_DIR="$TEMPLATE_DIR/${AI_SETTING_LOCALE}"
+if [ ! -d "$TEMPLATE_DIR" ]; then
+  TEMPLATE_DIR="$TEMPLATE_DIR/en"
+fi
 
 run_with_timeout() {
   local timeout_seconds="$1"
@@ -281,6 +285,10 @@ while [ "$#" -gt 0 ]; do
     --lang)
       AI_SETTING_LANG="$2"
       load_locale "$SCRIPT_DIR"
+      TEMPLATE_DIR="$TEMPLATE_DIR/${AI_SETTING_LOCALE}"
+      if [ ! -d "$TEMPLATE_DIR" ]; then
+        TEMPLATE_DIR="$TEMPLATE_DIR/en"
+      fi
       shift
       ;;
     --no-mcp)
@@ -606,7 +614,7 @@ TEMPLATES_COPIED=false
 
 if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/BEHAVIORAL_CORE.md" ]; then
   backup_existing_path "$TARGET/BEHAVIORAL_CORE.md" "BEHAVIORAL_CORE.md"
-  run_copy "$SCRIPT_DIR/templates/BEHAVIORAL_CORE.md.template" "$TARGET/BEHAVIORAL_CORE.md"
+  run_copy "$TEMPLATE_DIR/BEHAVIORAL_CORE.md.template" "$TARGET/BEHAVIORAL_CORE.md"
   if [ "$DRY_RUN" = true ]; then
     echo "$MSG_INIT_BEHAVIORAL_REAPPLY_PLANNED"
   else
@@ -614,7 +622,7 @@ if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/BEHAVIORAL_CORE.md" ]; then
   fi
   TEMPLATES_COPIED=true
 elif [ ! -f "$TARGET/BEHAVIORAL_CORE.md" ]; then
-  run_copy "$SCRIPT_DIR/templates/BEHAVIORAL_CORE.md.template" "$TARGET/BEHAVIORAL_CORE.md"
+  run_copy "$TEMPLATE_DIR/BEHAVIORAL_CORE.md.template" "$TARGET/BEHAVIORAL_CORE.md"
   if [ "$DRY_RUN" = true ]; then
     echo "$MSG_INIT_BEHAVIORAL_PLANNED"
   else
@@ -627,7 +635,7 @@ fi
 
 if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/CLAUDE.md" ]; then
   backup_existing_path "$TARGET/CLAUDE.md" "CLAUDE.md"
-  run_copy "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"
+  run_copy "$TEMPLATE_DIR/CLAUDE.md.template" "$TARGET/CLAUDE.md"
   if [ "$DRY_RUN" = true ]; then
     echo "$MSG_INIT_CLAUDEMD_REAPPLY_PLANNED"
   else
@@ -635,7 +643,7 @@ if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/CLAUDE.md" ]; then
   fi
   TEMPLATES_COPIED=true
 elif [ ! -f "$TARGET/CLAUDE.md" ]; then
-  run_copy "$SCRIPT_DIR/templates/CLAUDE.md.template" "$TARGET/CLAUDE.md"
+  run_copy "$TEMPLATE_DIR/CLAUDE.md.template" "$TARGET/CLAUDE.md"
   echo "$MSG_INIT_CLAUDEMD_DONE"
   TEMPLATES_COPIED=true
 else
@@ -643,7 +651,7 @@ else
 fi
 
 # archetype partial 삽입
-ARCHETYPE_PARTIAL="$SCRIPT_DIR/templates/archetype/${PROJECT_ARCHETYPE}.partial.md"
+ARCHETYPE_PARTIAL="$TEMPLATE_DIR/archetype/${PROJECT_ARCHETYPE}.partial.md"
 if [ -f "$ARCHETYPE_PARTIAL" ] && [ -f "$TARGET/CLAUDE.md" ] && [ "$DRY_RUN" != true ]; then
   if ! grep -qF "## Frontend 규칙\|## API 규칙\|## CLI 규칙\|## Worker/Batch 규칙\|## 데이터/자동화 규칙\|## 라이브러리/SDK 규칙\|## 인프라/IaC 규칙" "$TARGET/CLAUDE.md" 2>/dev/null; then
     echo "" >> "$TARGET/CLAUDE.md"
@@ -656,7 +664,7 @@ fi
 
 if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/AGENTS.md" ]; then
   backup_existing_path "$TARGET/AGENTS.md" "AGENTS.md"
-  run_copy "$SCRIPT_DIR/templates/AGENTS.md.template" "$TARGET/AGENTS.md"
+  run_copy "$TEMPLATE_DIR/AGENTS.md.template" "$TARGET/AGENTS.md"
   if [ "$DRY_RUN" = true ]; then
     echo "$MSG_INIT_AGENTSMD_REAPPLY_PLANNED"
   else
@@ -664,7 +672,7 @@ if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/AGENTS.md" ]; then
   fi
   TEMPLATES_COPIED=true
 elif [ ! -f "$TARGET/AGENTS.md" ]; then
-  run_copy "$SCRIPT_DIR/templates/AGENTS.md.template" "$TARGET/AGENTS.md"
+  run_copy "$TEMPLATE_DIR/AGENTS.md.template" "$TARGET/AGENTS.md"
   if [ "$DRY_RUN" = true ]; then
     echo "$MSG_INIT_AGENTSMD_PLANNED"
   else
@@ -678,7 +686,7 @@ fi
 if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/docs/research-notes.md" ]; then
   backup_existing_path "$TARGET/docs/research-notes.md" "docs/research-notes.md"
   run_mkdir_p "$TARGET/docs"
-  run_copy "$SCRIPT_DIR/templates/research-notes.md.template" "$TARGET/docs/research-notes.md"
+  run_copy "$TEMPLATE_DIR/research-notes.md.template" "$TARGET/docs/research-notes.md"
   if [ "$DRY_RUN" = true ]; then
     echo "$MSG_INIT_RESEARCH_REAPPLY_PLANNED"
   else
@@ -687,7 +695,7 @@ if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/docs/research-notes.md" ]; then
   TEMPLATES_COPIED=true
 elif [ ! -f "$TARGET/docs/research-notes.md" ]; then
   run_mkdir_p "$TARGET/docs"
-  run_copy "$SCRIPT_DIR/templates/research-notes.md.template" "$TARGET/docs/research-notes.md"
+  run_copy "$TEMPLATE_DIR/research-notes.md.template" "$TARGET/docs/research-notes.md"
   if [ "$DRY_RUN" = true ]; then
     echo "$MSG_INIT_RESEARCH_PLANNED"
   else
@@ -701,11 +709,11 @@ fi
 if tool_enabled "gemini"; then
   if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/GEMINI.md" ]; then
     backup_existing_path "$TARGET/GEMINI.md" "GEMINI.md"
-    run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
+    run_copy "$TEMPLATE_DIR/GEMINI.md.template" "$TARGET/GEMINI.md"
     echo "$MSG_INIT_GEMINIMD_REAPPLY_DONE"
     TEMPLATES_COPIED=true
   elif [ ! -f "$TARGET/GEMINI.md" ]; then
-    run_copy "$SCRIPT_DIR/templates/GEMINI.md.template" "$TARGET/GEMINI.md"
+    run_copy "$TEMPLATE_DIR/GEMINI.md.template" "$TARGET/GEMINI.md"
     echo "$MSG_INIT_GEMINIMD_DONE"
     TEMPLATES_COPIED=true
   else
@@ -717,11 +725,11 @@ if tool_enabled "copilot"; then
   run_mkdir_p "$TARGET/.github"
   if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.github/copilot-instructions.md" ]; then
     backup_existing_path "$TARGET/.github/copilot-instructions.md" ".github/copilot-instructions.md"
-    run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
+    run_copy "$TEMPLATE_DIR/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
     echo "$MSG_INIT_COPILOTMD_REAPPLY_DONE"
     TEMPLATES_COPIED=true
   elif [ ! -f "$TARGET/.github/copilot-instructions.md" ]; then
-    run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
+    run_copy "$TEMPLATE_DIR/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
     echo "$MSG_INIT_COPILOTMD_DONE"
     TEMPLATES_COPIED=true
   else
@@ -733,14 +741,14 @@ fi
 if [ "$CLAUDE_PROFILE" = "team" ]; then
   if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.github/pull_request_template.md" ]; then
     backup_existing_path "$TARGET/.github/pull_request_template.md" ".github/pull_request_template.md"
-    run_copy "$SCRIPT_DIR/templates/pull_request_template.md.template" "$TARGET/.github/pull_request_template.md"
+    run_copy "$TEMPLATE_DIR/pull_request_template.md.template" "$TARGET/.github/pull_request_template.md"
     if [ "$DRY_RUN" = true ]; then
       echo "$MSG_INIT_PR_TEMPLATE_REAPPLY_PLANNED"
     else
       echo "$MSG_INIT_PR_TEMPLATE_REAPPLY_DONE"
     fi
   elif [ ! -f "$TARGET/.github/pull_request_template.md" ]; then
-    run_copy "$SCRIPT_DIR/templates/pull_request_template.md.template" "$TARGET/.github/pull_request_template.md"
+    run_copy "$TEMPLATE_DIR/pull_request_template.md.template" "$TARGET/.github/pull_request_template.md"
     if [ "$DRY_RUN" = true ]; then
       echo "$MSG_INIT_PR_TEMPLATE_PLANNED"
     else
@@ -753,14 +761,14 @@ if [ "$CLAUDE_PROFILE" = "team" ]; then
   run_mkdir_p "$TARGET/.ai-setting"
   if [ "$REAPPLY_MODE" = true ] && [ -f "$TARGET/.ai-setting/team-webhook.json" ]; then
     backup_existing_path "$TARGET/.ai-setting/team-webhook.json" ".ai-setting/team-webhook.json"
-    run_copy "$SCRIPT_DIR/templates/team-webhook.json.template" "$TARGET/.ai-setting/team-webhook.json"
+    run_copy "$TEMPLATE_DIR/team-webhook.json.template" "$TARGET/.ai-setting/team-webhook.json"
     if [ "$DRY_RUN" = true ]; then
       echo "$MSG_INIT_WEBHOOK_REAPPLY_PLANNED"
     else
       echo "$MSG_INIT_WEBHOOK_REAPPLY_DONE"
     fi
   elif [ ! -f "$TARGET/.ai-setting/team-webhook.json" ]; then
-    run_copy "$SCRIPT_DIR/templates/team-webhook.json.template" "$TARGET/.ai-setting/team-webhook.json"
+    run_copy "$TEMPLATE_DIR/team-webhook.json.template" "$TARGET/.ai-setting/team-webhook.json"
     if [ "$DRY_RUN" = true ]; then
       echo "$MSG_INIT_WEBHOOK_PLANNED"
     else
@@ -773,7 +781,7 @@ fi
 
 run_mkdir_p "$TARGET/docs"
 if [ ! -f "$TARGET/docs/decisions.md" ]; then
-  run_copy "$SCRIPT_DIR/templates/decisions.md.template" "$TARGET/docs/decisions.md"
+  run_copy "$TEMPLATE_DIR/decisions.md.template" "$TARGET/docs/decisions.md"
   if [ "$DRY_RUN" = true ]; then
     echo "$MSG_INIT_DECISIONS_PLANNED"
   else
