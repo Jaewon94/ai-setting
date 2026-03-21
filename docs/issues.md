@@ -362,11 +362,31 @@ fi
 - ISS-023: research MCP fallback ✅
 - ISS-024: serena uvx 경고 ✅
 - ISS-025: skip-ai 범용 템플릿 ✅
+- ISS-026: npx Windows bash shebang ✅
+
+### ISS-026: npx 실행 시 Windows에서 bash shebang 인식 실패 (✅ 수정 완료)
+
+**발견일**: 2026-03-21
+**심각도**: 높음
+**상태**: ✅ 수정 완료 (2026-03-21)
+
+**문제**:
+- `npx @jaewon94/ai-setting --help` 실행 시 Windows cmd.exe에서 "지정된 경로를 찾을 수 없습니다" 에러
+- npm의 cmd-shim이 `#!/bin/bash` shebang을 `.cmd` wrapper로 변환하지만, `bash.exe`가 시스템 PATH에 없으면 실패
+- v1.0.1에서 CRLF 문제는 수정했지만, Windows cmd.exe 환경에서의 bash 실행 자체가 불가
+
+**수정**:
+- `bin/ai-setting.js` Node.js wrapper 추가 — `#!/usr/bin/env node`로 모든 플랫폼 지원
+- Windows에서 Git Bash 경로를 자동 탐색하여 bash 실행
+- `package.json` bin 엔트리를 `.js`로 변경
+- v1.0.2로 재배포
+
+---
 
 ## 보류 메모
 
 - Homebrew tap 배포는 자동화 코드까지 준비했지만, 실제 tap repo 생성과 GitHub variable/secret 설정은 추후 반영 예정
-- ISS-010: ✅ 원인 확인됨 (CRLF line ending). `.gitattributes` 추가 + LF 변환 완료. npm 1.0.1 재배포 필요
+- ISS-010: ✅ 완료 (CRLF + Node.js wrapper로 최종 해결)
 
 ---
 
