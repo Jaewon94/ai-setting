@@ -89,7 +89,9 @@
 ## Git Workflow
 - Branches: `feat/description`, `fix/description`
 - Commits: Conventional Commits (feat:, fix:, docs:, refactor:, test:)
-- Run tests before committing
+- 커밋 전 테스트 실행
+- `git pull --rebase`로 브랜치 히스토리를 깔끔하게 유지 (불필요한 merge 커밋 방지)
+- 권장: `git config pull.rebase true`
 
 ## Key Domain Concepts
 - [프로젝트별 도메인 개념]

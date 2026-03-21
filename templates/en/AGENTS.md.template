@@ -90,6 +90,8 @@
 - Branches: `feat/description`, `fix/description`
 - Commits: Conventional Commits (feat:, fix:, docs:, refactor:, test:)
 - Run tests before committing
+- Prefer `git pull --rebase` to keep branch history clean (avoids unnecessary merge commits)
+- Recommended: `git config pull.rebase true`
 
 ## Key Domain Concepts
 - [project-specific domain concepts]
