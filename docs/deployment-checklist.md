@@ -1,8 +1,8 @@
 # Phase 10: 실제 배포 체크리스트
 
-**기준일**: 2026-03-21
-**대상 버전**: `v1.0.1`
-**상태**: npm v1.0.1 배포 완료 (tag push 자동 배포), GitHub Release 생성됨, Homebrew 추후 반영 예정
+**기준일**: 2026-03-24
+**대상 버전**: `v1.1.8`
+**상태**: npm v1.1.8 배포 완료, `npx`는 clean directory 기준 정상 실행 확인, Homebrew 추후 반영 예정
 
 ---
 
@@ -31,7 +31,7 @@
 | Homebrew formula 초안 | ✅ 준비됨 | `Formula/ai-setting.rb` |
 | LICENSE / SECURITY / 이슈 템플릿 | ✅ 준비됨 | 루트 및 `.github/ISSUE_TEMPLATE/` |
 | 공개 저장소 전환 | ✅ 완료 | GitHub public 확인 |
-| npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.0.1` tag push 자동 배포 |
+| npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.1.8` 배포 확인 |
 | brew tap 등록 | ⏸ 보류 | 추후 tap repo 생성 시 반영 |
 
 ---
@@ -78,6 +78,10 @@ git log --oneline -5
 - [x] `https://github.com/Jaewon94/ai-setting` 공개 접근 가능
 - [x] README 렌더링 정상
 - [x] `LICENSE`, `SECURITY.md`, issue templates 노출 확인
+- 2026-03-24 확인:
+  - `Issues`, `Pull requests`, `Actions`, `Security`, `Insights`, `Releases`는 공개 페이지에서 노출됨
+  - `Discussions` 탭은 현재 노출되지 않음
+  - About description은 설정되어 있으나 topic 배지는 아직 없음
 
 ---
 
@@ -106,6 +110,8 @@ npm publish --access public
 
 - `npm pack --dry-run`에서 `EPERM`과 함께 `~/.npm` cache 권한 오류가 나오면 패키지 구성 문제가 아니라 로컬 환경 문제일 수 있음
 - 이 경우 npm cache 권한을 정리한 뒤 다시 `npm pack --dry-run`을 실행해야 함
+- Codex 샌드박스에서는 `~/.npm` 쓰기 제한 때문에 같은 EPERM이 재현될 수 있음
+- 실제 호스트 권한으로 실행해 통과하면 패키지 구성 문제는 아님
 
 배포 후 검증:
 
@@ -115,9 +121,11 @@ npx @jaewon94/ai-setting --help
 
 확인 포인트:
 
-- [ ] `npx @jaewon94/ai-setting --help` 정상 출력 (v1.0.0은 CRLF 문제로 실패, v1.0.1에서 수정)
+- [x] `npx @jaewon94/ai-setting --help` 정상 출력 확인
+  - 2026-03-24 검증: clean temp directory 기준 성공
+  - 저장소 루트에서는 `sh: ai-setting: command not found` 재현됨 → 사용자 설치 가이드 검토 필요
 - [ ] README / homepage / repository 링크 정상
-- [x] 패키지 버전이 `1.0.1`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
+- [x] 패키지 버전이 `1.1.8`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
 
 ---
 
@@ -129,8 +137,8 @@ npx @jaewon94/ai-setting --help
 실행 순서:
 
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+git tag v1.1.8
+git push origin v1.1.8
 ```
 
 체크리스트:
@@ -142,7 +150,7 @@ git push origin v1.0.1
 
 확인 포인트:
 
-- [x] Release가 생성됨 (v1.0.1)
+- [x] Release가 생성됨 (기존 릴리스 기준)
 - [x] 릴리스 노트가 최신 기능 반영
 - [x] npm publish 단계가 의도대로 실행됨 (release.yml 쉘 따옴표 수정 후 정상 동작)
 
@@ -183,7 +191,7 @@ ai-setting --help
 
 ## 5. 배포 후 확인
 
-- [ ] `npx @jaewon94/ai-setting --help` 확인
+- [x] `npx @jaewon94/ai-setting --help` 확인 (clean temp directory 기준)
 - [ ] `brew install` 경로 확인
 - [ ] GitHub README에 설치 방법 업데이트
 - [ ] 필요 시 `docs/roadmap.md`에서 Phase 10 완료 처리
