@@ -20,7 +20,7 @@
 - [x] Phase 5: 고급 hooks (branch 보호, async test, compact backup, session context, team webhook)
 - [x] Phase 6: 커뮤니티 & 배포 (CI/CD, npm 준비, brew formula, LICENSE, SECURITY, issue templates)
 
-### 현재 상태 (v1.0.1, 2026-03-21 기준)
+### 현재 상태 (v1.1.8, 2026-03-24 기준)
 
 ```
 init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → Claude autofill (timeout) → Codex fallback → 수동 안내
@@ -35,10 +35,10 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 | **안전** | doctor, dry-run, diff, backup-all, reapply |
 | **동기화** | `--link`(파일), `--link-dir`(디렉토리), update, sync(manifest), settings.local.json override, `--sync-conflict` |
 | **플러그인** | ai-setting-core/strict/team, `plugin list\|install\|uninstall\|check-update\|upgrade` |
-| **배포** | package.json v1.0.1, MIT, CI/CD, release workflow (npm auto-publish), brew formula |
+| **배포** | package.json v1.1.8, MIT, CI/CD, release workflow (npm auto-publish), brew formula |
 | **문서** | BEHAVIORAL_CORE.md, CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md, research-notes.md, decisions.md 템플릿 |
 | **신뢰성** | research-notes / decisions 추적성 구조, doctor 문서 형식 검사, session/backup 반영 |
-| **검증** | `./tests/run_all.sh` 기준 회귀 테스트 (test_hooks.sh 38건 포함), field test 4건 문서화 |
+| **검증** | `./tests/run_all.sh` 기준 회귀 테스트, macOS/BSD sed 비호환 제거, field test 4건 문서화 |
 
 ### 1차 고도화 상세 (아카이브)
 

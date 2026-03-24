@@ -438,7 +438,7 @@ run_diff_preview() {
   managed_paths=(".claude" ".codex/config.toml" "CLAUDE.md" "AGENTS.md" "docs/decisions.md" "docs/research-notes.md")
   managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" "BEHAVIORAL_CORE.md" ".github/copilot-instructions.md" ".github/instructions/typescript.instructions.md" ".github/instructions/python.instructions.md" ".github/instructions/testing.instructions.md" ".github/pull_request_template.md" ".ai-setting/team-webhook.json")
   if [ "$MCP_ENABLED" = true ]; then
-    managed_paths+=(".mcp.json")
+    managed_paths+=(".mcp.json" ".mcp.notes.md")
   fi
 
   staging_dir="$(mktemp -d)"

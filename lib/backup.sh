@@ -11,6 +11,7 @@ build_backup_managed_paths() {
     ".gemini/settings.json"
     ".codex/config.toml"
     ".mcp.json"
+    ".mcp.notes.md"
     "BEHAVIORAL_CORE.md"
     "CLAUDE.md"
     "AGENTS.md"

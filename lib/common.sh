@@ -60,3 +60,54 @@ tool_enabled() {
   local tool="$1"
   contains_value "$tool" "${TOOLS[@]}"
 }
+
+make_temp_file() {
+  mktemp "${TMPDIR:-/tmp}/ai-setting.XXXXXX"
+}
+
+replace_literal_in_file() {
+  local file="$1"
+  local search="$2"
+  local replacement="$3"
+  local temp_file
+
+  temp_file="$(make_temp_file)" || return 1
+
+  awk -v search="$search" -v replacement="$replacement" '
+    function replace_all(text, needle, repl,    out, pos, needle_len) {
+      if (needle == "") {
+        return text
+      }
+
+      out = ""
+      needle_len = length(needle)
+      while ((pos = index(text, needle)) > 0) {
+        out = out substr(text, 1, pos - 1) repl
+        text = substr(text, pos + needle_len)
+      }
+      return out text
+    }
+
+    {
+      print replace_all($0, search, replacement)
+    }
+  ' "$file" > "$temp_file" && mv "$temp_file" "$file"
+}
+
+truncate_file_from_marker() {
+  local file="$1"
+  local marker="$2"
+  local temp_file
+
+  temp_file="$(make_temp_file)" || return 1
+
+  awk -v marker="$marker" '
+    index($0, marker) {
+      exit
+    }
+
+    {
+      print
+    }
+  ' "$file" > "$temp_file" && mv "$temp_file" "$file"
+}

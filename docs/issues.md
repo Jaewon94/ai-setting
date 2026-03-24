@@ -800,3 +800,30 @@ fi
 **문제**: ISS-013 수정의 Windows 분기(`Wscript.Shell.Popup`)가 모달 팝업으로 포커스를 가져감 (macOS는 알림센터로 비침해)
 
 **수정**: timeout을 1초로 줄여 자동 닫힘으로 포커스 빼앗김 최소화
+
+---
+
+### ISS-032: macOS/BSD sed 비호환으로 init 멱등성 및 `--skip-ai` 실행 실패 (✅ 수정 완료)
+
+**발견일**: 2026-03-24
+**심각도**: 높음
+**상태**: ✅ 수정 완료 (2026-03-24)
+
+**문제**:
+- `init.sh`가 in-place 편집에 GNU sed 스타일 `sed -i`를 직접 사용
+- macOS의 BSD sed에서는 같은 구문이 실패하여 `sed: invalid command code ...` 에러 발생
+- 영향 범위:
+  - `CLAUDE.md` archetype 마커 재삽입
+  - `[프로젝트명]`, `{{TEST_CMD}}` 등 rule-based placeholder 치환
+  - `./init.sh --skip-ai <target>` 기본 경로와 2회 실행 멱등성 테스트
+
+**수정 내용**:
+- `lib/common.sh`에 플랫폼 공통 텍스트 편집 헬퍼 추가
+  - `replace_literal_in_file()`
+  - `truncate_file_from_marker()`
+- `init.sh`의 `sed -i` 사용 지점을 모두 공통 헬퍼로 교체
+- 관련 테스트를 `sed -i` 문자열 검사가 아닌 portable helper 기준으로 갱신
+
+**검증 기준**:
+- macOS에서 `tests/test_basic.sh`의 `멱등성 (2회 실행)` 통과
+- `./tests/run_all.sh` 전체 회귀 테스트 통과

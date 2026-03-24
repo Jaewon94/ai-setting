@@ -8,6 +8,7 @@ t=$(make_tmpdir)
 assert_file_exists "$t/.claude/settings.json" ".claude/settings.json 존재"
 assert_file_exists "$t/.claude/hooks/protect-files.sh" "protect-files.sh 존재"
 assert_file_exists "$t/.mcp.json" ".mcp.json 존재"
+assert_file_exists "$t/.mcp.notes.md" ".mcp.notes.md 존재"
 assert_file_exists "$t/BEHAVIORAL_CORE.md" "BEHAVIORAL_CORE.md 존재"
 assert_file_exists "$t/CLAUDE.md" "CLAUDE.md 존재"
 assert_file_exists "$t/AGENTS.md" "AGENTS.md 존재"
@@ -47,6 +48,7 @@ assert_file_exists "$t2/.claude/settings.json" ".claude/settings.json"
 assert_file_exists "$t2/.cursor/rules/ai-setting.mdc" ".cursor/rules/ai-setting.mdc"
 assert_file_exists "$t2/.gemini/settings.json" ".gemini/settings.json"
 assert_file_exists "$t2/.codex/config.toml" ".codex/config.toml"
+assert_file_exists "$t2/.mcp.notes.md" ".mcp.notes.md"
 assert_file_exists "$t2/BEHAVIORAL_CORE.md" "BEHAVIORAL_CORE.md"
 assert_file_exists "$t2/GEMINI.md" "GEMINI.md"
 assert_file_exists "$t2/.codex/config.toml" "codex config.toml"
@@ -113,5 +115,13 @@ t7=$(make_tmpdir)
 "$REPO_ROOT/scripts/render-homebrew-formula.sh" "v1.0.0" "deadbeef" "$t7/ai-setting.rb" "Jaewon94/ai-setting"
 assert_file_contains "$t7/ai-setting.rb" 'url "https://github.com/Jaewon94/ai-setting/archive/refs/tags/v1.0.0.tar.gz"' "formula url 렌더링"
 assert_file_contains "$t7/ai-setting.rb" 'sha256 "deadbeef"' "formula sha256 렌더링"
+
+suite "MCP notes guide"
+t8=$(make_tmpdir)
+"$INIT_SH" --skip-ai --tools claude,codex --mcp-preset core,local "$t8" >/dev/null 2>&1
+assert_file_contains "$t8/.mcp.notes.md" "YOUR_API_KEY_HERE" "API 키 placeholder 안내"
+assert_file_contains "$t8/.mcp.notes.md" "/absolute/path/to/project" "경로 placeholder 안내"
+assert_file_contains "$t8/.mcp.notes.md" "Current value" "현재 filesystem 경로 안내"
+assert_file_contains "$t8/.codex/config.toml" "Replace" "Codex MCP 주석 안내"
 
 print_summary

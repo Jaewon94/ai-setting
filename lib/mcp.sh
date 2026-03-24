@@ -126,6 +126,7 @@ EOF
       cat <<EOF >> "$file"
 
 # Project-local MCP preset: local
+# Note: Replace "${TARGET:-.}" with a narrower absolute path if you want tighter filesystem scope.
 [mcp_servers.filesystem]
 command = "npx"
 args = ["-y", "@anthropic/mcp-filesystem", "${TARGET:-.}"]
@@ -136,6 +137,87 @@ args = ["-y", "@anthropic/mcp-fetch"]
 EOF
       ;;
   esac
+}
+
+write_mcp_notes() {
+  local file="$1"
+  local preset
+  local target_path="${TARGET:-.}"
+
+  if [ "$DRY_RUN" = true ]; then
+    dry_run_note "MCP notes file would be generated at $file"
+    return
+  fi
+
+  cat > "$file" <<EOF
+# MCP Setup Notes
+
+This file explains which values may need manual edits after ai-setting generates project-local MCP config.
+
+## Current presets
+
+Enabled presets: ${MCP_PRESET_LABEL}
+
+EOF
+
+  for preset in "${MCP_PRESETS[@]}"; do
+    case "$preset" in
+      core)
+        cat >> "$file" <<'EOF'
+## core
+
+- `sequential-thinking`: no additional user input required.
+- `serena`: requires `uvx` availability. No API key is embedded here.
+- `upstash-context-7-mcp`: no local value is embedded here.
+
+EOF
+        ;;
+      web)
+        cat >> "$file" <<'EOF'
+## web
+
+- `playwright`: no additional user input required.
+
+EOF
+        ;;
+      infra)
+        cat >> "$file" <<'EOF'
+## infra
+
+- `docker`: requires Docker to be installed and running locally.
+
+EOF
+        ;;
+      local)
+        cat >> "$file" <<EOF
+## local
+
+- `filesystem`: the generated path is currently set to the project root.
+  - Current value: \`${target_path}\`
+  - If you want stricter scope, replace it with the exact directory you want to allow.
+  - Example: \`/absolute/path/to/project\`
+- `fetch`: no additional user input required.
+
+EOF
+        ;;
+    esac
+  done
+
+  cat >> "$file" <<'EOF'
+## Optional servers that need manual values
+
+If you manually add an MCP server that requires credentials or explicit paths, keep the config valid and replace placeholders like:
+
+- API key: `YOUR_API_KEY_HERE`
+- Absolute directory path: `/absolute/path/to/project`
+- Allowed directories list: add only the specific directories you actually want to expose
+
+Recommended rule:
+
+- Do not put explanatory comments inside `.mcp.json`; JSON comments are invalid.
+- Put explanations in this file and keep `.mcp.json` machine-parseable.
+- For Codex `.codex/config.toml`, inline comments are safe and preferred.
+EOF
 }
 
 check_mcp_commands() {

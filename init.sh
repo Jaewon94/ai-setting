@@ -650,6 +650,9 @@ else
   if [ -f "$TARGET/.mcp.json" ]; then
     backup_existing_path "$TARGET/.mcp.json" ".mcp.json"
   fi
+  if [ -f "$TARGET/.mcp.notes.md" ]; then
+    backup_existing_path "$TARGET/.mcp.notes.md" ".mcp.notes.md"
+  fi
 
   if tool_enabled "codex"; then
     for preset in "${MCP_PRESETS[@]}"; do
@@ -658,6 +661,7 @@ else
     printf "$MSG_INIT_STEP4_CODEX_MCP\n" "$MCP_PRESET_LABEL"
   fi
   write_claude_mcp_config "$TARGET/.mcp.json"
+  write_mcp_notes "$TARGET/.mcp.notes.md"
   echo "$MSG_INIT_STEP4_CLAUDE_MCP"
   check_mcp_commands
 fi
@@ -718,7 +722,7 @@ if [ -f "$ARCHETYPE_PARTIAL" ] && [ -f "$TARGET/CLAUDE.md" ] && [ "$DRY_RUN" != 
     if [ -n "$_ko_heading" ] && sed -n "/$ARCHETYPE_MARKER/,\$p" "$TARGET/CLAUDE.md" 2>/dev/null | grep -qF "$_ko_heading"; then
       _use_partial="$SCRIPT_DIR/templates/ko/archetype/${PROJECT_ARCHETYPE}.partial.md"
     fi
-    sed -i "/$ARCHETYPE_MARKER/,\$d" "$TARGET/CLAUDE.md"
+    truncate_file_from_marker "$TARGET/CLAUDE.md" "$ARCHETYPE_MARKER"
     echo "" >> "$TARGET/CLAUDE.md"
     echo "$ARCHETYPE_MARKER" >> "$TARGET/CLAUDE.md"
     cat "$_use_partial" >> "$TARGET/CLAUDE.md"
@@ -1019,37 +1023,37 @@ fill_rule_based_placeholders() {
 
     # [프로젝트명] 치환
     if grep -q '\[프로젝트명\]' "$file" 2>/dev/null; then
-      sed -i "s/\[프로젝트명\]/${PROJECT_NAME}/g" "$file"
+      replace_literal_in_file "$file" "[프로젝트명]" "$PROJECT_NAME"
       changed=true
     fi
 
     # {{...}} 플레이스홀더 치환
     if grep -q '{{TEST_BACKEND_CMD}}' "$file" 2>/dev/null; then
-      sed -i "s|{{TEST_BACKEND_CMD}}|${test_backend_cmd}|g" "$file"
+      replace_literal_in_file "$file" "{{TEST_BACKEND_CMD}}" "$test_backend_cmd"
       changed=true
     fi
     if grep -q '{{TEST_FRONTEND_CMD}}' "$file" 2>/dev/null; then
-      sed -i "s|{{TEST_FRONTEND_CMD}}|${test_frontend_cmd}|g" "$file"
+      replace_literal_in_file "$file" "{{TEST_FRONTEND_CMD}}" "$test_frontend_cmd"
       changed=true
     fi
     if grep -q '{{TEST_CMD}}' "$file" 2>/dev/null; then
-      sed -i "s|{{TEST_CMD}}|${test_cmd}|g" "$file"
+      replace_literal_in_file "$file" "{{TEST_CMD}}" "$test_cmd"
       changed=true
     fi
     if grep -q '{{LINT_CMD}}' "$file" 2>/dev/null; then
-      sed -i "s|{{LINT_CMD}}|${lint_cmd}|g" "$file"
+      replace_literal_in_file "$file" "{{LINT_CMD}}" "$lint_cmd"
       changed=true
     fi
     if grep -q '{{DEPLOY_BACKEND_CMD}}' "$file" 2>/dev/null; then
-      sed -i "s|{{DEPLOY_BACKEND_CMD}}|${deploy_backend_cmd}|g" "$file"
+      replace_literal_in_file "$file" "{{DEPLOY_BACKEND_CMD}}" "$deploy_backend_cmd"
       changed=true
     fi
     if grep -q '{{DEPLOY_FRONTEND_CMD}}' "$file" 2>/dev/null; then
-      sed -i "s|{{DEPLOY_FRONTEND_CMD}}|${deploy_frontend_cmd}|g" "$file"
+      replace_literal_in_file "$file" "{{DEPLOY_FRONTEND_CMD}}" "$deploy_frontend_cmd"
       changed=true
     fi
     if grep -q '{{DEPLOY_CMD}}' "$file" 2>/dev/null; then
-      sed -i "s|{{DEPLOY_CMD}}|${deploy_cmd}|g" "$file"
+      replace_literal_in_file "$file" "{{DEPLOY_CMD}}" "$deploy_cmd"
       changed=true
     fi
 

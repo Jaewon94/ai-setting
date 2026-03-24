@@ -142,7 +142,8 @@ suite "ISS-016/020/021/025: archetype 기반 명령 매핑"
 
 assert_file_contains "$REPO_ROOT/init.sh" "test_backend_cmd" "init.sh에 test_backend_cmd 변수"
 assert_file_contains "$REPO_ROOT/init.sh" "test_frontend_cmd" "init.sh에 test_frontend_cmd 변수"
-assert_file_contains "$REPO_ROOT/init.sh" 'sed -i.*프로젝트명' "init.sh에 프로젝트명 치환 로직"
+assert_file_contains "$REPO_ROOT/init.sh" 'replace_literal_in_file.*"\[프로젝트명\]"' "init.sh에 프로젝트명 치환 로직"
+assert_file_contains "$REPO_ROOT/lib/common.sh" 'replace_literal_in_file\(\)' "portable 치환 헬퍼 존재"
 
 # ISS-015: .gitignore 자동 추가 확인
 suite "ISS-015: .gitignore에 .claude/context/ 추가 로직"

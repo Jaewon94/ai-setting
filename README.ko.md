@@ -419,6 +419,7 @@ manifest 예시:
 - `.github/instructions/*.instructions.md` — Copilot path-specific instructions
 - `.codex/config.toml` — Codex CLI 기본 설정 + 프로젝트 로컬 MCP
 - `.mcp.json` — Claude Code 프로젝트 로컬 MCP
+- `.mcp.notes.md` — MCP 수동 입력값(API 키, 경로 등) 안내
 
 ### 프로젝트 로컬 MCP preset
 
@@ -440,6 +441,11 @@ manifest 예시:
 - `backend-api`, `worker-batch`, `data-automation` + 운영 신호(Docker/compose 등) → `core + infra`
 
 기본값은 여전히 `core`만 적용되고, `--auto-mcp`를 줬을 때만 추천 preset이 자동 반영됩니다.
+
+수동 입력이 필요한 MCP를 다룰 때:
+- `.mcp.json`은 JSON이라 주석을 넣지 않습니다.
+- 대신 `.mcp.notes.md`에 "여기에 API 키를 넣기", "여기에 절대 경로를 넣기" 같은 안내를 함께 생성합니다.
+- `.codex/config.toml`은 TOML이라 안전한 범위에서 인라인 주석을 함께 넣습니다.
 
 ### AI가 자동 생성한 파일 확인
 `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`가 프로젝트에 맞게 채워졌는지 확인.

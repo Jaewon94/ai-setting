@@ -419,6 +419,7 @@ The descriptions below are based on the default `standard` profile. If you used 
 - `.github/instructions/*.instructions.md` — Copilot path-specific instructions
 - `.codex/config.toml` — Codex CLI default settings + project-local MCP
 - `.mcp.json` — Claude Code project-local MCP
+- `.mcp.notes.md` — guidance for manual MCP values such as API keys and paths
 
 ### Project-Local MCP Presets
 
@@ -440,6 +441,11 @@ Auto-recommendation criteria:
 - `backend-api`, `worker-batch`, `data-automation` + ops signals (Docker/compose, etc.) → `core + infra`
 
 The default still applies only `core`; recommended presets are auto-applied only when `--auto-mcp` is used.
+
+When an MCP needs manual values:
+- `.mcp.json` stays comment-free because JSON comments are invalid.
+- `.mcp.notes.md` is generated alongside it with guidance like where to put API keys or absolute paths.
+- `.codex/config.toml` can safely include inline comments for the same purpose.
 
 ### Verify AI-Generated Files
 Check that `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md` are properly filled for your project.
