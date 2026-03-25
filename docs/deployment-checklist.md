@@ -130,7 +130,7 @@ npx @jaewon94/ai-setting --help
 - [x] `npx @jaewon94/ai-setting --help` 정상 출력 확인
   - 2026-03-24 검증: clean temp directory 기준 성공
   - 저장소 루트에서는 `sh: ai-setting: command not found` 재현됨 → 사용자 설치 가이드 검토 필요
-- [ ] README / homepage / repository 링크 정상
+- [x] README / homepage / repository 링크 정상
 - [x] 패키지 버전이 `1.1.8`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
 
 ---
@@ -231,4 +231,4 @@ ai-setting --help
 - Homebrew tap 운영까지는 아직 필요 없음
 - 실전 프로젝트 field test를 한두 개 더 보고 싶음
 
-이 경우 현재 상태는 "npm 배포 완료, Homebrew는 추후 반영 예정"으로 유지하면 됩니다.
+이 경우 현재 상태는 "npm/Homebrew 배포 경로는 유지, 추가 배포 채널은 추후 검토"로 관리하면 됩니다.
