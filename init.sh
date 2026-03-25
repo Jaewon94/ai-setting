@@ -387,17 +387,12 @@ if [ "$SYNC_MODE" = true ]; then
   fi
 fi
 
-TARGET="${TARGET:-.}"
-TARGET="$(cd "$TARGET" && pwd)"
-TARGET_BASENAME="$(basename "$TARGET")"
+prepare_target_context "${TARGET:-.}"
 
 if [ "$UPDATE_MODE" = true ]; then
   SKIP_AI=true
 fi
 
-detect_project_context_mode "$TARGET"
-detect_project_stack "$TARGET"
-detect_project_archetype "$TARGET"
 apply_user_hints
 calculate_recommended_mcp_presets
 apply_auto_mcp_presets

@@ -1,6 +1,24 @@
 #!/bin/bash
 # lib/detect.sh — 프로젝트 컨텍스트 모드, 스택, archetype 감지
 
+resolve_target_path() {
+  local target="${1:-.}"
+  (
+    cd "$target" && pwd
+  )
+}
+
+prepare_target_context() {
+  local target="${1:-.}"
+
+  TARGET="$(resolve_target_path "$target")"
+  TARGET_BASENAME="$(basename "$TARGET")"
+
+  detect_project_context_mode "$TARGET"
+  detect_project_stack "$TARGET"
+  detect_project_archetype "$TARGET"
+}
+
 set_project_mode_guidance() {
   case "$PROJECT_CONTEXT_MODE" in
     blank-start)

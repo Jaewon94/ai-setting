@@ -283,12 +283,7 @@ cmd_add_tool() {
   local tool_name="$1"
   local target="${2:-.}"
 
-  TARGET="$(cd "$target" && pwd)"
-  TARGET_BASENAME="$(basename "$TARGET")"
-
-  detect_project_context_mode "$TARGET"
-  detect_project_stack "$TARGET"
-  detect_project_archetype "$TARGET"
+  prepare_target_context "$target"
 
   printf "${CYAN}$(printf "$MSG_ADDTOOL_TITLE" "$tool_name")${NC}\n"
   printf "$MSG_ADDTOOL_TARGET\n" "$TARGET"

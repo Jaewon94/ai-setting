@@ -137,6 +137,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - tag push 기반 npm auto-publish + GitHub Release 자동화 동작 확인
 - Homebrew tap repo 생성, GitHub variable/secret 설정, `brew install` / `brew test` 검증 완료
 - ISS-010~025 전수 검증 이슈 16건 일괄 수정 (보안, 크로스플랫폼, monorepo, merge 중복 등)
+- `prepare_target_context()` 도입으로 `init` / `add-tool` 경로의 대상 절대경로화 + 컨텍스트 감지 중복 제거
 - 실전 검증 문서:
   - `docs/field-test-kobot.md`
   - `docs/field-test-research-traceability.md`
@@ -179,6 +180,12 @@ ai-setting/
 - `bash -n init.sh lib/*.sh` 모두 통과
 - 기존 모든 모드/옵션이 동일하게 동작 (회귀 없음)
 - `bin/ai-setting` 래퍼가 변경 없이 동작
+
+#### 다음 착수 단위
+
+1. 대상 프로젝트 준비 흐름처럼 중복되는 전처리 경로를 계속 공통 함수로 이동
+2. AI autofill 프롬프트/실행 체인을 별도 모듈로 분리
+3. 메인 엔트리는 옵션 파싱과 모드 분기만 남기고 축소
 
 ---
 
