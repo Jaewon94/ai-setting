@@ -46,6 +46,7 @@ else
 fi
 
 run_suite "$SCRIPT_DIR/test_basic.sh"
+run_suite "$SCRIPT_DIR/test_commit_message.sh"
 run_suite "$SCRIPT_DIR/test_profiles.sh"
 run_suite "$SCRIPT_DIR/test_tools.sh"
 run_suite "$SCRIPT_DIR/test_detect.sh"

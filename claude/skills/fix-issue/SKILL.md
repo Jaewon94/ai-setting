@@ -11,5 +11,5 @@ Analyze and fix the GitHub issue: $ARGUMENTS.
 4. Implement the fix
 5. Run tests to verify: `{{TEST_CMD}}`
 6. Ensure linter passes: `{{LINT_CMD}}`
-7. Create a descriptive commit: `git commit -m "fix: description (#issue-number)"`
+7. Create a descriptive commit that matches the repository's own commit conventions
 8. Push and create a PR: `gh pr create --fill`
