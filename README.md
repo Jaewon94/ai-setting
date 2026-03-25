@@ -81,9 +81,12 @@ Notes:
 ```bash
 npx @jaewon94/ai-setting --help
 npx @jaewon94/ai-setting /path/to/project
+brew install Jaewon94/ai-setting/ai-setting
+ai-setting --help
 ```
 
 - npm package: `@jaewon94/ai-setting`
+- Homebrew tap: `Jaewon94/ai-setting`
 - Windows requires `bash` to run the generated hooks and wrapper flow
 - Recommended on Windows: Git Bash
 - For `cmd.exe` or PowerShell, set:
@@ -99,6 +102,7 @@ Start here, then go deeper only as needed.
 - [docs/usage.md](docs/usage.md): commands, options, update/sync flows, MCP usage, plugin usage
 - [docs/reference.md](docs/reference.md): generated files, profiles, hook/agent/skill details, detection logic
 - [docs/deployment-checklist.md](docs/deployment-checklist.md): npm/release/Homebrew verification
+- [docs/distribution/README.md](docs/distribution/README.md): npm/Homebrew distribution operations
 - [docs/plugin-guide.md](docs/plugin-guide.md): plugin authoring and packaging
 - [docs/roadmap.md](docs/roadmap.md): planned work and phase tracking
 - [docs/issues.md](docs/issues.md): issue history and verification notes

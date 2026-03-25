@@ -81,9 +81,12 @@ init.sh
 ```bash
 npx @jaewon94/ai-setting --help
 npx @jaewon94/ai-setting /path/to/project
+brew install Jaewon94/ai-setting/ai-setting
+ai-setting --help
 ```
 
 - npm 패키지: `@jaewon94/ai-setting`
+- Homebrew tap: `Jaewon94/ai-setting`
 - Windows에서는 생성되는 훅과 래퍼 실행에 `bash`가 필요합니다.
 - Windows 권장 환경: Git Bash
 - `cmd.exe`나 PowerShell에서 쓰려면:
@@ -99,6 +102,7 @@ README는 진입 문서만 맡고, 상세 설명은 아래로 분리했습니다
 - [docs/usage.ko.md](docs/usage.ko.md): 명령, 옵션, update/sync 흐름, MCP 사용, plugin 사용
 - [docs/reference.ko.md](docs/reference.ko.md): 생성 파일, 프로필, 훅/에이전트/스킬 상세, 감지 로직
 - [docs/deployment-checklist.md](docs/deployment-checklist.md): npm/release/Homebrew 검증
+- [docs/distribution/README.ko.md](docs/distribution/README.ko.md): npm/Homebrew 배포 운영 문서
 - [docs/plugin-guide.md](docs/plugin-guide.md): 플러그인 작성/패키징 가이드
 - [docs/roadmap.md](docs/roadmap.md): 로드맵
 - [docs/issues.md](docs/issues.md): 이슈 이력과 검증 메모

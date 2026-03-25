@@ -446,7 +446,7 @@ fi
 
 ## 보류 메모
 
-- Homebrew tap 배포는 자동화 코드까지 준비했지만, 실제 tap repo 생성과 GitHub variable/secret 설정은 추후 반영 예정
+- Homebrew tap 배포는 tap repo 생성, GitHub variable/secret 설정, `brew install` / `brew test` 검증까지 완료
 - ISS-010: ✅ 완료 (CRLF + Node.js wrapper로 최종 해결)
 
 ---

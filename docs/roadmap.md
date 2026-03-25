@@ -120,7 +120,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - [x] Phase 7: init.sh 모듈 분리
 - [x] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
 - [x] Phase 9: 테스트 자동화
-- [x] Phase 10: 실제 배포 실행 (npm v1.0.1 배포 완료, Homebrew 추후 반영 예정)
+- [x] Phase 10: 실제 배포 실행 (npm 배포 + Homebrew 설치 검증 완료)
 - [x] Phase 11: MCP preset 확장
 - [x] Phase 12: 커뮤니티 플러그인 생태계 (가이드 문서)
 - [x] Phase 13: archetype별 템플릿 특화
@@ -135,7 +135,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - Claude timeout 후 Codex fallback까지 포함한 AI autofill 안정화 완료
 - npm scoped package `@jaewon94/ai-setting@1.0.1` publish 완료 (v1.0.0 bin CRLF 문제 수정)
 - tag push 기반 npm auto-publish + GitHub Release 자동화 동작 확인
-- Homebrew tap 자동 반영 workflow 준비 완료 (tap repo 생성 대기)
+- Homebrew tap repo 생성, GitHub variable/secret 설정, `brew install` / `brew test` 검증 완료
 - ISS-010~025 전수 검증 이슈 16건 일괄 수정 (보안, 크로스플랫폼, monorepo, merge 중복 등)
 - 실전 검증 문서:
   - `docs/field-test-kobot.md`
@@ -311,28 +311,28 @@ tests/
 
 ---
 
-### Phase 10: 실제 배포 실행 (준비 완료, 필요 시 진행)
+### Phase 10: 실제 배포 실행 (완료)
 
 > "준비된 배포 파이프라인을 실제로 가동한다"
 
-배포 인프라는 모두 준비되어 있다. 외부 사용자나 팀 공유가 필요한 시점에 실행한다.
-현재는 `git clone` 후 `./bin/ai-setting`으로 바로 사용 가능하므로 급하지 않다.
+배포 인프라는 실제 운영 상태까지 검증 완료했다.
+현재는 `npx @jaewon94/ai-setting`와 `brew install Jaewon94/ai-setting/ai-setting` 경로를 모두 사용할 수 있다.
 
 실행 체크리스트: `docs/deployment-checklist.md`
 
 | 항목 | 준비 상태 | 실행 시 할 일 |
 |------|-----------|--------------|
 | `git push` | ✅ origin에 push 완료 | — |
-| `npm publish` | ✅ v1.0.1 배포 완료 | tag push 시 자동 publish |
+| `npm publish` | ✅ 배포 완료 | tag push 시 자동 publish |
 | GitHub repo | ✅ public | — |
-| brew tap | ⏳ workflow 준비됨 | tap repo 생성 + secret 설정 필요 |
+| brew tap | ✅ tap + formula 검증 완료 | release/tag 갱신 시 formula 반영 유지 |
 | CI | ✅ 동작 중 | lint + test 자동 실행 |
 | sync-conf.dev | ⏳ | 등록 대기 |
 
 #### 실행 시점 기준
 
-- 다른 사람에게 `npx ai-setting`으로 공유하고 싶을 때
-- 팀 프로젝트에서 `brew install`로 배포하고 싶을 때
+- 다른 사람에게 `npx @jaewon94/ai-setting`으로 공유하고 싶을 때
+- 팀 프로젝트에서 `brew install Jaewon94/ai-setting/ai-setting`으로 배포하고 싶을 때
 - 커뮤니티 피드백을 받고 싶을 때
 
 ---

@@ -2,7 +2,7 @@
 
 **기준일**: 2026-03-24
 **대상 버전**: `v1.1.8`
-**상태**: npm v1.1.8 배포 완료, `npx`는 clean directory 기준 정상 실행 확인, Homebrew 추후 반영 예정
+**상태**: npm v1.1.8 배포 완료, `npx` clean directory 검증 완료, Homebrew install/test 검증 완료
 
 ---
 
@@ -16,6 +16,11 @@
 - GitHub 공개 저장소
 - Homebrew tap
 - GitHub Release workflow
+
+운영 문서:
+
+- [docs/distribution/README.md](distribution/README.md)
+- [docs/distribution/README.ko.md](distribution/README.ko.md)
 
 ---
 
@@ -184,20 +189,22 @@ ai-setting --help
 
 확인 포인트:
 
-- [ ] brew install 성공
-- [ ] 설치 후 `ai-setting --help` 정상 출력
-  - tap repo와 formula 배치까지 완료, 실제 설치 검증은 아직 미실행
+- [x] brew install 성공
+- [x] 설치 후 `ai-setting --help` 정상 출력
+  - 2026-03-25 최종 검증: `brew install Jaewon94/ai-setting/ai-setting` 후 `/opt/homebrew/bin/ai-setting --help` 정상
+  - formula는 `bin/ai-setting.js`를 `ai-setting` 이름으로 symlink 하도록 수정
+- [x] `brew test Jaewon94/ai-setting/ai-setting` 통과
 
 ---
 
 ## 5. 배포 후 확인
 
 - [x] `npx @jaewon94/ai-setting --help` 확인 (clean temp directory 기준)
-- [ ] `brew install` 경로 확인
-  - 예상 명령: `brew install Jaewon94/ai-setting/ai-setting`
-- [ ] GitHub README에 설치 방법 업데이트
-- [ ] 필요 시 `docs/roadmap.md`에서 Phase 10 완료 처리
-- [ ] 필요 시 `docs/issues.md` 또는 별도 release note에 배포 날짜 기록
+- [x] `brew install` 경로 확인
+  - 검증 명령: `brew install Jaewon94/ai-setting/ai-setting`
+- [x] GitHub README에 설치 방법 업데이트
+- [x] `docs/roadmap.md`에서 Phase 10 최신 상태 반영
+- [x] `docs/issues.md`에 Homebrew 보류 메모 해제
 
 ---
 
