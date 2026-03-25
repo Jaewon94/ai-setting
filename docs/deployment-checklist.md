@@ -32,7 +32,7 @@
 | LICENSE / SECURITY / 이슈 템플릿 | ✅ 준비됨 | 루트 및 `.github/ISSUE_TEMPLATE/` |
 | 공개 저장소 전환 | ✅ 완료 | GitHub public 확인 |
 | npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.1.8` 배포 확인 |
-| brew tap 등록 | ⏸ 보류 | 추후 tap repo 생성 시 반영 |
+| brew tap 등록 | ✅ 완료 | `Jaewon94/homebrew-ai-setting` 생성 및 formula 초기 반영 완료 |
 
 ---
 
@@ -163,17 +163,17 @@ git push origin v1.1.8
 
 사전 조건:
 
-- [ ] 별도 tap 저장소 생성 (`homebrew-ai-setting` 등)
-- [ ] repository variable `HOMEBREW_TAP_REPO` 설정
-- [ ] repository secret `HOMEBREW_TAP_GH_TOKEN` 설정
-- [ ] 공개 저장소 전환 완료
-- [ ] 첫 release tarball URL 확정
+- [x] 별도 tap 저장소 생성 (`homebrew-ai-setting`)
+- [x] repository variable `HOMEBREW_TAP_REPO` 설정
+- [x] repository secret `HOMEBREW_TAP_GH_TOKEN` 설정
+- [x] 공개 저장소 전환 완료
+- [x] 첫 release tarball URL 확정
 
 실행 항목:
 
 - [x] 자동 formula 생성 스크립트 준비 (`scripts/render-homebrew-formula.sh`)
 - [x] Homebrew workflow 준비 (`.github/workflows/homebrew.yml`)
-- [ ] tap 저장소에 formula 배치
+- [x] tap 저장소에 formula 배치
 
 검증 예시:
 
@@ -186,6 +186,7 @@ ai-setting --help
 
 - [ ] brew install 성공
 - [ ] 설치 후 `ai-setting --help` 정상 출력
+  - tap repo와 formula 배치까지 완료, 실제 설치 검증은 아직 미실행
 
 ---
 
@@ -193,6 +194,7 @@ ai-setting --help
 
 - [x] `npx @jaewon94/ai-setting --help` 확인 (clean temp directory 기준)
 - [ ] `brew install` 경로 확인
+  - 예상 명령: `brew install Jaewon94/ai-setting/ai-setting`
 - [ ] GitHub README에 설치 방법 업데이트
 - [ ] 필요 시 `docs/roadmap.md`에서 Phase 10 완료 처리
 - [ ] 필요 시 `docs/issues.md` 또는 별도 release note에 배포 날짜 기록
