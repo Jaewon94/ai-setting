@@ -74,19 +74,20 @@ git log --oneline -5
 실행 항목:
 
 - [x] GitHub 저장소를 `public`으로 전환
-- [ ] Issues / Discussions / Releases 정책 확인
+- [x] Issues / Discussions / Releases 정책 확인
 - [x] 기본 브랜치가 `main`인지 확인
-- [ ] repository description / topics 정리
+- [x] repository description / topics 정리
 
 확인 포인트:
 
 - [x] `https://github.com/Jaewon94/ai-setting` 공개 접근 가능
 - [x] README 렌더링 정상
 - [x] `LICENSE`, `SECURITY.md`, issue templates 노출 확인
-- 2026-03-24 확인:
+- 2026-03-25 확인:
   - `Issues`, `Pull requests`, `Actions`, `Security`, `Insights`, `Releases`는 공개 페이지에서 노출됨
-  - `Discussions` 탭은 현재 노출되지 않음
-  - About description은 설정되어 있으나 topic 배지는 아직 없음
+  - `Discussions`는 현재 비활성 상태로 유지
+  - homepage는 README URL로 설정됨
+  - topics 설정 완료: `ai-tooling`, `bootstrap`, `claude-code`, `codex`, `cursor`, `developer-tools`, `gemini-cli`, `github-copilot`
 
 ---
 
