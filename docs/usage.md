@@ -1,7 +1,5 @@
 # Usage Guide
 
-This page covers how to use `ai-setting` after the initial overview in the main README.
-
 ## Main Commands
 
 ```bash
@@ -92,8 +90,6 @@ When switching profiles:
 
 ## Update Mode
 
-Use update mode when the project already exists and you want the latest shared assets without rerunning AI autofill.
-
 ```bash
 ./bin/ai-setting update /path/to/project
 ```
@@ -104,8 +100,6 @@ Behavior:
 - Does not run AI autofill
 
 ## Sync Mode
-
-Use sync mode to align multiple projects from one manifest.
 
 ```bash
 ./bin/ai-setting sync ./projects.manifest
@@ -155,8 +149,6 @@ Still kept as local files:
 - `docs/decisions.md`
 
 ## Project Interpretation Hints
-
-For empty or ambiguous projects, you can guide detection manually.
 
 ```bash
 ./bin/ai-setting \
@@ -232,11 +224,6 @@ Recommended pair:
 
 ## Plugin Commands
 
-Included plugins:
-- `ai-setting-core`
-- `ai-setting-strict`
-- `ai-setting-team`
-
 Examples:
 
 ```bash
@@ -246,8 +233,6 @@ Examples:
 ./bin/ai-setting plugin uninstall ai-setting-strict /path/to/project
 ./bin/ai-setting plugin upgrade ai-setting-strict /path/to/project
 ```
-
-For plugin authoring, see [plugin-guide.md](plugin-guide.md).
 
 ## Platform Notes
 
@@ -259,10 +244,3 @@ For plugin authoring, see [plugin-guide.md](plugin-guide.md).
 ```bash
 npm config set script-shell "C:\Program Files\Git\bin\bash.exe"
 ```
-
-## Related Documents
-
-- [reference.md](reference.md)
-- [deployment-checklist.md](deployment-checklist.md)
-- [roadmap.md](roadmap.md)
-- [issues.md](issues.md)

@@ -1,7 +1,5 @@
 # Reference
 
-This page keeps the detailed reference material that no longer belongs in the main README.
-
 ## Tool Support
 
 | Tool | Generated Files | Notes |
@@ -180,12 +178,6 @@ Priority:
 
 Auto-detection is monorepo-aware and searches for the nearest relevant project markers.
 
-## Team Webhook Behavior
-
-- only meaningful in `team`
-- meta-config stored in `.ai-setting/team-webhook.json`
-- recommended to keep the actual URL in an environment variable
-
 ## Structure
 
 High-level repo layout:
@@ -210,12 +202,3 @@ Important implementation areas:
 - `lib/mcp.sh`: MCP generation
 - `lib/doctor.sh`: diagnostics and diff logic
 - `lib/sync.sh`: manifest sync flow
-
-## Sources
-
-The project is based on:
-- StoryForge and TaskRelay real-world config sources
-- official Claude Code docs
-- official Codex CLI docs
-- official GitHub/Copilot docs where relevant
-- field verification documents stored under `docs/`

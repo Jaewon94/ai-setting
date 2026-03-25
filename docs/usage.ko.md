@@ -1,7 +1,5 @@
 # 사용 가이드
 
-이 문서는 메인 README 이후 실제 사용 방법만 빠르게 찾기 위한 문서입니다.
-
 ## 주요 명령
 
 ```bash
@@ -92,8 +90,6 @@
 
 ## Update 모드
 
-기존 프로젝트의 공유 자산만 최신 상태로 맞추고 싶을 때 사용합니다.
-
 ```bash
 ./bin/ai-setting update /path/to/project
 ```
@@ -104,8 +100,6 @@
 - AI 자동 채우기는 실행하지 않음
 
 ## Sync 모드
-
-여러 프로젝트를 manifest로 한 번에 맞추는 기능입니다.
 
 ```bash
 ./bin/ai-setting sync ./projects.manifest
@@ -155,8 +149,6 @@ manifest 예시:
 - `docs/decisions.md`
 
 ## 프로젝트 해석 힌트
-
-빈 프로젝트나 애매한 프로젝트는 힌트로 보정할 수 있습니다.
 
 ```bash
 ./bin/ai-setting \
@@ -232,11 +224,6 @@ manifest 예시:
 
 ## Plugin 명령
 
-포함된 플러그인:
-- `ai-setting-core`
-- `ai-setting-strict`
-- `ai-setting-team`
-
 예시:
 
 ```bash
@@ -246,8 +233,6 @@ manifest 예시:
 ./bin/ai-setting plugin uninstall ai-setting-strict /path/to/project
 ./bin/ai-setting plugin upgrade ai-setting-strict /path/to/project
 ```
-
-플러그인 제작은 [plugin-guide.md](plugin-guide.md)를 참고하세요.
 
 ## 플랫폼 메모
 
@@ -259,10 +244,3 @@ manifest 예시:
 ```bash
 npm config set script-shell "C:\Program Files\Git\bin\bash.exe"
 ```
-
-## 관련 문서
-
-- [reference.ko.md](reference.ko.md)
-- [deployment-checklist.md](deployment-checklist.md)
-- [roadmap.md](roadmap.md)
-- [issues.md](issues.md)
