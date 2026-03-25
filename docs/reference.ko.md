@@ -1,0 +1,221 @@
+# 레퍼런스
+
+메인 README에 두기엔 너무 세부적인 내용을 이 문서에 모았습니다.
+
+## 지원 도구
+
+| 도구 | 생성 파일 | 메모 |
+|------|-----------|------|
+| Claude Code | `.claude/`, `CLAUDE.md` | 기본 통합 대상 |
+| Codex CLI | `.codex/config.toml`, `AGENTS.md` | AGENTS.md는 디렉토리 계층에서 자동 탐색 |
+| Cursor | `.cursor/rules/*.mdc` | rules는 지원, `@file`은 Cursor 제품 측 이슈 영향 |
+| Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | 설정 파일 + 컨텍스트 문서 |
+| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | 저장소 지침 + path-specific instructions |
+
+## 생성 자산 범주
+
+- `.claude/settings.json`
+- `.claude/hooks/*`
+- `.claude/agents/*`
+- `.claude/skills/*`
+- `.cursor/rules/*`
+- `.gemini/settings.json`
+- `.codex/config.toml`
+- `.mcp.json`
+- `.mcp.notes.md`
+- `CLAUDE.md`
+- `AGENTS.md`
+- `GEMINI.md`
+- `.github/copilot-instructions.md`
+- `.github/instructions/*.instructions.md`
+- `docs/decisions.md`
+- `docs/research-notes.md`
+
+## 프로필
+
+| 프로필 | 동작 |
+|--------|------|
+| `standard` | 기본 hooks, agents, skills |
+| `minimal` | 최소 hooks만 유지, 관리 agents/skills는 복사하지 않음 |
+| `strict` | `standard` + main/master 직접 git 작업 보호 |
+| `team` | `strict` + PR 템플릿 + 웹훅 메타 설정 |
+
+## 프로젝트 해석 모드
+
+AI 자동 채우기 전에 `init.sh`는 프로젝트를 4가지 모드 중 하나로 분류합니다.
+
+| 모드 | 의미 |
+|------|------|
+| `blank-start` | 프로젝트 신호가 거의 없음 |
+| `docs-first` | 문서 신호가 구현 신호보다 강함 |
+| `hybrid` | 문서와 구현 신호를 함께 봐야 함 |
+| `code-first` | 구현/테스트 신호가 충분함 |
+
+신호 예시:
+- 문서: `README.md`, `docs/`, `spec/`, `prd/`
+- 구현: `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `src/`, `app/`, `backend/`, `frontend/`
+- 테스트/운영: `tests/`, workflow, Docker 관련 파일, `.env.example`
+
+## Archetype / Stack 감지
+
+지원 archetype:
+- `frontend-web`
+- `backend-api`
+- `cli-tool`
+- `worker-batch`
+- `data-automation`
+- `library-sdk`
+- `infra-iac`
+- `general-app`
+
+감지 가능한 스택 예시:
+- `Next.js`
+- `Vite`
+- `Node.js / TypeScript`
+- `Python`
+- `Go`
+- `Rust`
+- `Java / Kotlin`
+- `Ruby`
+- `PHP`
+
+## Link / Copy 동작
+
+`--link`:
+- 공유 자산을 파일 단위로 심링크
+
+`--link-dir`:
+- hooks, agents, skills를 디렉토리 단위로 심링크
+
+항상 로컬 파일로 유지되는 것:
+- `CLAUDE.md`
+- `AGENTS.md`
+- `GEMINI.md`
+- `.github/copilot-instructions.md`
+- `.github/pull_request_template.md`
+- `.codex/config.toml`
+- `.mcp.json`
+- `.mcp.notes.md`
+- `docs/decisions.md`
+- `docs/research-notes.md`
+
+## Hooks
+
+| Hook | 트리거 | 역할 |
+|------|--------|------|
+| `protect-files.sh` | 편집 전 | 민감 파일 편집 차단 |
+| `block-dangerous-commands.sh` | Bash 실행 전 | 위험 명령 차단 |
+| `async-test.sh` | Edit/Write 후 | 백그라운드 테스트 실행 |
+| `compact-backup.sh` | Stop / compact 시작 | compact 복구용 스냅샷 |
+| `session-context.sh` | Stop / compact 시작 | 세션 컨텍스트 보존 |
+| `protect-main-branch.sh` | git 민감 흐름 | strict/team 브랜치 보호 |
+| `team-webhook-notify.sh` | Stop | 팀 웹훅 알림 |
+
+관련 자동 동작:
+- Python 포맷: `ruff`
+- TS/JS 포맷: `prettier`
+- 알림 hook
+- 테스트 리마인더 / 세션 리마인더
+
+## Agents
+
+| Agent | 역할 |
+|-------|------|
+| `security-reviewer` | 보안 리뷰 |
+| `architect-reviewer` | 아키텍처 리뷰 |
+| `test-writer` | 테스트 생성 |
+| `research` | 검색/문서 도구 기반 리서치 |
+
+## Skills
+
+| Skill | 역할 |
+|-------|------|
+| `deploy` | 배포 체크/배포 흐름 |
+| `review` | 리뷰 체크리스트 |
+| `fix-issue` | 이슈 해결 워크플로 |
+| `gap-check` | 누락 요구사항 탐지 |
+| `cross-validate` | AI 결과와 실제 상태 교차 검증 |
+
+## MCP 설정
+
+위치:
+- `.codex/config.toml`
+- `.mcp.json`
+- `.mcp.notes.md`
+
+기본 preset:
+- `core`
+- 선택 `web`
+- 선택 `infra`
+- 선택 `local`
+
+수동 입력값 처리:
+- `.mcp.json`에는 JSON 주석을 넣지 않음
+- 설명은 `.mcp.notes.md`에 둠
+- Codex 쪽 주석은 TOML에 기록 가능
+
+## 보호 패턴
+
+`protect-files.sh`가 막는 것:
+- 민감한 env 파일
+- lock 파일
+- credential 파일
+- 특정 DB/key 확장자
+- 생성물/build/vendor/cache 디렉토리
+
+`block-dangerous-commands.sh`가 막는 패턴 예시:
+- `rm -rf`
+- `sudo`
+- `git push --force`
+- `git reset --hard`
+- 파괴적 SQL
+- raw device write
+
+## Async Test 동작
+
+우선순위:
+- `.ai-setting/test-command`
+- `AI_SETTING_ASYNC_TEST_CMD`
+- 자동 감지
+
+자동 감지는 monorepo를 고려해 가장 가까운 프로젝트 마커를 탐색합니다.
+
+## Team Webhook 동작
+
+- `team` 프로필에서만 의미가 큼
+- 메타 설정은 `.ai-setting/team-webhook.json`
+- 실제 URL은 환경변수에 두는 방식 권장
+
+## 구조
+
+상위 구조:
+
+```text
+ai-setting/
+├── bin/
+├── claude/
+├── codex/
+├── cursor/
+├── gemini/
+├── plugins/
+├── templates/
+├── lib/
+├── tests/
+└── docs/
+```
+
+중요 구현 위치:
+- `init.sh`: 메인 엔트리
+- `lib/profile.sh`: 도구/프로필 자산 적용
+- `lib/mcp.sh`: MCP 생성
+- `lib/doctor.sh`: 진단과 diff
+- `lib/sync.sh`: manifest 기반 sync
+
+## 출처
+
+이 프로젝트는 아래 기반으로 정리됐습니다.
+- StoryForge, TaskRelay 실전 설정
+- Claude Code 공식 문서
+- Codex CLI 공식 문서
+- 관련 GitHub / Copilot 공식 문서
+- `docs/` 아래 실전 검증 문서
