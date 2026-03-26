@@ -23,6 +23,8 @@
 - `.codex/config.notes.md`
 - `.mcp.json`
 - `.mcp.notes.md`
+- `.ai-setting/protect-files.json`
+- `.ai-setting/protect-files.notes.md`
 - `CLAUDE.md`
 - `AGENTS.md`
 - `GEMINI.md`
@@ -146,6 +148,8 @@ Locations:
 - `.codex/config.toml`
 - `.mcp.json`
 - `.mcp.notes.md`
+- `.ai-setting/protect-files.json`
+- `.ai-setting/protect-files.notes.md`
 
 Default presets:
 - `core`
@@ -170,6 +174,9 @@ Manual values:
   - lock files
   - `docker-compose*.yml`
   - `.github/workflows/*`
+- project override:
+  - `.ai-setting/protect-files.json` can adjust `allow` / `confirm` / `block`
+  - built-in hard-block entries cannot be downgraded by override
 
 `block-dangerous-commands.sh` blocks patterns like:
 - `rm -rf`

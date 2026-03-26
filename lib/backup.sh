@@ -22,6 +22,8 @@ build_backup_managed_paths() {
     ".github/instructions/backend.instructions.md"
     ".github/instructions/docs.instructions.md"
     ".github/pull_request_template.md"
+    ".ai-setting/protect-files.json"
+    ".ai-setting/protect-files.notes.md"
     ".ai-setting/team-webhook.json"
     "docs/decisions.md"
   )

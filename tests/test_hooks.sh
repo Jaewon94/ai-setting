@@ -57,6 +57,50 @@ if command -v jq >/dev/null 2>&1; then
   output=$(echo '{"tool_input":{"file_path":"credentials.json"}}' | bash "$REPO_ROOT/claude/hooks/protect-files.sh" 2>&1)
   ec=$?
   assert_exit_code 2 $ec "credentials.json → exit 2 차단 유지"
+
+  # hard block 항목은 override allow로도 해제되지 않음
+  t_override=$(make_tmpdir)
+  mkdir -p "$t_override/.ai-setting"
+  cat > "$t_override/.ai-setting/protect-files.json" <<'EOF'
+{
+  "_source": "ai-setting",
+  "allow": ["credentials.json"],
+  "confirm": [],
+  "block": []
+}
+EOF
+  output=$(echo '{"tool_input":{"file_path":"credentials.json"}}' | CLAUDE_PROJECT_DIR="$t_override" bash "$REPO_ROOT/claude/hooks/protect-files.sh" 2>&1)
+  ec=$?
+  assert_exit_code 2 $ec "hard block은 override allow로도 유지"
+  assert_output_contains "$output" "cannot be overridden" "hard block override 불가 메시지 출력"
+
+  # project override allow → exit 0
+  cat > "$t_override/.ai-setting/protect-files.json" <<'EOF'
+{
+  "_source": "ai-setting",
+  "allow": ["docker-compose.dev.yml"],
+  "confirm": [],
+  "block": []
+}
+EOF
+  output=$(echo '{"tool_input":{"file_path":"docker-compose.dev.yml"}}' | CLAUDE_PROJECT_DIR="$t_override" bash "$REPO_ROOT/claude/hooks/protect-files.sh" 2>&1)
+  ec=$?
+  assert_exit_code 0 $ec "confirm 항목은 override allow 가능"
+  assert_output_contains "$output" "Allow:" "override allow 메시지 출력"
+
+  # project override block → exit 2
+  cat > "$t_override/.ai-setting/protect-files.json" <<'EOF'
+{
+  "_source": "ai-setting",
+  "allow": [],
+  "confirm": [],
+  "block": ["src/main.py"]
+}
+EOF
+  output=$(echo '{"tool_input":{"file_path":"src/main.py"}}' | CLAUDE_PROJECT_DIR="$t_override" bash "$REPO_ROOT/claude/hooks/protect-files.sh" 2>&1)
+  ec=$?
+  assert_exit_code 2 $ec "override block → exit 2"
+  assert_output_contains "$output" "project override block" "override block 메시지 출력"
 else
   echo "  ⚠️ jq 미설치 — 정상 동작 테스트 스킵"
 fi

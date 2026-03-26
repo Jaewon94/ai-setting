@@ -87,6 +87,9 @@
 - `.mcp.json`은 실제 실행되는 JSON 설정
 - `.mcp.notes.md`는 API 키, 절대 경로 같은 수동 입력값 안내
 - `.codex/config.toml`은 필요한 경우 인라인 주석 포함 가능
+- `.ai-setting/protect-files.json`은 프로젝트별 파일 보호 정책 override
+- `.ai-setting/protect-files.notes.md`는 override 작성 가이드
+- 단, 기본 hard-block 항목은 override로 `allow`로 내릴 수 없음
 
 ## Update 모드
 

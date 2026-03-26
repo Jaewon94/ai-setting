@@ -1,0 +1,38 @@
+# 보호 파일 정책 안내
+
+`.ai-setting/protect-files.json`은 프로젝트별 파일 수정 보호 정책을 조정할 때 사용합니다.
+
+기본 원칙:
+- `allow`: 기본 차단/확인 정책을 무시하고 허용
+- `confirm`: 경고를 보여주고 허용
+- `block`: 즉시 차단
+
+제한:
+- 기본 hard-block 항목(키, 인증서, credential, DB 파일, 생성물 디렉토리)은 project override로 `allow`로 풀 수 없습니다.
+- override는 주로 `confirm` 대상이나 일반 파일을 더 엄격하게 막거나 완화할 때 사용합니다.
+
+패턴 규칙:
+- glob 스타일 패턴을 사용합니다.
+- 파일명 패턴 예:
+  - `.env`
+  - `.env.*`
+  - `docker-compose.yml`
+- 경로 패턴 예:
+  - `.github/workflows/*`
+  - `infra/terraform/*`
+
+예시:
+
+```json
+{
+  "_source": "ai-setting",
+  "allow": ["docker-compose.dev.yml"],
+  "confirm": [".env.local", ".github/workflows/*"],
+  "block": ["secrets/*.pem", "infra/prod/*"]
+}
+```
+
+권장:
+- 진짜 비밀값, 키, 인증서는 `block`
+- 자주 손대는 운영 파일은 `confirm`
+- 팀에서 자주 같이 수정하는 안전한 파일만 `allow`

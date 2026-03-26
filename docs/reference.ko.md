@@ -23,6 +23,8 @@
 - `.codex/config.notes.md`
 - `.mcp.json`
 - `.mcp.notes.md`
+- `.ai-setting/protect-files.json`
+- `.ai-setting/protect-files.notes.md`
 - `CLAUDE.md`
 - `AGENTS.md`
 - `GEMINI.md`
@@ -146,6 +148,8 @@ archetype 특화 반영:
 - `.codex/config.toml`
 - `.mcp.json`
 - `.mcp.notes.md`
+- `.ai-setting/protect-files.json`
+- `.ai-setting/protect-files.notes.md`
 
 기본 preset:
 - `core`
@@ -170,6 +174,9 @@ archetype 특화 반영:
   - lock 파일
   - `docker-compose*.yml`
   - `.github/workflows/*`
+- 프로젝트 override:
+  - `.ai-setting/protect-files.json`으로 `allow` / `confirm` / `block` 조정 가능
+  - 단, 기본 hard-block 항목은 override로 해제할 수 없음
 
 `block-dangerous-commands.sh`가 막는 패턴 예시:
 - `rm -rf`

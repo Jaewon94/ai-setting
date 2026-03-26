@@ -87,6 +87,9 @@ When switching profiles:
 - `.mcp.json` contains the runnable JSON config
 - `.mcp.notes.md` explains manual values such as API keys or absolute paths
 - `.codex/config.toml` may include inline comments for manual MCP editing
+- `.ai-setting/protect-files.json` overrides file-protection rules per project
+- `.ai-setting/protect-files.notes.md` explains how to write those overrides
+- built-in hard-block entries cannot be downgraded to `allow` by project override
 
 ## Update Mode
 

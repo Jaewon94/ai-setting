@@ -1,0 +1,38 @@
+# Protect Files Policy Notes
+
+Use `.ai-setting/protect-files.json` to override file-edit protection rules per project.
+
+Default meaning:
+- `allow`: bypass the default block/confirm rule and allow edits
+- `confirm`: print a warning and allow edits
+- `block`: block immediately
+
+Limits:
+- Built-in hard-block entries (keys, certificates, credentials, database files, generated directories) cannot be downgraded to `allow` by project override.
+- Use overrides mainly to tighten or relax `confirm` targets and other non-critical files.
+
+Pattern rules:
+- use glob-style patterns
+- file-name examples:
+  - `.env`
+  - `.env.*`
+  - `docker-compose.yml`
+- path examples:
+  - `.github/workflows/*`
+  - `infra/terraform/*`
+
+Example:
+
+```json
+{
+  "_source": "ai-setting",
+  "allow": ["docker-compose.dev.yml"],
+  "confirm": [".env.local", ".github/workflows/*"],
+  "block": ["secrets/*.pem", "infra/prod/*"]
+}
+```
+
+Recommended:
+- keep real secrets, keys, and certificates in `block`
+- use `confirm` for operational files you edit often
+- use `allow` only for files your team intentionally wants AI to edit freely

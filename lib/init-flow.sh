@@ -352,6 +352,27 @@ run_step5_project_templates() {
       "$MSG_INIT_WEBHOOK_SKIP"
   fi
 
+  run_mkdir_p "$TARGET/.ai-setting"
+  copy_or_reapply_template \
+    "$TARGET/.ai-setting/protect-files.json" \
+    "$TEMPLATE_DIR/protect-files.json.template" \
+    ".ai-setting/protect-files.json" \
+    "  ✅ protect-files override config 생성" \
+    "  📝 [dry-run] .ai-setting/protect-files.json 생성 예정" \
+    "  ✅ protect-files override config 재적용" \
+    "  📝 [dry-run] .ai-setting/protect-files.json 재적용 예정" \
+    "  ⚠ .ai-setting/protect-files.json 유지"
+
+  copy_or_reapply_template \
+    "$TARGET/.ai-setting/protect-files.notes.md" \
+    "$TEMPLATE_DIR/protect-files.notes.md.template" \
+    ".ai-setting/protect-files.notes.md" \
+    "  ✅ protect-files notes 생성" \
+    "  📝 [dry-run] .ai-setting/protect-files.notes.md 생성 예정" \
+    "  ✅ protect-files notes 재적용" \
+    "  📝 [dry-run] .ai-setting/protect-files.notes.md 재적용 예정" \
+    "  ⚠ .ai-setting/protect-files.notes.md 유지"
+
   ensure_decisions_template
   ensure_runtime_gitignore_patterns
 }

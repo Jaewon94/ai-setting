@@ -17,6 +17,9 @@ fi
 
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | $JQ_BIN -r '.tool_input.file_path // empty')
+SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$SCRIPT_PATH/../.." && pwd)}"
+OVERRIDE_CONFIG="$PROJECT_DIR/.ai-setting/protect-files.json"
 
 # 디렉토리 패턴 (경로에 포함되면 차단)
 BLOCK_DIR_PATTERNS=(
@@ -62,26 +65,75 @@ CONFIRM_PATH_PATTERNS=(
 
 BASENAME=$(basename "$FILE_PATH")
 
+match_any_pattern() {
+  local value="$1"
+  shift
+  local pattern
+  for pattern in "$@"; do
+    [ -n "$pattern" ] || continue
+    if [[ "$value" == $pattern ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+OVERRIDE_ALLOW_PATTERNS=()
+OVERRIDE_CONFIRM_PATTERNS=()
+OVERRIDE_BLOCK_PATTERNS=()
+
+if [ -f "$OVERRIDE_CONFIG" ]; then
+  while IFS= read -r pattern; do
+    [ -n "$pattern" ] || continue
+    OVERRIDE_ALLOW_PATTERNS+=("$pattern")
+  done < <($JQ_BIN -r '.allow[]? // empty' "$OVERRIDE_CONFIG" 2>/dev/null)
+
+  while IFS= read -r pattern; do
+    [ -n "$pattern" ] || continue
+    OVERRIDE_CONFIRM_PATTERNS+=("$pattern")
+  done < <($JQ_BIN -r '.confirm[]? // empty' "$OVERRIDE_CONFIG" 2>/dev/null)
+
+  while IFS= read -r pattern; do
+    [ -n "$pattern" ] || continue
+    OVERRIDE_BLOCK_PATTERNS+=("$pattern")
+  done < <($JQ_BIN -r '.block[]? // empty' "$OVERRIDE_CONFIG" 2>/dev/null)
+fi
+
 for pattern in "${BLOCK_DIR_PATTERNS[@]}"; do
   if [[ "$FILE_PATH" == *"$pattern"* ]]; then
-    echo "Blocked: $FILE_PATH matches protected directory '$pattern'. Edit manually if needed." >&2
+    echo "Blocked: $FILE_PATH matches protected directory '$pattern'. This hard-block cannot be overridden." >&2
     exit 2
   fi
 done
 
 for pattern in "${BLOCK_FILE_PATTERNS[@]}"; do
   if [[ "$BASENAME" == $pattern ]]; then
-    echo "Blocked: $FILE_PATH matches protected file '$pattern'. Edit manually if needed." >&2
+    echo "Blocked: $FILE_PATH matches protected file '$pattern'. This hard-block cannot be overridden." >&2
     exit 2
   fi
 done
 
 for pattern in "${BLOCK_EXT_PATTERNS[@]}"; do
   if [[ "$BASENAME" == *"$pattern" ]]; then
-    echo "Blocked: $FILE_PATH matches protected extension '$pattern'. Edit manually if needed." >&2
+    echo "Blocked: $FILE_PATH matches protected extension '$pattern'. This hard-block cannot be overridden." >&2
     exit 2
   fi
 done
+
+if match_any_pattern "$FILE_PATH" "${OVERRIDE_BLOCK_PATTERNS[@]}" || match_any_pattern "$BASENAME" "${OVERRIDE_BLOCK_PATTERNS[@]}"; then
+  echo "Blocked: $FILE_PATH matches project override block pattern. Edit manually if needed." >&2
+  exit 2
+fi
+
+if match_any_pattern "$FILE_PATH" "${OVERRIDE_ALLOW_PATTERNS[@]}" || match_any_pattern "$BASENAME" "${OVERRIDE_ALLOW_PATTERNS[@]}"; then
+  echo "Allow: $FILE_PATH matches project override allow pattern. Proceed carefully." >&2
+  exit 0
+fi
+
+if match_any_pattern "$FILE_PATH" "${OVERRIDE_CONFIRM_PATTERNS[@]}" || match_any_pattern "$BASENAME" "${OVERRIDE_CONFIRM_PATTERNS[@]}"; then
+  echo "Confirm: $FILE_PATH matches project override confirm pattern. Review the diff carefully before accepting the edit." >&2
+  exit 0
+fi
 
 for pattern in "${CONFIRM_PATH_PATTERNS[@]}"; do
   if [[ "$FILE_PATH" == *"$pattern"* ]]; then

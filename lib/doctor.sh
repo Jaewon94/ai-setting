@@ -200,6 +200,18 @@ run_doctor() {
     fi
   fi
 
+  if [ -f "$target/.ai-setting/protect-files.json" ]; then
+    doctor_ok ".ai-setting/protect-files.json 존재"
+  else
+    doctor_warn ".ai-setting/protect-files.json 없음"
+  fi
+
+  if [ -f "$target/.ai-setting/protect-files.notes.md" ]; then
+    doctor_ok ".ai-setting/protect-files.notes.md 존재"
+  else
+    doctor_warn ".ai-setting/protect-files.notes.md 없음"
+  fi
+
   if [ -x "$target/.claude/hooks/protect-files.sh" ]; then
     doctor_ok "$MSG_DOCTOR_PROTECT_OK"
   else
@@ -448,7 +460,7 @@ run_diff_preview() {
   local -a internal_args
 
   managed_paths=(".claude" ".codex/config.toml" ".codex/config.notes.md" "CLAUDE.md" "AGENTS.md" "docs/decisions.md" "docs/research-notes.md")
-  managed_paths+=(".gemini/settings.json" ".gemini/settings.notes.md" "GEMINI.md" "BEHAVIORAL_CORE.md" ".github/copilot-instructions.md" ".github/instructions/typescript.instructions.md" ".github/instructions/python.instructions.md" ".github/instructions/testing.instructions.md" ".github/instructions/frontend.instructions.md" ".github/instructions/backend.instructions.md" ".github/instructions/docs.instructions.md" ".github/pull_request_template.md" ".ai-setting/team-webhook.json")
+  managed_paths+=(".gemini/settings.json" ".gemini/settings.notes.md" "GEMINI.md" "BEHAVIORAL_CORE.md" ".github/copilot-instructions.md" ".github/instructions/typescript.instructions.md" ".github/instructions/python.instructions.md" ".github/instructions/testing.instructions.md" ".github/instructions/frontend.instructions.md" ".github/instructions/backend.instructions.md" ".github/instructions/docs.instructions.md" ".github/pull_request_template.md" ".ai-setting/protect-files.json" ".ai-setting/protect-files.notes.md" ".ai-setting/team-webhook.json")
   local cursor_rule
   while IFS= read -r cursor_rule; do
     [ -n "$cursor_rule" ] || continue

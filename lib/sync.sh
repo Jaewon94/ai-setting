@@ -78,7 +78,7 @@ get_shared_asset_paths() {
     [ -n "$cursor_rule" ] || continue
     paths+=(".cursor/rules/$cursor_rule")
   done < <(get_cursor_rule_paths "$stack" "$context_mode" "$archetype")
-  paths+=(".gemini/settings.json" ".gemini/settings.notes.md" ".codex/config.notes.md")
+  paths+=(".gemini/settings.json" ".gemini/settings.notes.md" ".codex/config.notes.md" ".ai-setting/protect-files.json" ".ai-setting/protect-files.notes.md")
   printf '%s\n' "${paths[@]}"
 }
 
@@ -138,6 +138,12 @@ detect_sync_conflicts() {
         ;;
       .codex/config.notes.md)
         source_file="$TEMPLATE_DIR/codex-config.notes.md.template"
+        ;;
+      .ai-setting/protect-files.json)
+        source_file="$TEMPLATE_DIR/protect-files.json.template"
+        ;;
+      .ai-setting/protect-files.notes.md)
+        source_file="$TEMPLATE_DIR/protect-files.notes.md.template"
         ;;
     esac
 
