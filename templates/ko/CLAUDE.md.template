@@ -4,6 +4,19 @@
 @BEHAVIORAL_CORE.md
 @AGENTS.md
 
+## 도구 역할 분담
+- Claude Code는 이 프로젝트의 기본 오케스트레이터로 사용합니다.
+- 저장소 공통 규칙과 아키텍처 기준은 `AGENTS.md`, `BEHAVIORAL_CORE.md`를 우선 따릅니다.
+- Codex CLI는 `.codex/config.toml`과 `AGENTS.md`를 기준으로 승인/샌드박스 정책이 필요한 작업에 사용합니다.
+- Cursor와 Copilot은 경로별 규칙과 빠른 편집 보조에 가깝고, 최종 기준 문서는 `CLAUDE.md`와 `AGENTS.md`입니다.
+- Gemini CLI는 넓은 컨텍스트 탐색과 문서/구조 파악에 보조적으로 사용합니다.
+
+## 프로필 운영 기준
+- `standard`: 기본 hooks, agents, skills를 사용합니다.
+- `minimal`: 최소 안전장치만 유지하고, 과한 자동화는 줄입니다.
+- `strict`: 브랜치 보호와 더 엄격한 승인 흐름을 전제로 합니다.
+- `team`: `strict` 기준에 팀 알림과 협업 자산을 추가합니다.
+
 ## 빌드 & 실행
 ```bash
 # [프로젝트에 맞게 수정]

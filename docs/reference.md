@@ -4,7 +4,7 @@
 
 | Tool | Generated Files | Notes |
 |------|-----------------|-------|
-| Claude Code | `.claude/`, `CLAUDE.md` | Primary integration target |
+| Claude Code | `.claude/`, `CLAUDE.md` | Primary integration target with profile and tool-role guidance |
 | Codex CLI | `.codex/config.toml`, `.codex/config.notes.md`, `AGENTS.md` | AGENTS.md is auto-read from the directory hierarchy |
 | Cursor | `.cursor/rules/*.mdc` | Common plus stack/archetype rules; `@file` behavior still depends on Cursor-side support |
 | Gemini CLI | `.gemini/settings.json`, `.gemini/settings.notes.md`, `GEMINI.md` | Config file plus manual-adjustment notes and context file |

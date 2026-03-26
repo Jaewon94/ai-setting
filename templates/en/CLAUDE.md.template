@@ -4,6 +4,19 @@
 @BEHAVIORAL_CORE.md
 @AGENTS.md
 
+## Tool Roles
+- Use Claude Code as the primary orchestrator for this project.
+- Treat `AGENTS.md` and `BEHAVIORAL_CORE.md` as the primary source of shared rules and architecture guidance.
+- Use Codex CLI when approval and sandbox behavior from `.codex/config.toml` matters.
+- Treat Cursor and Copilot as path-specific editing aides; the final source of truth is still `CLAUDE.md` and `AGENTS.md`.
+- Use Gemini CLI mainly for broad context gathering and document-structure exploration.
+
+## Profile Operating Notes
+- `standard`: enables the default hooks, agents, and skills.
+- `minimal`: keeps only the lighter safety defaults and reduces automation.
+- `strict`: assumes branch protection and tighter approval flow.
+- `team`: builds on `strict` and adds team notification/collaboration assets.
+
 ## Build & Run
 ```bash
 # [modify for your project]

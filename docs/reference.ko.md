@@ -4,7 +4,7 @@
 
 | 도구 | 생성 파일 | 메모 |
 |------|-----------|------|
-| Claude Code | `.claude/`, `CLAUDE.md` | 기본 통합 대상 |
+| Claude Code | `.claude/`, `CLAUDE.md` | 기본 통합 대상, profile/도구 역할 분담 가이드 포함 |
 | Codex CLI | `.codex/config.toml`, `.codex/config.notes.md`, `AGENTS.md` | AGENTS.md는 디렉토리 계층에서 자동 탐색 |
 | Cursor | `.cursor/rules/*.mdc` | 공통 rule + stack/archetype rule 생성, `@file`은 Cursor 제품 측 이슈 영향 |
 | Gemini CLI | `.gemini/settings.json`, `.gemini/settings.notes.md`, `GEMINI.md` | 설정 파일 + 수동 조정 notes + 컨텍스트 문서 |

@@ -37,6 +37,9 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 | **플러그인** | ai-setting-core/strict/team, `plugin list\|install\|uninstall\|check-update\|upgrade` |
 | **배포** | package.json v1.1.8, MIT, CI/CD, release workflow (npm auto-publish), brew formula |
 | **문서** | BEHAVIORAL_CORE.md, CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md, research-notes.md, decisions.md 템플릿 |
+
+추가 상태:
+- `CLAUDE.md` 공통 템플릿에 도구 역할 분담과 프로필 운영 기준 반영 완료
 | **신뢰성** | research-notes / decisions 추적성 구조, doctor 문서 형식 검사, session/backup 반영 |
 | **검증** | `./tests/run_all.sh` 기준 회귀 테스트, macOS/BSD sed 비호환 제거, field test 4건 문서화 |
 
