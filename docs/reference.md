@@ -141,6 +141,9 @@ Related automatic behavior:
 | `fix-issue` | issue-to-fix workflow |
 | `gap-check` | missing requirements detection |
 | `cross-validate` | AI output vs actual state verification |
+| `document-feature` | structure feature-level documentation |
+| `document-infra` | structure infrastructure and operations docs |
+| `document-security` | structure security implementation and operations docs |
 
 ## MCP Configuration
 

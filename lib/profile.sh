@@ -36,6 +36,9 @@ cleanup_managed_claude_assets() {
     "$TARGET/.claude/skills/fix-issue/SKILL.md"
     "$TARGET/.claude/skills/gap-check/SKILL.md"
     "$TARGET/.claude/skills/cross-validate/SKILL.md"
+    "$TARGET/.claude/skills/document-feature/SKILL.md"
+    "$TARGET/.claude/skills/document-infra/SKILL.md"
+    "$TARGET/.claude/skills/document-security/SKILL.md"
   )
   local managed_dirs=(
     "$TARGET/.claude/agents"
@@ -44,6 +47,9 @@ cleanup_managed_claude_assets() {
     "$TARGET/.claude/skills/fix-issue"
     "$TARGET/.claude/skills/gap-check"
     "$TARGET/.claude/skills/cross-validate"
+    "$TARGET/.claude/skills/document-feature"
+    "$TARGET/.claude/skills/document-infra"
+    "$TARGET/.claude/skills/document-security"
     "$TARGET/.claude/skills"
     "$TARGET/.claude/hooks"
   )
@@ -208,11 +214,17 @@ copy_claude_profile_assets() {
     run_mkdir_p "$TARGET/.claude/skills/fix-issue"
     run_mkdir_p "$TARGET/.claude/skills/gap-check"
     run_mkdir_p "$TARGET/.claude/skills/cross-validate"
+    run_mkdir_p "$TARGET/.claude/skills/document-feature"
+    run_mkdir_p "$TARGET/.claude/skills/document-infra"
+    run_mkdir_p "$TARGET/.claude/skills/document-security"
     install_shared_asset "$SCRIPT_DIR/claude/skills/deploy/SKILL.md" "$TARGET/.claude/skills/deploy/"
     install_shared_asset "$SCRIPT_DIR/claude/skills/review/SKILL.md" "$TARGET/.claude/skills/review/"
     install_shared_asset "$SCRIPT_DIR/claude/skills/fix-issue/SKILL.md" "$TARGET/.claude/skills/fix-issue/"
     install_shared_asset "$SCRIPT_DIR/claude/skills/gap-check/SKILL.md" "$TARGET/.claude/skills/gap-check/"
     install_shared_asset "$SCRIPT_DIR/claude/skills/cross-validate/SKILL.md" "$TARGET/.claude/skills/cross-validate/"
+    install_shared_asset "$SCRIPT_DIR/claude/skills/document-feature/SKILL.md" "$TARGET/.claude/skills/document-feature/"
+    install_shared_asset "$SCRIPT_DIR/claude/skills/document-infra/SKILL.md" "$TARGET/.claude/skills/document-infra/"
+    install_shared_asset "$SCRIPT_DIR/claude/skills/document-security/SKILL.md" "$TARGET/.claude/skills/document-security/"
   fi
 
   merge_settings_local

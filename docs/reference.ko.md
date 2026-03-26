@@ -141,6 +141,9 @@ archetype 특화 반영:
 | `fix-issue` | 이슈 해결 워크플로 |
 | `gap-check` | 누락 요구사항 탐지 |
 | `cross-validate` | AI 결과와 실제 상태 교차 검증 |
+| `document-feature` | 기능 단위 문서 구조화 |
+| `document-infra` | 인프라 운영 문서 구조화 |
+| `document-security` | 보안 구현/운영 문서 구조화 |
 
 ## MCP 설정
 

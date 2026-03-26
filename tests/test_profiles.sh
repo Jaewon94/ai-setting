@@ -10,6 +10,9 @@ assert_file_exists "$t/.claude/hooks/block-dangerous-commands.sh" "block-dangero
 assert_file_exists "$t/.claude/hooks/async-test.sh" "async-test.sh"
 assert_file_exists "$t/.claude/agents/security-reviewer.md" "agents 존재"
 assert_file_exists "$t/.claude/skills/deploy/SKILL.md" "skills 존재"
+assert_file_exists "$t/.claude/skills/document-feature/SKILL.md" "document-feature skill 존재"
+assert_file_exists "$t/.claude/skills/document-infra/SKILL.md" "document-infra skill 존재"
+assert_file_exists "$t/.claude/skills/document-security/SKILL.md" "document-security skill 존재"
 assert_file_not_exists "$t/.claude/hooks/protect-main-branch.sh" "branch 보호 없음"
 
 suite "minimal profile"
@@ -19,6 +22,7 @@ assert_file_exists "$t/.claude/hooks/protect-files.sh" "protect-files.sh"
 assert_file_not_exists "$t/.claude/hooks/block-dangerous-commands.sh" "block-commands 없음"
 assert_file_not_exists "$t/.claude/agents/security-reviewer.md" "agents 없음"
 assert_file_not_exists "$t/.claude/skills/deploy/SKILL.md" "skills 없음"
+assert_file_not_exists "$t/.claude/skills/document-feature/SKILL.md" "document-feature 없음"
 assert_file_contains "$t/.codex/config.toml" 'model_reasoning_effort = "low"' "minimal codex low reasoning"
 
 suite "strict profile"
