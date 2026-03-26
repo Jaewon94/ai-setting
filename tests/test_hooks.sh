@@ -26,6 +26,14 @@ suite "ISS-011: plugins 버전도 동일 적용"
 assert_file_contains "$REPO_ROOT/plugins/ai-setting-core/scripts/protect-files.sh" "command -v jq" "plugins/protect-files.sh에 jq 체크 존재"
 assert_file_contains "$REPO_ROOT/plugins/ai-setting-core/scripts/block-dangerous-commands.sh" "command -v jq" "plugins/block-dangerous-commands.sh에 jq 체크 존재"
 
+suite "metadata manifest 존재 및 핵심 필드 확인"
+
+assert_file_contains "$REPO_ROOT/claude/skills/metadata.json" '"name": "document-feature"' "skills metadata에 document-feature 존재"
+assert_file_contains "$REPO_ROOT/claude/skills/metadata.json" '"profile_scope"' "skills metadata에 profile_scope 존재"
+assert_file_contains "$REPO_ROOT/claude/hooks/metadata.json" '"name": "protect-files.sh"' "hooks metadata에 protect-files 존재"
+assert_file_contains "$REPO_ROOT/claude/hooks/metadata.json" '"blocking_or_async": "blocking"' "hooks metadata에 blocking_or_async 존재"
+assert_file_contains "$REPO_ROOT/claude/hooks/metadata.json" '"requires_network_or_secret": true' "hooks metadata에 secret/network 필드 존재"
+
 # ━━━ ISS-011: jq 있는 환경에서 정상 동작 확인 ━━━
 suite "ISS-011: jq 있을 때 protect-files.sh 정상 통과"
 

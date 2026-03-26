@@ -145,6 +145,26 @@ archetype 특화 반영:
 | `document-infra` | 인프라 운영 문서 구조화 |
 | `document-security` | 보안 구현/운영 문서 구조화 |
 
+운영 메타데이터:
+- `.claude/skills/metadata.json`
+  - `category`
+  - `explicit_only`
+  - `profile_scope`
+  - `required_tools`
+  - `required_mcp`
+  - `risk_level`
+
+## Hook 메타데이터
+
+- `.claude/hooks/metadata.json`
+  - `event`
+  - `matcher`
+  - `type`
+  - `blocking_or_async`
+  - `profile_scope`
+  - `risk_level`
+  - `requires_network_or_secret`
+
 ## MCP 설정
 
 위치:

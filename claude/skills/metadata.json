@@ -1,0 +1,78 @@
+{
+  "_source": "ai-setting",
+  "version": 1,
+  "skills": [
+    {
+      "name": "deploy",
+      "category": "operations",
+      "explicit_only": true,
+      "profile_scope": ["standard", "strict", "team"],
+      "required_tools": [],
+      "required_mcp": [],
+      "risk_level": "medium"
+    },
+    {
+      "name": "review",
+      "category": "quality",
+      "explicit_only": true,
+      "profile_scope": ["standard", "strict", "team"],
+      "required_tools": [],
+      "required_mcp": [],
+      "risk_level": "low"
+    },
+    {
+      "name": "fix-issue",
+      "category": "implementation",
+      "explicit_only": true,
+      "profile_scope": ["standard", "strict", "team"],
+      "required_tools": ["gh"],
+      "required_mcp": [],
+      "risk_level": "medium"
+    },
+    {
+      "name": "gap-check",
+      "category": "planning",
+      "explicit_only": true,
+      "profile_scope": ["standard", "strict", "team"],
+      "required_tools": [],
+      "required_mcp": [],
+      "risk_level": "low"
+    },
+    {
+      "name": "cross-validate",
+      "category": "verification",
+      "explicit_only": true,
+      "profile_scope": ["standard", "strict", "team"],
+      "required_tools": [],
+      "required_mcp": [],
+      "risk_level": "low"
+    },
+    {
+      "name": "document-feature",
+      "category": "documentation",
+      "explicit_only": true,
+      "profile_scope": ["standard", "strict", "team"],
+      "required_tools": [],
+      "required_mcp": [],
+      "risk_level": "low"
+    },
+    {
+      "name": "document-infra",
+      "category": "documentation",
+      "explicit_only": true,
+      "profile_scope": ["standard", "strict", "team"],
+      "required_tools": [],
+      "required_mcp": [],
+      "risk_level": "medium"
+    },
+    {
+      "name": "document-security",
+      "category": "documentation",
+      "explicit_only": true,
+      "profile_scope": ["standard", "strict", "team"],
+      "required_tools": [],
+      "required_mcp": [],
+      "risk_level": "medium"
+    }
+  ]
+}

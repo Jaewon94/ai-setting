@@ -27,6 +27,7 @@ cleanup_managed_claude_assets() {
     "$TARGET/.claude/hooks/compact-backup.sh"
     "$TARGET/.claude/hooks/async-test.sh"
     "$TARGET/.claude/hooks/team-webhook-notify.sh"
+    "$TARGET/.claude/hooks/metadata.json"
     "$TARGET/.claude/agents/security-reviewer.md"
     "$TARGET/.claude/agents/architect-reviewer.md"
     "$TARGET/.claude/agents/test-writer.md"
@@ -39,6 +40,7 @@ cleanup_managed_claude_assets() {
     "$TARGET/.claude/skills/document-feature/SKILL.md"
     "$TARGET/.claude/skills/document-infra/SKILL.md"
     "$TARGET/.claude/skills/document-security/SKILL.md"
+    "$TARGET/.claude/skills/metadata.json"
   )
   local managed_dirs=(
     "$TARGET/.claude/agents"
@@ -186,6 +188,7 @@ copy_claude_profile_assets() {
   merge_claude_settings_template "$settings_template"
   install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/protect-files.sh" "$TARGET/.claude/hooks/protect-files.sh"
   install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/format-on-write.sh" "$TARGET/.claude/hooks/format-on-write.sh"
+  install_shared_asset "$SCRIPT_DIR/claude/hooks/metadata.json" "$TARGET/.claude/hooks/metadata.json"
 
   if [ "$CLAUDE_PROFILE" != "minimal" ]; then
     install_shared_executable_asset "$SCRIPT_DIR/claude/hooks/block-dangerous-commands.sh" "$TARGET/.claude/hooks/block-dangerous-commands.sh"
@@ -225,6 +228,7 @@ copy_claude_profile_assets() {
     install_shared_asset "$SCRIPT_DIR/claude/skills/document-feature/SKILL.md" "$TARGET/.claude/skills/document-feature/"
     install_shared_asset "$SCRIPT_DIR/claude/skills/document-infra/SKILL.md" "$TARGET/.claude/skills/document-infra/"
     install_shared_asset "$SCRIPT_DIR/claude/skills/document-security/SKILL.md" "$TARGET/.claude/skills/document-security/"
+    install_shared_asset "$SCRIPT_DIR/claude/skills/metadata.json" "$TARGET/.claude/skills/metadata.json"
   fi
 
   merge_settings_local

@@ -8,8 +8,10 @@ t=$(make_tmpdir)
 assert_file_exists "$t/.claude/hooks/protect-files.sh" "protect-files.sh"
 assert_file_exists "$t/.claude/hooks/block-dangerous-commands.sh" "block-dangerous-commands.sh"
 assert_file_exists "$t/.claude/hooks/async-test.sh" "async-test.sh"
+assert_file_exists "$t/.claude/hooks/metadata.json" "hooks metadata 존재"
 assert_file_exists "$t/.claude/agents/security-reviewer.md" "agents 존재"
 assert_file_exists "$t/.claude/skills/deploy/SKILL.md" "skills 존재"
+assert_file_exists "$t/.claude/skills/metadata.json" "skills metadata 존재"
 assert_file_exists "$t/.claude/skills/document-feature/SKILL.md" "document-feature skill 존재"
 assert_file_exists "$t/.claude/skills/document-infra/SKILL.md" "document-infra skill 존재"
 assert_file_exists "$t/.claude/skills/document-security/SKILL.md" "document-security skill 존재"
@@ -19,9 +21,11 @@ suite "minimal profile"
 t=$(make_tmpdir)
 "$INIT_SH" --skip-ai --all --profile minimal "$t" >/dev/null 2>&1
 assert_file_exists "$t/.claude/hooks/protect-files.sh" "protect-files.sh"
+assert_file_exists "$t/.claude/hooks/metadata.json" "hooks metadata 존재"
 assert_file_not_exists "$t/.claude/hooks/block-dangerous-commands.sh" "block-commands 없음"
 assert_file_not_exists "$t/.claude/agents/security-reviewer.md" "agents 없음"
 assert_file_not_exists "$t/.claude/skills/deploy/SKILL.md" "skills 없음"
+assert_file_not_exists "$t/.claude/skills/metadata.json" "skills metadata 없음"
 assert_file_not_exists "$t/.claude/skills/document-feature/SKILL.md" "document-feature 없음"
 assert_file_contains "$t/.codex/config.toml" 'model_reasoning_effort = "low"' "minimal codex low reasoning"
 

@@ -1,0 +1,86 @@
+{
+  "_source": "ai-setting",
+  "version": 1,
+  "hooks": [
+    {
+      "name": "protect-files.sh",
+      "event": "PreToolUse",
+      "matcher": "Edit|Write",
+      "type": "command",
+      "blocking_or_async": "blocking",
+      "profile_scope": ["standard", "minimal", "strict", "team"],
+      "risk_level": "high",
+      "requires_network_or_secret": false
+    },
+    {
+      "name": "block-dangerous-commands.sh",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "type": "command",
+      "blocking_or_async": "blocking",
+      "profile_scope": ["standard", "strict", "team"],
+      "risk_level": "high",
+      "requires_network_or_secret": false
+    },
+    {
+      "name": "format-on-write.sh",
+      "event": "PostToolUse",
+      "matcher": "Edit|Write",
+      "type": "command",
+      "blocking_or_async": "blocking",
+      "profile_scope": ["standard", "minimal", "strict", "team"],
+      "risk_level": "low",
+      "requires_network_or_secret": false
+    },
+    {
+      "name": "async-test.sh",
+      "event": "PostToolUse",
+      "matcher": "Edit|Write",
+      "type": "command",
+      "blocking_or_async": "async",
+      "profile_scope": ["standard", "strict", "team"],
+      "risk_level": "medium",
+      "requires_network_or_secret": false
+    },
+    {
+      "name": "session-context.sh",
+      "event": "Stop|SessionStart",
+      "matcher": "compact",
+      "type": "command",
+      "blocking_or_async": "blocking",
+      "profile_scope": ["standard", "strict", "team"],
+      "risk_level": "low",
+      "requires_network_or_secret": false
+    },
+    {
+      "name": "compact-backup.sh",
+      "event": "Stop",
+      "matcher": "",
+      "type": "command",
+      "blocking_or_async": "blocking",
+      "profile_scope": ["standard", "strict", "team"],
+      "risk_level": "low",
+      "requires_network_or_secret": false
+    },
+    {
+      "name": "protect-main-branch.sh",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "type": "command",
+      "blocking_or_async": "blocking",
+      "profile_scope": ["strict", "team"],
+      "risk_level": "high",
+      "requires_network_or_secret": false
+    },
+    {
+      "name": "team-webhook-notify.sh",
+      "event": "Stop",
+      "matcher": "",
+      "type": "command",
+      "blocking_or_async": "blocking",
+      "profile_scope": ["team"],
+      "risk_level": "medium",
+      "requires_network_or_secret": true
+    }
+  ]
+}

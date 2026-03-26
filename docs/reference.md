@@ -145,6 +145,26 @@ Related automatic behavior:
 | `document-infra` | structure infrastructure and operations docs |
 | `document-security` | structure security implementation and operations docs |
 
+Operational metadata:
+- `.claude/skills/metadata.json`
+  - `category`
+  - `explicit_only`
+  - `profile_scope`
+  - `required_tools`
+  - `required_mcp`
+  - `risk_level`
+
+## Hook Metadata
+
+- `.claude/hooks/metadata.json`
+  - `event`
+  - `matcher`
+  - `type`
+  - `blocking_or_async`
+  - `profile_scope`
+  - `risk_level`
+  - `requires_network_or_secret`
+
 ## MCP Configuration
 
 Locations:
