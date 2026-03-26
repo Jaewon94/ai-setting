@@ -314,6 +314,21 @@ ai-setting/
   - `risk_level`
   - `blocking_or_async`
 
+#### 8-7. 파일 보호 정책 재설계
+
+현재: `protect-files.sh`는 민감 파일 보호에 유효하지만, 정책이 사실상 일괄 차단 중심이라 실제 프로젝트 작업에서는 불편할 수 있음
+
+목표:
+- 파일 보호를 `block / confirm / allow` 3단계로 재설계
+- 진짜 고위험 자산은 계속 강하게 보호
+- 운영 중 자주 수정하는 파일은 무조건 차단 대신 확인 기반 흐름으로 완화
+
+구현 방향:
+- `block`: 키/인증서/credential/DB/생성물
+- `confirm`: `.env*`, `docker-compose*.yml`, workflow, deploy script, infra config, lockfile
+- `allow`: 일반 코드/문서/테스트
+- 프로젝트별 override와 profile 차등 적용 가능성까지 함께 설계
+
 #### 완료 기준
 
 - 각 도구에서 설정이 실제로 적용되고 동작하는지 검증

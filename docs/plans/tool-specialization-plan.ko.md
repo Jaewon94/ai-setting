@@ -443,6 +443,46 @@
 - 최소 1개 이상 skill/Codex metadata, 1개 이상 hook metadata 적용 후보가 정의됨
 - 추후 구현 시 lint/test 대상으로 삼을 수 있는 manifest 구조 초안이 생김
 
+### 8. 파일 보호 정책 재설계
+
+### 도입 배경
+
+- 현재 `protect-files.sh`는 민감 파일을 단순 차단하는 구조라 안전성은 높지만, 실제 프로젝트 운영에서는 자주 수정해야 하는 파일까지 AI가 만지지 못해 불편할 수 있다.
+- 특히 환경 파일, compose 설정, workflow, 배포 스크립트처럼 "위험하지만 자주 수정하는 파일"은 `무조건 차단`보다 더 세밀한 정책이 필요하다.
+
+### 현재 갭
+
+- 현재 정책은 사실상 `block only`에 가깝다.
+- 파일마다 위험도와 사용 빈도가 다른데도 차등이 없다.
+- 프로젝트별로 "이 파일은 수정 허용", "이 파일은 확인 후 수정" 같은 override 구조가 없다.
+
+### 실행 항목
+
+1. 보호 정책 등급화
+- `block`: 키, 인증서, credential, DB 파일, 생성물/캐시, raw device 성격 파일
+- `confirm`: `.env*`, `docker-compose*.yml`, workflow, deploy script, infra config, lockfile
+- `allow`: 일반 코드, 문서, 테스트
+
+2. 정책 저장 방식 정의
+- 기본 내장 정책은 hook 스크립트에 유지
+- 프로젝트 override는 `.ai-setting/` 아래 별도 manifest 또는 notes로 열어 둠
+
+3. profile 연계 검토
+- `minimal`: 덜 공격적인 보호
+- `standard`: 기본 균형형
+- `strict/team`: confirm 범위를 더 넓히거나 block 기준을 조금 더 강화
+
+4. UX 정리
+- `block`은 즉시 차단
+- `confirm`은 이유/검토를 한 번 더 요구하는 구조로 설계
+- `doctor`에서 현재 프로젝트 보호 정책을 진단할 수 있게 연결 검토
+
+### 완료 기준
+
+- 파일 보호 정책이 `block / confirm / allow` 3단계로 문서화됨
+- 어떤 파일이 왜 해당 등급인지 설명 가능해야 함
+- 프로젝트 override와 profile 차등 적용 방향이 정의됨
+
 ## 구현 순서
 
 ### Step 1. 설계 고정
@@ -474,11 +514,12 @@
 - `docs/reference*`에 생성물 설명 반영
 - 배포 문서는 변경 없으면 유지
 
-### Step 6. 문서화/메타데이터 레이어 확장
+### Step 6. 문서화/메타데이터/보호정책 레이어 확장
 
 - 문서화 skill pack 초안 작성
 - skill/hook metadata 표준안과 sidecar manifest 초안 작성
 - 공식 지원 필드와 내부 운영 필드를 구분해 정리
+- 파일 보호 정책의 위험도 기반 계층 초안 작성
 
 ## 검증 기준
 
@@ -503,7 +544,8 @@
 5. Claude archetype guidance 정리안
 6. 문서화 skill pack 설계안
 7. skill/hook metadata 표준안
-8. 테스트 매트릭스 초안
+8. 파일 보호 정책 재설계안
+9. 테스트 매트릭스 초안
 
 ## 참고 자료
 

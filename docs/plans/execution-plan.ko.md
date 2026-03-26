@@ -73,7 +73,35 @@
 - `docs/features/*`, `docs/infrastructure/*`, `docs/security/*` 구조를 표준화한다.
 - 전역 문서와 주제별 문서의 역할 충돌을 해소한다.
 
-## 4. 3순위: 스킬/훅 메타데이터 표준화
+## 4. 3순위: 파일 보호 정책 재설계
+
+### 목표
+
+- 현재 `protect-files.sh`의 일괄 차단 방식을 `block / confirm / allow` 3단계 정책으로 재설계한다.
+- 사용자가 자주 수정해야 하는 파일까지 과하게 막아 생산성이 떨어지는 문제를 줄인다.
+- 동시에 실제 비밀값, 인증서, 키 파일, 파괴적 생성물 같은 고위험 자산은 계속 강하게 보호한다.
+
+### 설계 방향
+
+- 기본 원칙:
+  - 진짜 고위험 자산만 `block`
+  - 운영 중 자주 만지는 설정 파일은 `confirm`
+  - 일반 소스/문서는 `allow`
+- 재검토 대상 예:
+  - `.env*`
+  - `docker-compose*.yml`
+  - `.github/workflows/*`
+  - 배포 스크립트
+  - lockfile
+- 프로젝트별 override 가능성을 열어 둔다.
+
+### 완료 조건
+
+- 보호 정책이 위험도 기준으로 설명 가능해야 한다.
+- 사용자 편의와 안전의 균형이 문서로 명확히 정리돼야 한다.
+- 추후 구현 시 profile/manifest와 연결할 수 있는 구조가 정의돼야 한다.
+
+## 5. 4순위: 스킬/훅 메타데이터 표준화
 
 상세 계획: [tool-specialization-plan.ko.md](/Users/jaewon/my-project/ai-setting/docs/plans/tool-specialization-plan.ko.md)
 
@@ -96,7 +124,7 @@
 - sidecar notes 또는 manifest 초안이 정의된다.
 - 이후 doctor/test에서 metadata 기반 검증 확장이 가능해진다.
 
-## 5. 4순위: 테스트 자동화 강화
+## 6. 5순위: 테스트 자동화 강화
 
 상세 계획: [docs/roadmap.md](/Users/jaewon/my-project/ai-setting/docs/roadmap.md)
 
@@ -105,13 +133,13 @@
 - 문서화 스킬과 metadata 표준화가 들어온 뒤에도 회귀가 없도록 테스트를 보강한다.
 - `run_all.sh` 수준을 넘어, 문서/생성물/manifest까지 검증 범위를 넓힌다.
 
-## 6. 하위 계획 문서
+## 7. 하위 계획 문서
 
 - [tool-specialization-plan.ko.md](/Users/jaewon/my-project/ai-setting/docs/plans/tool-specialization-plan.ko.md)
   - Phase 8 세부 실행 계획
 - 추가 계획 문서는 필요 시 `docs/plans/` 아래에 계속 분리한다.
 
-## 7. 진행 규칙
+## 8. 진행 규칙
 
 1. 큰 작업을 시작하기 전에 이 문서의 우선순위를 먼저 확인한다.
 2. 하위 계획 문서를 수정하면, 필요할 경우 이 상위 계획도 함께 갱신한다.

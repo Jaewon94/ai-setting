@@ -160,12 +160,16 @@ archetype 특화 반영:
 
 ## 보호 패턴
 
-`protect-files.sh`가 막는 것:
-- 민감한 env 파일
-- lock 파일
-- credential 파일
-- 특정 DB/key 확장자
-- 생성물/build/vendor/cache 디렉토리
+`protect-files.sh` 정책:
+- 즉시 차단:
+  - credential 파일
+  - 특정 DB/key 확장자
+  - 생성물/build/cache 디렉토리
+- 확인 후 허용:
+  - `.env*`
+  - lock 파일
+  - `docker-compose*.yml`
+  - `.github/workflows/*`
 
 `block-dangerous-commands.sh`가 막는 패턴 예시:
 - `rm -rf`

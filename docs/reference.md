@@ -160,12 +160,16 @@ Manual values:
 
 ## Protection Patterns
 
-`protect-files.sh` blocks:
-- sensitive env files
-- lock files
-- credential files
-- certain database/key extensions
-- generated/build/vendor/cache directories
+`protect-files.sh` policy:
+- immediate block:
+  - credential files
+  - certain database/key extensions
+  - generated/build/cache directories
+- confirm-before-accept:
+  - `.env*`
+  - lock files
+  - `docker-compose*.yml`
+  - `.github/workflows/*`
 
 `block-dangerous-commands.sh` blocks patterns like:
 - `rm -rf`

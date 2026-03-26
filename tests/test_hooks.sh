@@ -35,10 +35,28 @@ if command -v jq >/dev/null 2>&1; then
   ec=$?
   assert_exit_code 0 $ec "안전한 파일 경로 → exit 0"
 
-  # .env 파일 → exit 2 (차단)
+  # .env 파일 → exit 0 (경고 후 허용)
   output=$(echo '{"tool_input":{"file_path":".env"}}' | bash "$REPO_ROOT/claude/hooks/protect-files.sh" 2>&1)
   ec=$?
-  assert_exit_code 2 $ec ".env 파일 → exit 2 차단"
+  assert_exit_code 0 $ec ".env 파일 → exit 0 경고 허용"
+  assert_output_contains "$output" "Confirm:" ".env 파일 → 확인 경고 출력"
+
+  # docker-compose 파일 → exit 0 (경고 후 허용)
+  output=$(echo '{"tool_input":{"file_path":"docker-compose.yml"}}' | bash "$REPO_ROOT/claude/hooks/protect-files.sh" 2>&1)
+  ec=$?
+  assert_exit_code 0 $ec "docker-compose.yml → exit 0 경고 허용"
+  assert_output_contains "$output" "Confirm:" "docker-compose.yml → 확인 경고 출력"
+
+  # lockfile → exit 0 (경고 후 허용)
+  output=$(echo '{"tool_input":{"file_path":"package-lock.json"}}' | bash "$REPO_ROOT/claude/hooks/protect-files.sh" 2>&1)
+  ec=$?
+  assert_exit_code 0 $ec "package-lock.json → exit 0 경고 허용"
+  assert_output_contains "$output" "Confirm:" "lockfile → 확인 경고 출력"
+
+  # credential 파일 → exit 2 (차단 유지)
+  output=$(echo '{"tool_input":{"file_path":"credentials.json"}}' | bash "$REPO_ROOT/claude/hooks/protect-files.sh" 2>&1)
+  ec=$?
+  assert_exit_code 2 $ec "credentials.json → exit 2 차단 유지"
 else
   echo "  ⚠️ jq 미설치 — 정상 동작 테스트 스킵"
 fi
@@ -130,24 +148,24 @@ assert_file_contains "$REPO_ROOT/lib/profile.sh" "is_managed" "profile.sh에 is_
 suite "ISS-024: check_mcp_commands 함수 존재"
 
 assert_file_contains "$REPO_ROOT/lib/mcp.sh" "check_mcp_commands" "mcp.sh에 check_mcp_commands 함수"
-assert_file_contains "$REPO_ROOT/init.sh" "check_mcp_commands" "init.sh에서 check_mcp_commands 호출"
+assert_file_contains "$REPO_ROOT/lib/init-flow.sh" "check_mcp_commands" "init-flow.sh에서 check_mcp_commands 호출"
 
 # ━━━ ISS-016/020/021/025: --skip-ai rule-based 치환 ━━━
 suite "ISS-016/020/021/025: fill_rule_based_placeholders 함수 존재"
 
-assert_file_contains "$REPO_ROOT/init.sh" "fill_rule_based_placeholders" "init.sh에 fill_rule_based_placeholders 함수"
-assert_file_contains "$REPO_ROOT/init.sh" "skip-ai.*rule-based\|rule-based 치환" "init.sh에서 --skip-ai 분기에서 호출"
+assert_file_contains "$REPO_ROOT/lib/ai-autofill.sh" "fill_rule_based_placeholders" "ai-autofill.sh에 fill_rule_based_placeholders 함수"
+assert_file_contains "$REPO_ROOT/lib/ai-autofill.sh" "fill_rule_based_placeholders" "ai-autofill.sh에서 --skip-ai 경로 호출 존재"
 
 suite "ISS-016/020/021/025: archetype 기반 명령 매핑"
 
-assert_file_contains "$REPO_ROOT/init.sh" "test_backend_cmd" "init.sh에 test_backend_cmd 변수"
-assert_file_contains "$REPO_ROOT/init.sh" "test_frontend_cmd" "init.sh에 test_frontend_cmd 변수"
-assert_file_contains "$REPO_ROOT/init.sh" 'replace_literal_in_file.*"\[프로젝트명\]"' "init.sh에 프로젝트명 치환 로직"
+assert_file_contains "$REPO_ROOT/lib/ai-autofill.sh" "test_backend_cmd" "ai-autofill.sh에 test_backend_cmd 변수"
+assert_file_contains "$REPO_ROOT/lib/ai-autofill.sh" "test_frontend_cmd" "ai-autofill.sh에 test_frontend_cmd 변수"
+assert_file_contains "$REPO_ROOT/lib/ai-autofill.sh" 'replace_literal_in_file.*"\[프로젝트명\]"' "ai-autofill.sh에 프로젝트명 치환 로직"
 assert_file_contains "$REPO_ROOT/lib/common.sh" 'replace_literal_in_file\(\)' "portable 치환 헬퍼 존재"
 
 # ISS-015: .gitignore 자동 추가 확인
 suite "ISS-015: .gitignore에 .claude/context/ 추가 로직"
 
-assert_file_contains "$REPO_ROOT/init.sh" ".claude/context/" "init.sh에 .claude/context/ gitignore 로직"
+assert_file_contains "$REPO_ROOT/lib/init-flow.sh" ".claude/context/" "init-flow.sh에 .claude/context/ gitignore 로직"
 
 print_summary
