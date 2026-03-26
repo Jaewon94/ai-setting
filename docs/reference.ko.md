@@ -197,7 +197,11 @@ ai-setting/
 ```
 
 중요 구현 위치:
-- `init.sh`: 메인 엔트리
+- `init.sh`: 얇은 메인 엔트리와 모드 오케스트레이션
+- `lib/cli.sh`: CLI 파싱, 서브커맨드 전처리, 모드 검증
+- `lib/deps.sh`: jq 의존성 점검
+- `lib/init-flow.sh`: Step 1~5 실행, 템플릿 복사, 요약 출력
+- `lib/ai-autofill.sh`: AI 자동 채우기와 Claude/Codex fallback
 - `lib/profile.sh`: 도구/프로필 자산 적용
 - `lib/mcp.sh`: MCP 생성
 - `lib/doctor.sh`: 진단과 diff

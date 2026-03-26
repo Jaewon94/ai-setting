@@ -150,7 +150,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 
 > "단일 파일 ~3000행을 유지보수 가능한 구조로 분리한다"
 
-현재 `init.sh`가 모든 기능을 포함하여 약 3000행에 달한다. Phase 8 이후 기능 추가 전에 반드시 구조를 정리해야 한다.
+초기에는 `init.sh`가 모든 기능을 포함하여 약 3000행 규모였고, Phase 8 이후 기능 추가 전에 구조 정리가 필요했다. 현재는 엔트리 기준 약 100행 수준까지 축소했다.
 
 #### 구현 지침
 
@@ -166,12 +166,15 @@ ai-setting/
 ├── init.sh                    # 메인 엔트리 (옵션 파싱 + 실행 흐름, ~300행)
 ├── lib/
 │   ├── common.sh              # 색상, dry-run, mkdir, copy, symlink 헬퍼
+│   ├── ai-autofill.sh         # AI 자동 채우기 프롬프트/실행/fallback
+│   ├── cli.sh                 # CLI 파싱, 서브커맨드 전처리, 모드 검증
+│   ├── deps.sh                # jq 의존성 점검/설치 제안
 │   ├── detect.sh              # 프로젝트 모드/archetype/스택 감지
 │   ├── doctor.sh              # doctor 진단 로직
+│   ├── init-flow.sh           # Step 1~5 실행과 요약 출력
 │   ├── sync.sh                # sync manifest, 충돌 감지, settings.local.json
 │   ├── plugin.sh              # plugin list/install/uninstall/check-update/upgrade
-│   ├── mcp.sh                 # MCP preset 생성
-│   └── ai-fill.sh             # AI 자동 채우기 프롬프트/실행
+│   └── mcp.sh                 # MCP preset 생성
 ```
 
 #### 완료 기준
@@ -181,11 +184,17 @@ ai-setting/
 - 기존 모든 모드/옵션이 동일하게 동작 (회귀 없음)
 - `bin/ai-setting` 래퍼가 변경 없이 동작
 
+#### 최신 상태
+
+- `init.sh`: 약 94행
+- 분리 완료 모듈: `cli.sh`, `deps.sh`, `init-flow.sh`, `ai-autofill.sh` 포함
+- 회귀 검증: `./tests/run_all.sh` 기준 `PASS 120 / FAIL 0`
+
 #### 다음 착수 단위
 
-1. 대상 프로젝트 준비 흐름처럼 중복되는 전처리 경로를 계속 공통 함수로 이동
-2. AI autofill 프롬프트/실행 체인을 별도 모듈로 분리
-3. 메인 엔트리는 옵션 파싱과 모드 분기만 남기고 축소
+1. 모듈 경계가 바뀔 때는 `CONTRIBUTING.md`, `docs/reference*`의 책임 표를 같이 갱신
+2. 큰 단계 분리 후에는 테스트 시나리오가 새로운 경계를 커버하는지 확인
+3. 메인 엔트리는 오케스트레이터 역할만 유지하고 세부 로직은 lib로 계속 이동
 
 ---
 

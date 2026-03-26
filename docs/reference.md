@@ -197,7 +197,11 @@ ai-setting/
 ```
 
 Important implementation areas:
-- `init.sh`: main entry flow
+- `init.sh`: thin main entry and mode orchestration
+- `lib/cli.sh`: CLI parsing, subcommand preprocessing, mode validation
+- `lib/deps.sh`: jq dependency checks
+- `lib/init-flow.sh`: step 1-5 execution, template copy, summary output
+- `lib/ai-autofill.sh`: AI autofill and Claude/Codex fallback
 - `lib/profile.sh`: tool/profile asset application
 - `lib/mcp.sh`: MCP generation
 - `lib/doctor.sh`: diagnostics and diff logic
