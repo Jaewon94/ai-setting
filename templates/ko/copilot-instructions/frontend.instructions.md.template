@@ -1,0 +1,11 @@
+---
+applyTo: "app/**,src/components/**,src/features/**,src/routes/**,pages/**,components/**"
+---
+
+# Frontend Instructions
+
+- 사용자에게 보이는 동작, 로딩 상태, 에러 상태, 접근성을 함께 고려합니다.
+- UI 렌더링과 비즈니스 로직, API 정규화를 한 파일에 과도하게 섞지 않습니다.
+- 컴포넌트는 작게 유지하고, 공유 상태나 비동기 처리는 별도 계층으로 분리합니다.
+- 화면 동작이 바뀌면 관련 테스트나 문서도 함께 갱신합니다.
+- 공통 규칙은 `AGENTS.md`, `CLAUDE.md`를 따릅니다.

@@ -1,0 +1,13 @@
+---
+description: Frontend and UI implementation rules
+globs: "app/**/*,src/components/**/*,src/features/**/*,src/routes/**/*,pages/**/*,components/**/*"
+---
+
+- Prefer user-visible behavior over implementation cleverness. Keep state transitions explicit and easy to trace.
+- Preserve accessibility basics by default: labels, keyboard flow, focus visibility, and semantic structure.
+- Keep loading, empty, and error states present in the same change when adding UI behavior.
+- Avoid mixing API normalization, UI state, and rendering concerns in one file when the feature grows.
+- Follow the project architecture, naming, and safety rules in `AGENTS.md` and `CLAUDE.md`.
+
+@AGENTS.md
+@CLAUDE.md

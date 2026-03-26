@@ -52,6 +52,9 @@ parse_manifest_line() {
 
 get_shared_asset_paths() {
   local profile="${1:-standard}"
+  local stack="${2:-}"
+  local context_mode="${3:-}"
+  local archetype="${4:-}"
   local paths=(
     ".claude/settings.json"
     ".claude/hooks/protect-files.sh"
@@ -70,16 +73,21 @@ get_shared_asset_paths() {
   if [ "$profile" = "team" ]; then
     paths+=(".claude/hooks/team-webhook-notify.sh")
   fi
-  paths+=(
-    ".cursor/rules/ai-setting.mdc"
-    ".gemini/settings.json"
-  )
+  local cursor_rule
+  while IFS= read -r cursor_rule; do
+    [ -n "$cursor_rule" ] || continue
+    paths+=(".cursor/rules/$cursor_rule")
+  done < <(get_cursor_rule_paths "$stack" "$context_mode" "$archetype")
+  paths+=(".gemini/settings.json" ".gemini/settings.notes.md" ".codex/config.notes.md")
   printf '%s\n' "${paths[@]}"
 }
 
 detect_sync_conflicts() {
   local target="$1"
   local profile="${2:-standard}"
+  local stack="${3:-}"
+  local context_mode="${4:-}"
+  local archetype="${5:-}"
   local conflict_count=0
   local conflict_files=()
 
@@ -101,8 +109,35 @@ detect_sync_conflicts() {
       .cursor/rules/ai-setting.mdc)
         source_file="$SCRIPT_DIR/cursor/rules/ai-setting.mdc"
         ;;
+      .cursor/rules/typescript.mdc)
+        source_file="$SCRIPT_DIR/cursor/rules/typescript.mdc"
+        ;;
+      .cursor/rules/python.mdc)
+        source_file="$SCRIPT_DIR/cursor/rules/python.mdc"
+        ;;
+      .cursor/rules/testing.mdc)
+        source_file="$SCRIPT_DIR/cursor/rules/testing.mdc"
+        ;;
+      .cursor/rules/frontend.mdc)
+        source_file="$SCRIPT_DIR/cursor/rules/frontend.mdc"
+        ;;
+      .cursor/rules/backend.mdc)
+        source_file="$SCRIPT_DIR/cursor/rules/backend.mdc"
+        ;;
+      .cursor/rules/docs.mdc)
+        source_file="$SCRIPT_DIR/cursor/rules/docs.mdc"
+        ;;
+      .cursor/rules/cli-library.mdc)
+        source_file="$SCRIPT_DIR/cursor/rules/cli-library.mdc"
+        ;;
       .gemini/settings.json)
         source_file="$SCRIPT_DIR/gemini/settings.json"
+        ;;
+      .gemini/settings.notes.md)
+        source_file="$TEMPLATE_DIR/gemini-settings.notes.md.template"
+        ;;
+      .codex/config.notes.md)
+        source_file="$TEMPLATE_DIR/codex-config.notes.md.template"
         ;;
     esac
 
@@ -112,7 +147,7 @@ detect_sync_conflicts() {
       conflict_count=$((conflict_count + 1))
       conflict_files+=("$rel_path")
     fi
-  done < <(get_shared_asset_paths "$profile")
+  done < <(get_shared_asset_paths "$profile" "$stack" "$context_mode" "$archetype")
 
   SYNC_CONFLICT_COUNT=$conflict_count
   SYNC_CONFLICT_FILES=("${conflict_files[@]}")
@@ -196,7 +231,7 @@ run_sync_manifest() {
       continue
     fi
 
-    detect_sync_conflicts "$target_path" "$per_project_profile"
+    detect_sync_conflicts "$target_path" "$per_project_profile" "$per_project_stack" "" "$per_project_archetype"
     if [ "$SYNC_CONFLICT_COUNT" -gt 0 ]; then
       printf "  ${YELLOW}${MSG_SYNC_CONFLICT_DETECTED}${NC}\n" "$SYNC_CONFLICT_COUNT" "${SYNC_CONFLICT_FILES[*]}"
       case "$SYNC_CONFLICT_STRATEGY" in

@@ -10,12 +10,19 @@ Core rules and execution/verification methods follow the documents below as the 
 ## Build & Validate
 - Build/run, test, and lint commands follow the "Build & Run" section of `CLAUDE.md`.
 
+## Gemini Workflow
+- Start by checking the relevant files and docs, then write a short execution plan before making broad changes.
+- During longer tasks, share concise progress updates and blockers instead of going silent.
+- After changes, summarize the verification commands, observed results, and any remaining risks.
+
 ## Gemini-specific Notes
-- 200K token context: When analyzing large files, pass the entire file at once instead of splitting.
-- @ mentions: You can directly reference a specific file with `@filename`.
-- Code execution: Only runs in directories allowed by `.gemini/settings.json`'s `codeExecution.allowedDirectories`.
+- `GEMINI.md` is the Gemini-specific working guide; shared rules still come from `AGENTS.md`, `CLAUDE.md`, and `BEHAVIORAL_CORE.md`.
+- @ mentions and file discovery follow the context settings in `.gemini/settings.json`.
+- Code execution only runs in directories allowed by `.gemini/settings.json`'s `codeExecution.allowedDirectories`.
+- Manual choices such as approval mode, model selection, or broader execution paths should be adjusted with `.gemini/settings.notes.md`.
 - [rules to emphasize specifically when using Gemini CLI in this project]
 
 ## Safety Rules
 - Follow the safety guards, error handling, and environment variable rules from `CLAUDE.md` as-is.
 - Do not include files specified in `.geminiignore` in the context.
+- Do not assume repository-external paths or global system changes are allowed by default; confirm first when needed.

@@ -1,0 +1,13 @@
+---
+description: Backend, API, and service-side rules
+globs: "app/**/*,api/**/*,backend/**/*,server/**/*,internal/**/*,services/**/*,workers/**/*,jobs/**/*,infra/**/*"
+---
+
+- Keep request validation, domain logic, and persistence concerns separated when touching service code.
+- Treat public API shapes, CLI interfaces, and message contracts as compatibility boundaries; document breaking changes.
+- Prefer explicit error handling, idempotent operations, and safe retry behavior for jobs, queues, and background work.
+- When changing data flows, update related tests, fixtures, and operational notes in the same change.
+- Follow the project execution, safety, and testing rules in `AGENTS.md` and `CLAUDE.md`.
+
+@AGENTS.md
+@CLAUDE.md

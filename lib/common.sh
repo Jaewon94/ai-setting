@@ -111,3 +111,98 @@ truncate_file_from_marker() {
     }
   ' "$file" > "$temp_file" && mv "$temp_file" "$file"
 }
+
+get_all_cursor_rule_paths() {
+  printf '%s\n' \
+    "ai-setting.mdc" \
+    "typescript.mdc" \
+    "python.mdc" \
+    "testing.mdc" \
+    "frontend.mdc" \
+    "backend.mdc" \
+    "docs.mdc" \
+    "cli-library.mdc"
+}
+
+get_cursor_rule_paths() {
+  local stack="${1:-}"
+  local context_mode="${2:-}"
+  local archetype="${3:-}"
+
+  printf '%s\n' "ai-setting.mdc"
+
+  case "$stack" in
+    *TypeScript*|*JavaScript*|*Next.js*|*Vite*|*Node*)
+      printf '%s\n' "typescript.mdc"
+      ;;
+    *Python*)
+      printf '%s\n' "python.mdc"
+      ;;
+  esac
+
+  if [ "$context_mode" != "blank-start" ]; then
+    printf '%s\n' "testing.mdc"
+  fi
+
+  case "$context_mode" in
+    docs-first|hybrid)
+      printf '%s\n' "docs.mdc"
+      ;;
+  esac
+
+  case "$archetype" in
+    frontend-web)
+      printf '%s\n' "frontend.mdc"
+      ;;
+    backend-api|worker-batch|data-automation|infra-iac)
+      printf '%s\n' "backend.mdc"
+      ;;
+    cli-tool|library-sdk)
+      printf '%s\n' "cli-library.mdc"
+      ;;
+  esac
+}
+
+get_all_copilot_instruction_paths() {
+  printf '%s\n' \
+    "typescript.instructions.md" \
+    "python.instructions.md" \
+    "testing.instructions.md" \
+    "frontend.instructions.md" \
+    "backend.instructions.md" \
+    "docs.instructions.md"
+}
+
+get_copilot_instruction_paths() {
+  local stack="${1:-}"
+  local context_mode="${2:-}"
+  local archetype="${3:-}"
+
+  case "$stack" in
+    *TypeScript*|*JavaScript*|*Next.js*|*Vite*|*Node*)
+      printf '%s\n' "typescript.instructions.md"
+      ;;
+    *Python*)
+      printf '%s\n' "python.instructions.md"
+      ;;
+  esac
+
+  if [ "$context_mode" != "blank-start" ]; then
+    printf '%s\n' "testing.instructions.md"
+  fi
+
+  case "$context_mode" in
+    docs-first|hybrid)
+      printf '%s\n' "docs.instructions.md"
+      ;;
+  esac
+
+  case "$archetype" in
+    frontend-web)
+      printf '%s\n' "frontend.instructions.md"
+      ;;
+    backend-api|worker-batch|data-automation|infra-iac)
+      printf '%s\n' "backend.instructions.md"
+      ;;
+  esac
+}

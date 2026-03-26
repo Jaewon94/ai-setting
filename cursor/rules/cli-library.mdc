@@ -1,0 +1,13 @@
+---
+description: CLI and library surface rules
+globs: "cmd/**/*,bin/**/*,cli/**/*,src/**/*,lib/**/*,pkg/**/*,examples/**/*"
+---
+
+- Keep command entry points, public APIs, and usage examples consistent when changing flags, arguments, or exported behavior.
+- Prefer predictable defaults, clear error messages, and stable help/output formats for user-facing commands.
+- Separate internal helpers from public interfaces so the supported surface stays easy to identify.
+- Update examples, README snippets, and release-facing notes when public behavior changes.
+- Follow the architecture, compatibility, and testing rules in `AGENTS.md` and `CLAUDE.md`.
+
+@AGENTS.md
+@CLAUDE.md

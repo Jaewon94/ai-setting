@@ -5,10 +5,10 @@
 | 도구 | 생성 파일 | 메모 |
 |------|-----------|------|
 | Claude Code | `.claude/`, `CLAUDE.md` | 기본 통합 대상 |
-| Codex CLI | `.codex/config.toml`, `AGENTS.md` | AGENTS.md는 디렉토리 계층에서 자동 탐색 |
-| Cursor | `.cursor/rules/*.mdc` | rules는 지원, `@file`은 Cursor 제품 측 이슈 영향 |
-| Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | 설정 파일 + 컨텍스트 문서 |
-| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | 저장소 지침 + path-specific instructions |
+| Codex CLI | `.codex/config.toml`, `.codex/config.notes.md`, `AGENTS.md` | AGENTS.md는 디렉토리 계층에서 자동 탐색 |
+| Cursor | `.cursor/rules/*.mdc` | 공통 rule + stack/archetype rule 생성, `@file`은 Cursor 제품 측 이슈 영향 |
+| Gemini CLI | `.gemini/settings.json`, `.gemini/settings.notes.md`, `GEMINI.md` | 설정 파일 + 수동 조정 notes + 컨텍스트 문서 |
+| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | 저장소 지침 + stack/archetype path-specific instructions |
 
 ## 생성 자산 범주
 
@@ -18,7 +18,9 @@
 - `.claude/skills/*`
 - `.cursor/rules/*`
 - `.gemini/settings.json`
+- `.gemini/settings.notes.md`
 - `.codex/config.toml`
+- `.codex/config.notes.md`
 - `.mcp.json`
 - `.mcp.notes.md`
 - `CLAUDE.md`

@@ -1,0 +1,51 @@
+# Gemini Settings Notes
+
+이 파일은 `.gemini/settings.json`에서 자주 조정하는 항목을 정리한 메모입니다.
+
+## 기본 원칙
+
+- 프로젝트 기본값은 보수적으로 유지합니다.
+- 팀이나 개인 취향에 따라 크게 달라지는 항목은 JSON에 강제하지 않습니다.
+- workspace 설정은 user 설정보다 우선합니다.
+
+## 자주 조정하는 항목
+
+### 1. 코드 실행 범위
+
+현재 기본값:
+
+```json
+"codeExecution": {
+  "allowedDirectories": ["."]
+}
+```
+
+필요할 때만 프로젝트 하위 경로를 추가합니다.
+
+예:
+
+```json
+"codeExecution": {
+  "allowedDirectories": [".", "./scripts", "./tools"]
+}
+```
+
+저장소 밖 경로는 기본값으로 열지 않는 편이 안전합니다.
+
+### 2. 모델/승인 정책
+
+- 모델 선택
+- approval mode
+- interactive shell 성격 옵션
+
+이 항목들은 팀 운영 방식에 따라 달라질 수 있으니, 실제 사용 후 필요할 때만 추가합니다.
+
+### 3. context 범위
+
+현재 기본값:
+
+- `GEMINI.md`, `AGENTS.md`를 우선 메모리 파일로 사용
+- `.gitignore`, `.geminiignore` 존중
+- 재귀 파일 탐색 허용
+
+프로젝트가 매우 크면 `discoveryMaxDirs`나 include directory 관련 옵션을 좁혀서 조정합니다.

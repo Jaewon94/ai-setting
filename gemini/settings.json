@@ -1,10 +1,13 @@
 {
   "context": {
     "fileName": ["GEMINI.md", "AGENTS.md"],
+    "discoveryMaxDirs": 200,
     "includeDirectoryTree": true,
+    "loadMemoryFromIncludeDirectories": false,
     "fileFiltering": {
       "respectGitIgnore": true,
-      "respectGeminiIgnore": true
+      "respectGeminiIgnore": true,
+      "enableRecursiveFileSearch": true
     }
   },
   "codeExecution": {

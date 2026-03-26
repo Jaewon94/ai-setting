@@ -1,0 +1,59 @@
+# Codex Config Notes
+
+This file documents the options you are most likely to adjust in `.codex/config.toml`.
+
+## Default stance
+
+- Project-local `.codex/config.toml` only applies in trusted projects.
+- Keep defaults conservative and move highly team-specific choices into notes instead of the base template.
+- Codex automatically discovers `AGENTS.md` in the directory hierarchy, so shared rules belong there.
+
+## Current defaults
+
+- model: `gpt-5.1-codex-mini`
+- standard/minimal: `approval_policy = "on-request"`
+- strict/team: granular approval
+- sandbox: `workspace-write`
+
+## Common adjustments
+
+### 1. Model choice
+
+Check the latest official Codex model docs before changing the model.
+
+Example:
+
+```toml
+model = "gpt-5-codex"
+```
+
+Choose based on cost, speed, and team defaults together.
+
+### 2. approval_policy
+
+Valid values in the current reference:
+
+- `on-request`
+- `never`
+- `untrusted`
+- `granular`
+
+Older values such as `suggest` or `auto-edit` should not be treated as current defaults.
+
+### 3. Sandbox details
+
+Add workspace-write sub-options only when the project clearly needs them.
+
+Example:
+
+```toml
+sandbox_workspace_write.network_access = true
+```
+
+### 4. review / service tier / shell environment
+
+- `review_model`
+- `service_tier`
+- `shell_environment_policy.*`
+
+These vary heavily by runtime environment, so they are intentionally not hard-coded in the base template.

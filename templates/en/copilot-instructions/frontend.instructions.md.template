@@ -1,0 +1,11 @@
+---
+applyTo: "app/**,src/components/**,src/features/**,src/routes/**,pages/**,components/**"
+---
+
+# Frontend Instructions
+
+- Consider user-visible behavior, loading states, error states, and accessibility together.
+- Do not over-mix UI rendering, business logic, and API normalization in one file.
+- Keep components small and move shared state or async orchestration into clearer layers.
+- When UI behavior changes, update the related tests or docs in the same change.
+- Follow the shared rules in `AGENTS.md` and `CLAUDE.md`.

@@ -1,0 +1,11 @@
+---
+applyTo: "app/**,api/**,backend/**,server/**,services/**,workers/**,jobs/**,infra/**"
+---
+
+# Backend Instructions
+
+- Keep request validation, domain logic, and persistence concerns separated when practical.
+- Treat public APIs, CLI interfaces, and message schemas as compatibility boundaries.
+- For retryable jobs, workers, or queue consumers, consider idempotency and failure handling together.
+- When data flows change, update the related tests, fixtures, and operational notes.
+- Follow the shared rules in `AGENTS.md` and `CLAUDE.md`.

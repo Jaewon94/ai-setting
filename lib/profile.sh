@@ -219,26 +219,33 @@ copy_claude_profile_assets() {
 }
 
 copy_cursor_assets() {
+  local selected_rule
+  local target_rule
+  local selected_rules=()
+
   run_mkdir_p "$TARGET/.cursor/rules"
-  if [ -f "$TARGET/.cursor/rules/ai-setting.mdc" ]; then
-    backup_existing_path "$TARGET/.cursor/rules/ai-setting.mdc" ".cursor/rules/ai-setting.mdc"
-  fi
-  install_shared_asset "$SCRIPT_DIR/cursor/rules/ai-setting.mdc" "$TARGET/.cursor/rules/ai-setting.mdc"
 
-  # 스택 기반 파일 타입별 규칙 추가
-  case "${PROJECT_STACK:-}" in
-    *TypeScript*|*JavaScript*|*Next.js*|*Vite*|*Node*)
-      install_shared_asset "$SCRIPT_DIR/cursor/rules/typescript.mdc" "$TARGET/.cursor/rules/typescript.mdc"
-      ;;
-    *Python*)
-      install_shared_asset "$SCRIPT_DIR/cursor/rules/python.mdc" "$TARGET/.cursor/rules/python.mdc"
-      ;;
-  esac
+  while IFS= read -r selected_rule; do
+    [ -n "$selected_rule" ] || continue
+    selected_rules+=("$selected_rule")
+    target_rule="$TARGET/.cursor/rules/$selected_rule"
+    if [ -f "$target_rule" ] || [ -L "$target_rule" ]; then
+      backup_existing_path "$target_rule" ".cursor/rules/$selected_rule"
+    fi
+    install_shared_asset "$SCRIPT_DIR/cursor/rules/$selected_rule" "$target_rule"
+  done < <(get_cursor_rule_paths "${PROJECT_STACK:-}" "${PROJECT_CONTEXT_MODE:-}" "${PROJECT_ARCHETYPE:-}")
 
-  # testing.mdc는 모든 프로젝트에 적용 (blank-start 제외)
-  if [ "${PROJECT_CONTEXT_MODE:-}" != "blank-start" ]; then
-    install_shared_asset "$SCRIPT_DIR/cursor/rules/testing.mdc" "$TARGET/.cursor/rules/testing.mdc"
-  fi
+  while IFS= read -r selected_rule; do
+    [ -n "$selected_rule" ] || continue
+    if contains_value "$selected_rule" "${selected_rules[@]}"; then
+      continue
+    fi
+    target_rule="$TARGET/.cursor/rules/$selected_rule"
+    if [ -e "$target_rule" ] || [ -L "$target_rule" ]; then
+      backup_existing_path "$target_rule" ".cursor/rules/$selected_rule"
+      run_remove_path "$target_rule"
+    fi
+  done < <(get_all_cursor_rule_paths)
 }
 
 copy_gemini_assets() {
@@ -247,28 +254,45 @@ copy_gemini_assets() {
     backup_existing_path "$TARGET/.gemini/settings.json" ".gemini/settings.json"
   fi
   install_shared_asset "$SCRIPT_DIR/gemini/settings.json" "$TARGET/.gemini/settings.json"
+  if [ -f "$TARGET/.gemini/settings.notes.md" ]; then
+    backup_existing_path "$TARGET/.gemini/settings.notes.md" ".gemini/settings.notes.md"
+  fi
+  run_copy "$TEMPLATE_DIR/gemini-settings.notes.md.template" "$TARGET/.gemini/settings.notes.md"
 }
 
 copy_copilot_assets() {
+  local instruction
+  local target_instruction
+  local selected_instructions=()
+
   run_mkdir_p "$TARGET/.github"
   run_mkdir_p "$TARGET/.github/instructions"
   if [ -f "$TARGET/.github/copilot-instructions.md" ]; then
     backup_existing_path "$TARGET/.github/copilot-instructions.md" ".github/copilot-instructions.md"
   fi
-  run_copy "$SCRIPT_DIR/templates/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
+  run_copy "$TEMPLATE_DIR/copilot-instructions.md.template" "$TARGET/.github/copilot-instructions.md"
 
-  case "${PROJECT_STACK:-}" in
-    *TypeScript*|*JavaScript*|*Next.js*|*Vite*|*Node*)
-      run_copy "$SCRIPT_DIR/templates/copilot-instructions/typescript.instructions.md.template" "$TARGET/.github/instructions/typescript.instructions.md"
-      ;;
-    *Python*)
-      run_copy "$SCRIPT_DIR/templates/copilot-instructions/python.instructions.md.template" "$TARGET/.github/instructions/python.instructions.md"
-      ;;
-  esac
+  while IFS= read -r instruction; do
+    [ -n "$instruction" ] || continue
+    selected_instructions+=("$instruction")
+    target_instruction="$TARGET/.github/instructions/$instruction"
+    if [ -f "$target_instruction" ] || [ -L "$target_instruction" ]; then
+      backup_existing_path "$target_instruction" ".github/instructions/$instruction"
+    fi
+    run_copy "$TEMPLATE_DIR/copilot-instructions/$instruction.template" "$target_instruction"
+  done < <(get_copilot_instruction_paths "${PROJECT_STACK:-}" "${PROJECT_CONTEXT_MODE:-}" "${PROJECT_ARCHETYPE:-}")
 
-  if [ "${PROJECT_CONTEXT_MODE:-}" != "blank-start" ]; then
-    run_copy "$SCRIPT_DIR/templates/copilot-instructions/testing.instructions.md.template" "$TARGET/.github/instructions/testing.instructions.md"
-  fi
+  while IFS= read -r instruction; do
+    [ -n "$instruction" ] || continue
+    if contains_value "$instruction" "${selected_instructions[@]}"; then
+      continue
+    fi
+    target_instruction="$TARGET/.github/instructions/$instruction"
+    if [ -e "$target_instruction" ] || [ -L "$target_instruction" ]; then
+      backup_existing_path "$target_instruction" ".github/instructions/$instruction"
+      run_remove_path "$target_instruction"
+    fi
+  done < <(get_all_copilot_instruction_paths)
 }
 
 copy_codex_assets() {
@@ -277,6 +301,10 @@ copy_codex_assets() {
     backup_existing_path "$TARGET/.codex/config.toml" ".codex/config.toml"
   fi
   run_copy "$(get_codex_config_template "$CLAUDE_PROFILE")" "$TARGET/.codex/config.toml"
+  if [ -f "$TARGET/.codex/config.notes.md" ]; then
+    backup_existing_path "$TARGET/.codex/config.notes.md" ".codex/config.notes.md"
+  fi
+  run_copy "$TEMPLATE_DIR/codex-config.notes.md.template" "$TARGET/.codex/config.notes.md"
 }
 
 cmd_add_tool() {

@@ -1,0 +1,11 @@
+---
+applyTo: "**/*.md,docs/**"
+---
+
+# Documentation Instructions
+
+- Do not leave docs that conflict with the current code, commands, or file paths.
+- Prefer short, direct, task-oriented writing over long explanations.
+- For workflow docs, include prerequisites, commands, and expected outcomes.
+- When behavior changes in code, update the nearest README, reference, or operational doc.
+- Follow terminology and documentation rules from `CLAUDE.md`.

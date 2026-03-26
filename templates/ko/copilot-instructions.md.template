@@ -3,41 +3,19 @@
 ## Project Summary
 - [프로젝트 한 줄 설명]
 
-## Behavioral Core
-- State assumptions explicitly when the code or docs do not fully confirm them.
-- Prefer the simplest sufficient change before introducing new abstractions or dependencies.
-- Keep edits local to the requested scope unless wider change is clearly necessary.
-- Decide how success will be checked before editing, then report what was verified.
+## How To Work In This Repo
+- 먼저 `AGENTS.md`, `CLAUDE.md`, `docs/decisions.md`를 확인하고 작업 범위를 좁힙니다.
+- 저장소 전역 지침은 여기서 짧게 유지하고, 파일별 규칙은 `.github/instructions/*.instructions.md`를 우선 따릅니다.
+- 추측이 필요한 경우 가정을 분명히 드러내고, 변경 후에는 확인한 검증 결과를 함께 남깁니다.
 
-## Build, Test, Validate
+## Validate Before Finishing
 - Build/Run: [프로젝트별 build 또는 run 명령]
 - Test: [프로젝트별 테스트 명령어]
 - Lint/Format: [프로젝트별 린트 또는 포맷 명령]
 
-## Code Style
-- Follow the naming conventions and code patterns defined in `AGENTS.md`.
-- Use explicit types for public APIs and function signatures.
-- Prefer standard library solutions before introducing new dependencies.
-- Keep functions focused: one function, one responsibility.
-
-## Naming Conventions
-- Files: follow existing project conventions (kebab-case, snake_case, or camelCase as established).
-- Variables/Functions: descriptive names that reveal intent, no abbreviations.
-- Constants: UPPER_SNAKE_CASE for true constants.
-
-## Forbidden Patterns
-- Do not use `any` type (TypeScript) or bare `except` (Python) in new code.
-- Do not hardcode secrets, API keys, or environment-specific values.
-- Do not commit `.env` files or generated credentials.
-- Do not suppress linter warnings without a comment explaining why.
-
-## PR Review Criteria
-- Every PR should include: clear description, test coverage for changes, no unrelated changes.
-- Breaking changes must be documented in the PR description.
-- Follow the project's PR template if available (`.github/pull_request_template.md`).
-
-## Working Agreements
-- Follow `AGENTS.md` for architecture and coding rules.
-- Follow `CLAUDE.md` for project-specific build, safety, and documentation rules.
-- Update `docs/decisions.md` when a meaningful technical decision changes.
+## Shared Rules
+- 아키텍처, 네이밍, 공통 코딩 규칙은 `AGENTS.md`를 따릅니다.
+- 빌드, 안전장치, 문서 업데이트 규칙은 `CLAUDE.md`를 따릅니다.
+- 의미 있는 기술적 결정이 바뀌면 `docs/decisions.md`를 함께 업데이트합니다.
+- 경로별 세부 규칙은 `.github/instructions/*.instructions.md`를 우선 적용합니다.
 - [프로젝트별 추가 검증 또는 협업 규칙]

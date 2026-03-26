@@ -1,0 +1,51 @@
+# Gemini Settings Notes
+
+This file documents the options you are most likely to adjust in `.gemini/settings.json`.
+
+## Default stance
+
+- Keep project defaults conservative.
+- Do not hard-code options that vary heavily by team or personal preference.
+- Workspace settings override user settings.
+
+## Common adjustments
+
+### 1. Code execution scope
+
+Current default:
+
+```json
+"codeExecution": {
+  "allowedDirectories": ["."]
+}
+```
+
+Add project-local paths only when needed.
+
+Example:
+
+```json
+"codeExecution": {
+  "allowedDirectories": [".", "./scripts", "./tools"]
+}
+```
+
+Avoid opening repository-external paths by default.
+
+### 2. Model and approval choices
+
+- model selection
+- approval mode
+- interactive shell options
+
+These vary by team workflow, so add them only after real usage confirms the need.
+
+### 3. Context scope
+
+Current default:
+
+- prefer `GEMINI.md` and `AGENTS.md` as memory files
+- respect `.gitignore` and `.geminiignore`
+- allow recursive file search
+
+If the project is very large, narrow `discoveryMaxDirs` or related include-directory options.

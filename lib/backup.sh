@@ -4,11 +4,8 @@
 build_backup_managed_paths() {
   BACKUP_MANAGED_PATHS=(
     ".claude"
-    ".cursor/rules/ai-setting.mdc"
-    ".cursor/rules/typescript.mdc"
-    ".cursor/rules/python.mdc"
-    ".cursor/rules/testing.mdc"
     ".gemini/settings.json"
+    ".gemini/settings.notes.md"
     ".codex/config.toml"
     ".mcp.json"
     ".mcp.notes.md"
@@ -21,10 +18,19 @@ build_backup_managed_paths() {
     ".github/instructions/typescript.instructions.md"
     ".github/instructions/python.instructions.md"
     ".github/instructions/testing.instructions.md"
+    ".github/instructions/frontend.instructions.md"
+    ".github/instructions/backend.instructions.md"
+    ".github/instructions/docs.instructions.md"
     ".github/pull_request_template.md"
     ".ai-setting/team-webhook.json"
     "docs/decisions.md"
   )
+
+  local cursor_rule
+  while IFS= read -r cursor_rule; do
+    [ -n "$cursor_rule" ] || continue
+    BACKUP_MANAGED_PATHS+=(".cursor/rules/$cursor_rule")
+  done < <(get_all_cursor_rule_paths)
 }
 
 snapshot_managed_path() {

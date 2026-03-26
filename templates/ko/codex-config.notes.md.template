@@ -1,0 +1,61 @@
+# Codex Config Notes
+
+이 파일은 `.codex/config.toml`에서 자주 손보는 항목과 운영 기준을 정리한 메모입니다.
+
+## 기본 원칙
+
+- 프로젝트 로컬 `.codex/config.toml`은 신뢰된 프로젝트에서만 적용됩니다.
+- 기본값은 보수적으로 유지하고, 팀/개인 취향 차이가 큰 항목은 notes에서만 안내합니다.
+- `AGENTS.md`는 Codex가 디렉토리 계층에서 자동으로 읽으므로, 공통 규칙은 거기에 두는 편이 낫습니다.
+
+## 현재 기본값
+
+- model: `gpt-5.1-codex-mini`
+- standard/minimal: `approval_policy = "on-request"`
+- strict/team: granular approval
+- sandbox: `workspace-write`
+
+## 자주 조정하는 항목
+
+### 1. 모델 선택
+
+공식 문서의 최신 Codex 모델을 확인한 뒤 필요할 때만 바꿉니다.
+
+예:
+
+```toml
+model = "gpt-5-codex"
+```
+
+비용, 속도, 팀 기본값을 같이 보고 결정하는 편이 안전합니다.
+
+### 2. approval_policy
+
+최신 reference 기준 유효 값:
+
+- `on-request`
+- `never`
+- `untrusted`
+- `granular`
+
+`suggest`, `auto-edit` 같은 과거 값은 더 이상 기준값으로 보지 않습니다.
+
+### 3. sandbox 세부 옵션
+
+필요하면 workspace-write 하위 옵션을 추가할 수 있습니다.
+
+예:
+
+```toml
+sandbox_workspace_write.network_access = true
+```
+
+이런 항목은 프로젝트 성격이 분명할 때만 켭니다.
+
+### 4. review / service tier / shell environment
+
+- `review_model`
+- `service_tier`
+- `shell_environment_policy.*`
+
+이 항목들은 운영 환경 차이가 커서 기본 템플릿에 강제하지 않습니다.

@@ -202,6 +202,8 @@ ai-setting/
 
 > "설정 파일 복사 수준에서 각 도구의 고유 기능을 활용하는 수준으로 끌어올린다"
 
+상세 실행 계획: [`docs/plans/tool-specialization-plan.ko.md`](plans/tool-specialization-plan.ko.md)
+
 현재 Cursor/Gemini/Copilot/Codex는 기본 설정 파일만 생성하고 있다. 각 도구의 공식 문서와 베스트 프랙티스를 기반으로 특화 규칙을 추가한다.
 
 #### 구현 지침
@@ -213,7 +215,7 @@ ai-setting/
 
 #### 8-1. Cursor 지원 심화
 
-현재: `.cursor/rules/ai-setting.mdc` 1개 (AGENTS.md/CLAUDE.md 참조만)
+현재: 공통 rule + stack rule + archetype rule 생성이 가능하지만, 세분화와 검증 범위를 더 넓혀야 함
 
 목표:
 - **glob 패턴 기반 파일 타입별 규칙** 추가 (Cursor의 핵심 차별점)
@@ -237,7 +239,7 @@ ai-setting/
 
 #### 8-2. Gemini CLI 지원 심화
 
-현재: `.gemini/settings.json` (gitignore만), `GEMINI.md` (CLAUDE.md/AGENTS.md 참조만)
+현재: `.gemini/settings.json`, `.gemini/settings.notes.md`, `GEMINI.md`까지 생성 가능하지만 Gemini 전용 운영 규칙은 더 다듬을 여지가 있음
 
 목표:
 - Gemini CLI의 고유 설정 옵션 활용 (sandbox mode, model 설정 등)
@@ -250,7 +252,7 @@ ai-setting/
 
 #### 8-3. GitHub Copilot 지원 심화
 
-현재: `.github/copilot-instructions.md` (generic build/test/lint 요약)
+현재: repository-wide instruction + stack/archetype path-specific instructions까지 생성 가능하지만 세부 규칙 축약과 경로 범위는 더 다듬을 여지가 있음
 
 목표:
 - Copilot의 파일별 지침 (`*.test.ts` 패턴 등) 활용
@@ -263,7 +265,7 @@ ai-setting/
 
 #### 8-4. Codex CLI 지원 심화
 
-현재: `.codex/config.toml` (모델/sandbox/MCP만)
+현재: `.codex/config.toml`, `.codex/config.notes.md`, `AGENTS.md` 조합으로 운영 가능하지만 archetype별 AGENTS 보강과 세부 정책 정리는 더 남아 있음
 
 목표:
 - Codex의 approval_policy 세분화 (suggest/auto-edit/full-auto)

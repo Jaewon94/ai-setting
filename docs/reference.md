@@ -5,10 +5,10 @@
 | Tool | Generated Files | Notes |
 |------|-----------------|-------|
 | Claude Code | `.claude/`, `CLAUDE.md` | Primary integration target |
-| Codex CLI | `.codex/config.toml`, `AGENTS.md` | AGENTS.md is auto-read from the directory hierarchy |
-| Cursor | `.cursor/rules/*.mdc` | Rules supported; `@file` behavior still depends on Cursor-side support |
-| Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | Separate CLI config plus context file |
-| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | Standalone repo + path-specific instruction files |
+| Codex CLI | `.codex/config.toml`, `.codex/config.notes.md`, `AGENTS.md` | AGENTS.md is auto-read from the directory hierarchy |
+| Cursor | `.cursor/rules/*.mdc` | Common plus stack/archetype rules; `@file` behavior still depends on Cursor-side support |
+| Gemini CLI | `.gemini/settings.json`, `.gemini/settings.notes.md`, `GEMINI.md` | Config file plus manual-adjustment notes and context file |
+| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | Repo-wide guidance plus stack/archetype path-specific instructions |
 
 ## Generated Asset Categories
 
@@ -18,7 +18,9 @@
 - `.claude/skills/*`
 - `.cursor/rules/*`
 - `.gemini/settings.json`
+- `.gemini/settings.notes.md`
 - `.codex/config.toml`
+- `.codex/config.notes.md`
 - `.mcp.json`
 - `.mcp.notes.md`
 - `CLAUDE.md`

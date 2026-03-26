@@ -1,0 +1,12 @@
+---
+description: Documentation and markdown update rules
+globs: "**/*.md,docs/**/*"
+---
+
+- Keep documentation aligned with the current code, commands, and file paths. Remove stale examples instead of leaving conflicting notes.
+- Prefer short sections, direct wording, and task-oriented examples over long narrative explanations.
+- When documenting workflows, include prerequisites, command examples, and expected outcomes.
+- If a behavior changed in code, update the nearest README, reference, or operational doc in the same change.
+- Follow the project documentation conventions and terminology from `CLAUDE.md`.
+
+@CLAUDE.md

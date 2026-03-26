@@ -127,6 +127,12 @@ run_doctor() {
     doctor_warn "$MSG_DOCTOR_GEMINI_SETTINGS_WARN"
   fi
 
+  if [ -f "$target/.gemini/settings.notes.md" ]; then
+    doctor_ok ".gemini/settings.notes.md 존재"
+  else
+    doctor_warn ".gemini/settings.notes.md 없음"
+  fi
+
   if [ -f "$target/GEMINI.md" ]; then
     doctor_ok "$MSG_DOCTOR_GEMINIMD_OK"
   else
@@ -259,6 +265,12 @@ run_doctor() {
     doctor_ok "$MSG_DOCTOR_CODEX_CONFIG_OK"
   else
     doctor_warn "$MSG_DOCTOR_CODEX_CONFIG_WARN"
+  fi
+
+  if [ -f "$target/.codex/config.notes.md" ]; then
+    doctor_ok ".codex/config.notes.md 존재"
+  else
+    doctor_warn ".codex/config.notes.md 없음"
   fi
 
   if [ -f "$target/.mcp.json" ]; then
@@ -435,8 +447,13 @@ run_diff_preview() {
   local -a managed_paths
   local -a internal_args
 
-  managed_paths=(".claude" ".codex/config.toml" "CLAUDE.md" "AGENTS.md" "docs/decisions.md" "docs/research-notes.md")
-  managed_paths+=(".cursor/rules/ai-setting.mdc" ".gemini/settings.json" "GEMINI.md" "BEHAVIORAL_CORE.md" ".github/copilot-instructions.md" ".github/instructions/typescript.instructions.md" ".github/instructions/python.instructions.md" ".github/instructions/testing.instructions.md" ".github/pull_request_template.md" ".ai-setting/team-webhook.json")
+  managed_paths=(".claude" ".codex/config.toml" ".codex/config.notes.md" "CLAUDE.md" "AGENTS.md" "docs/decisions.md" "docs/research-notes.md")
+  managed_paths+=(".gemini/settings.json" ".gemini/settings.notes.md" "GEMINI.md" "BEHAVIORAL_CORE.md" ".github/copilot-instructions.md" ".github/instructions/typescript.instructions.md" ".github/instructions/python.instructions.md" ".github/instructions/testing.instructions.md" ".github/instructions/frontend.instructions.md" ".github/instructions/backend.instructions.md" ".github/instructions/docs.instructions.md" ".github/pull_request_template.md" ".ai-setting/team-webhook.json")
+  local cursor_rule
+  while IFS= read -r cursor_rule; do
+    [ -n "$cursor_rule" ] || continue
+    managed_paths+=(".cursor/rules/$cursor_rule")
+  done < <(get_all_cursor_rule_paths)
   if [ "$MCP_ENABLED" = true ]; then
     managed_paths+=(".mcp.json" ".mcp.notes.md")
   fi

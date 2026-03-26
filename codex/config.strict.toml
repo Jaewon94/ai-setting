@@ -2,11 +2,11 @@
 # 공식 문서: https://developers.openai.com/codex/config-reference/
 # 참고: 프로젝트 로컬 MCP preset은 init.sh 실행 시 이 파일에 추가됩니다.
 
-model = "o4-mini"
+model = "gpt-5.1-codex-mini"
 model_reasoning_effort = "medium"
 model_reasoning_summary = "concise"
 sandbox_mode = "workspace-write"
-approval_policy = "suggest"
+approval_policy = { granular = { sandbox_approval = true, rules = true, mcp_elicitations = true, request_permissions = true, skill_approval = true } }
 
 [features]
 multi_agent = true

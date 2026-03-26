@@ -22,19 +22,26 @@ assert_file_not_exists "$t/.cursor" "cursor 없음"
 
 suite "add-tool cursor"
 t=$(make_tmpdir)
-"$INIT_SH" --skip-ai "$t" >/dev/null 2>&1
+mkdir -p "$t/src/app"
+echo '{"dependencies":{"next":"14"}}' > "$t/package.json"
+touch "$t/next.config.ts"
+"$INIT_SH" --skip-ai --tools claude "$t" >/dev/null 2>&1
 assert_file_not_exists "$t/.cursor" "add 전 cursor 없음"
 "$INIT_SH" add-tool cursor "$t" >/dev/null 2>&1
 assert_file_exists "$t/.cursor/rules/ai-setting.mdc" "add 후 cursor 있음"
+assert_file_exists "$t/.cursor/rules/frontend.mdc" "add 후 frontend rule 있음"
+assert_file_exists "$t/.cursor/rules/typescript.mdc" "add 후 TS rule 있음"
 
 suite "add-tool gemini"
 "$INIT_SH" add-tool gemini "$t" >/dev/null 2>&1
 assert_file_exists "$t/.gemini/settings.json" "add 후 gemini 있음"
+assert_file_exists "$t/.gemini/settings.notes.md" "add 후 gemini notes 있음"
 assert_file_exists "$t/GEMINI.md" "add 후 GEMINI.md 있음"
 
 suite "add-tool codex"
 "$INIT_SH" add-tool codex "$t" >/dev/null 2>&1
 assert_file_exists "$t/.codex/config.toml" "add 후 codex 있음"
+assert_file_exists "$t/.codex/config.notes.md" "add 후 codex notes 있음"
 assert_file_exists "$t/.codex/config.toml" "add 후 config.toml 있음"
 
 suite "add-tool copilot"
@@ -44,5 +51,6 @@ echo '{"dependencies":{"typescript":"5"}}' > "$t/package.json"
 assert_file_exists "$t/.github/copilot-instructions.md" "add 후 copilot 있음"
 assert_file_exists "$t/.github/instructions/typescript.instructions.md" "add 후 copilot TS instructions 있음"
 assert_file_exists "$t/.github/instructions/testing.instructions.md" "add 후 copilot test instructions 있음"
+assert_file_exists "$t/.github/instructions/frontend.instructions.md" "add 후 copilot frontend instructions 있음"
 
 print_summary

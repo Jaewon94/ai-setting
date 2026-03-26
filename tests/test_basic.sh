@@ -47,7 +47,9 @@ t2=$(make_tmpdir)
 assert_file_exists "$t2/.claude/settings.json" ".claude/settings.json"
 assert_file_exists "$t2/.cursor/rules/ai-setting.mdc" ".cursor/rules/ai-setting.mdc"
 assert_file_exists "$t2/.gemini/settings.json" ".gemini/settings.json"
+assert_file_exists "$t2/.gemini/settings.notes.md" ".gemini/settings.notes.md"
 assert_file_exists "$t2/.codex/config.toml" ".codex/config.toml"
+assert_file_exists "$t2/.codex/config.notes.md" ".codex/config.notes.md"
 assert_file_exists "$t2/.mcp.notes.md" ".mcp.notes.md"
 assert_file_exists "$t2/BEHAVIORAL_CORE.md" "BEHAVIORAL_CORE.md"
 assert_file_exists "$t2/GEMINI.md" "GEMINI.md"
@@ -123,5 +125,23 @@ assert_file_contains "$t8/.mcp.notes.md" "YOUR_API_KEY_HERE" "API 키 placeholde
 assert_file_contains "$t8/.mcp.notes.md" "/absolute/path/to/project" "경로 placeholder 안내"
 assert_file_contains "$t8/.mcp.notes.md" "Current value" "현재 filesystem 경로 안내"
 assert_file_contains "$t8/.codex/config.toml" "Replace" "Codex MCP 주석 안내"
+
+suite "Gemini notes guide"
+t9=$(make_tmpdir)
+"$INIT_SH" --skip-ai --tools claude,gemini "$t9" >/dev/null 2>&1
+assert_file_exists "$t9/.gemini/settings.notes.md" "gemini settings notes 생성"
+assert_file_contains "$t9/.gemini/settings.json" '"discoveryMaxDirs": 200' "gemini discoveryMaxDirs 설정"
+assert_file_contains "$t9/.gemini/settings.json" '"loadMemoryFromIncludeDirectories": false' "gemini memory load 기본값"
+assert_file_contains "$t9/.gemini/settings.json" '"enableRecursiveFileSearch": true' "gemini recursive file search 설정"
+assert_file_contains "$t9/.gemini/settings.notes.md" 'allowedDirectories' "gemini allowedDirectories 안내"
+assert_file_contains "$t9/GEMINI.md" "Gemini Workflow" "gemini workflow 섹션 생성"
+
+suite "Codex notes guide"
+t10=$(make_tmpdir)
+"$INIT_SH" --skip-ai --tools claude,codex "$t10" >/dev/null 2>&1
+assert_file_exists "$t10/.codex/config.notes.md" "codex config notes 생성"
+assert_file_contains "$t10/.codex/config.toml" 'model = "gpt-5.1-codex-mini"' "codex 최신 모델 기본값"
+assert_file_contains "$t10/.codex/config.notes.md" 'approval_policy' "codex approval 정책 안내"
+assert_file_contains "$t10/.codex/config.notes.md" 'workspace-write' "codex sandbox 안내"
 
 print_summary
