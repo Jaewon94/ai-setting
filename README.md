@@ -101,6 +101,7 @@ Start here, then go deeper only as needed.
 
 - [docs/usage.md](docs/usage.md): commands, options, update/sync flows, MCP usage, plugin usage
 - [docs/reference.md](docs/reference.md): generated files, profiles, hook/agent/skill details, detection logic
+- [docs/plans/execution-plan.ko.md](docs/plans/execution-plan.ko.md): current top-level execution order and documentation-first priorities
 - [docs/deployment-checklist.md](docs/deployment-checklist.md): npm/release/Homebrew verification
 - [docs/distribution/README.md](docs/distribution/README.md): npm/Homebrew distribution operations
 - [docs/plugin-guide.md](docs/plugin-guide.md): plugin authoring and packaging

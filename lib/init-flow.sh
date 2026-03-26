@@ -172,32 +172,34 @@ copy_or_reapply_template() {
   fi
 }
 
-insert_archetype_partial_if_needed() {
-  local archetype_partial archetype_marker use_partial ko_heading check_partial heading has_existing
+insert_file_partial_if_needed() {
+  local target_file="$1"
+  local partial_dir="$2"
+  local marker="$3"
+  local archetype_partial use_partial ko_heading check_partial heading has_existing
 
-  archetype_partial="$TEMPLATE_DIR/archetype/${PROJECT_ARCHETYPE}.partial.md"
-  archetype_marker="<!-- ai-setting:archetype-rules -->"
+  archetype_partial="$TEMPLATE_DIR/$partial_dir/${PROJECT_ARCHETYPE}.partial.md"
 
-  if [ -f "$archetype_partial" ] && [ -f "$TARGET/CLAUDE.md" ] && [ "$DRY_RUN" != true ]; then
-    if grep -qF "$archetype_marker" "$TARGET/CLAUDE.md" 2>/dev/null; then
+  if [ -f "$archetype_partial" ] && [ -f "$target_file" ] && [ "$DRY_RUN" != true ]; then
+    if grep -qF "$marker" "$target_file" 2>/dev/null; then
       use_partial="$archetype_partial"
-      ko_heading="$(head -1 "$SCRIPT_DIR/templates/ko/archetype/${PROJECT_ARCHETYPE}.partial.md" 2>/dev/null)"
-      if [ -n "$ko_heading" ] && sed -n "/$archetype_marker/,\$p" "$TARGET/CLAUDE.md" 2>/dev/null | grep -qF "$ko_heading"; then
-        use_partial="$SCRIPT_DIR/templates/ko/archetype/${PROJECT_ARCHETYPE}.partial.md"
+      ko_heading="$(head -1 "$SCRIPT_DIR/templates/ko/$partial_dir/${PROJECT_ARCHETYPE}.partial.md" 2>/dev/null)"
+      if [ -n "$ko_heading" ] && sed -n "/$marker/,\$p" "$target_file" 2>/dev/null | grep -qF "$ko_heading"; then
+        use_partial="$SCRIPT_DIR/templates/ko/$partial_dir/${PROJECT_ARCHETYPE}.partial.md"
       fi
-      truncate_file_from_marker "$TARGET/CLAUDE.md" "$archetype_marker"
-      echo "" >> "$TARGET/CLAUDE.md"
-      echo "$archetype_marker" >> "$TARGET/CLAUDE.md"
-      cat "$use_partial" >> "$TARGET/CLAUDE.md"
+      truncate_file_from_marker "$target_file" "$marker"
+      echo "" >> "$target_file"
+      echo "$marker" >> "$target_file"
+      cat "$use_partial" >> "$target_file"
       printf "$MSG_INIT_ARCHETYPE_DONE\n" "$PROJECT_ARCHETYPE"
       return
     fi
 
     has_existing=false
-    for check_partial in "$SCRIPT_DIR/templates/en/archetype/${PROJECT_ARCHETYPE}.partial.md" "$SCRIPT_DIR/templates/ko/archetype/${PROJECT_ARCHETYPE}.partial.md"; do
+    for check_partial in "$SCRIPT_DIR/templates/en/$partial_dir/${PROJECT_ARCHETYPE}.partial.md" "$SCRIPT_DIR/templates/ko/$partial_dir/${PROJECT_ARCHETYPE}.partial.md"; do
       if [ -f "$check_partial" ]; then
         heading="$(head -1 "$check_partial")"
-        if [ -n "$heading" ] && grep -qF "$heading" "$TARGET/CLAUDE.md" 2>/dev/null; then
+        if [ -n "$heading" ] && grep -qF "$heading" "$target_file" 2>/dev/null; then
           has_existing=true
           break
         fi
@@ -205,14 +207,19 @@ insert_archetype_partial_if_needed() {
     done
 
     if [ "$has_existing" = false ]; then
-      echo "" >> "$TARGET/CLAUDE.md"
-      echo "$archetype_marker" >> "$TARGET/CLAUDE.md"
-      cat "$archetype_partial" >> "$TARGET/CLAUDE.md"
+      echo "" >> "$target_file"
+      echo "$marker" >> "$target_file"
+      cat "$archetype_partial" >> "$target_file"
       printf "$MSG_INIT_ARCHETYPE_DONE\n" "$PROJECT_ARCHETYPE"
     fi
   elif [ -f "$archetype_partial" ] && [ "$DRY_RUN" = true ]; then
     dry_run_note "$(printf "$MSG_INIT_ARCHETYPE_DRYRUN" "$PROJECT_ARCHETYPE")"
   fi
+}
+
+insert_archetype_partials_if_needed() {
+  insert_file_partial_if_needed "$TARGET/CLAUDE.md" "archetype" "<!-- ai-setting:archetype-rules -->"
+  insert_file_partial_if_needed "$TARGET/AGENTS.md" "agents-archetype" "<!-- ai-setting:archetype-agent-rules -->"
 }
 
 ensure_decisions_template() {
@@ -273,8 +280,6 @@ run_step5_project_templates() {
     "$MSG_INIT_CLAUDEMD_REAPPLY_PLANNED" \
     "$MSG_INIT_CLAUDEMD_SKIP"
 
-  insert_archetype_partial_if_needed
-
   copy_or_reapply_template \
     "$TARGET/AGENTS.md" \
     "$TEMPLATE_DIR/AGENTS.md.template" \
@@ -284,6 +289,8 @@ run_step5_project_templates() {
     "$MSG_INIT_AGENTSMD_REAPPLY_DONE" \
     "$MSG_INIT_AGENTSMD_REAPPLY_PLANNED" \
     "$MSG_INIT_AGENTSMD_SKIP"
+
+  insert_archetype_partials_if_needed
 
   run_mkdir_p "$TARGET/docs"
   copy_or_reapply_template \

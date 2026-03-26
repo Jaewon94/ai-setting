@@ -121,10 +121,10 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 ### 완료 체크
 
 - [x] Phase 7: init.sh 모듈 분리
-- [x] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
-- [x] Phase 9: 테스트 자동화
+- [ ] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
+- [ ] Phase 9: 테스트 자동화
 - [x] Phase 10: 실제 배포 실행 (npm 배포 + Homebrew 설치 검증 완료)
-- [x] Phase 11: MCP preset 확장
+- [ ] Phase 11: MCP preset 확장
 - [x] Phase 12: 커뮤니티 플러그인 생태계 (가이드 문서)
 - [x] Phase 13: archetype별 템플릿 특화
 
@@ -205,9 +205,11 @@ ai-setting/
 
 > "설정 파일 복사 수준에서 각 도구의 고유 기능을 활용하는 수준으로 끌어올린다"
 
+상위 실행 계획: [`docs/plans/execution-plan.ko.md`](plans/execution-plan.ko.md)
+
 상세 실행 계획: [`docs/plans/tool-specialization-plan.ko.md`](plans/tool-specialization-plan.ko.md)
 
-현재 Cursor/Gemini/Copilot/Codex는 기본 설정 파일만 생성하고 있다. 각 도구의 공식 문서와 베스트 프랙티스를 기반으로 특화 규칙을 추가한다.
+현재 Cursor/Gemini/Copilot/Codex의 1차 특화는 반영됐지만, 문서화 스킬 팩과 스킬/훅 메타데이터 표준화까지 포함한 Phase 8 전체는 아직 진행 중이다.
 
 #### 구현 지침
 
@@ -268,7 +270,7 @@ ai-setting/
 
 #### 8-4. Codex CLI 지원 심화
 
-현재: `.codex/config.toml`, `.codex/config.notes.md`, `AGENTS.md` 조합으로 운영 가능하지만 archetype별 AGENTS 보강과 세부 정책 정리는 더 남아 있음
+현재: `.codex/config.toml`, `.codex/config.notes.md`, `AGENTS.md` 조합으로 운영 가능하며, AGENTS archetype 보강까지 반영됨. 세부 정책 정리는 추가 여지가 있음
 
 목표:
 - Codex의 approval_policy 세분화 (suggest/auto-edit/full-auto)
@@ -278,6 +280,39 @@ ai-setting/
 참고 자료:
 - [Codex CLI Config Reference](https://developers.openai.com/codex/config-reference/)
 - [Codex CLI GitHub](https://github.com/openai/codex)
+
+#### 8-5. 문서화 스킬 팩 추가
+
+현재: 배포/레퍼런스/로드맵/이슈 문서는 정리돼 있지만, downstream 프로젝트에서 기능/인프라/보안 문서를 구조적으로 남기는 skill은 아직 없음
+
+목표:
+- `document-feature`, `document-infra`, `document-security` 성격의 명시적 문서화 skill 제공
+- `docs/features/*`, `docs/infrastructure/*`, `docs/security/*` 구조 표준화
+- 전역 문서(`docs/decisions.md`, `docs/research-notes.md`)와 주제별 문서의 경계 명확화
+
+구현 방향:
+- 자동 생성이 아니라 명시적 호출 skill로 둔다
+- 각 skill은 폴더 규칙과 문서별 질문만 강하게 정의하고 boilerplate는 최소화한다
+- README에는 요약/링크만 두고 상세는 주제별 문서 폴더로 내린다
+
+#### 8-6. 스킬/훅 메타데이터 표준화
+
+현재: skill frontmatter와 hook 설정은 동작 중심으로만 관리되고 있어, 적용 범위와 운영 맥락을 한눈에 파악하기 어렵다
+
+목표:
+- 공식 문서가 지원하는 메타데이터 필드는 적극 활용
+- 공식 필드가 없는 운영 정보는 sidecar notes 또는 manifest로 표준화
+- 이후 doctor/test에서 metadata 기반 진단이 가능하도록 구조를 고정
+
+구현 방향:
+- Codex skill: `name`, `description`, `agents/openai.yaml` 활용 검토
+- Claude hook: `type`, `matcher`, `timeout`, `async`, prompt/agent hook 활용 후보 정리
+- 내부 운영 필드:
+  - `profile_scope`
+  - `required_tools`
+  - `required_mcp`
+  - `risk_level`
+  - `blocking_or_async`
 
 #### 완료 기준
 

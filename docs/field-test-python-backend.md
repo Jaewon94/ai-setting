@@ -11,7 +11,7 @@
 이번 테스트의 목적은 다음 4가지를 확인하는 것입니다.
 
 1. Python 프로젝트에서 `backend-api` archetype과 `Python` 스택이 올바르게 감지되는지
-2. `CLAUDE.md`에 backend-api partial이 실제로 삽입되는지
+2. `CLAUDE.md`와 `AGENTS.md`에 backend-api 관련 규칙이 실제로 반영되는지
 3. `doctor`가 Python 프로젝트 기준으로 async test 자동 감지와 autofill readiness를 올바르게 보여주는지
 4. 배포 전 대표 스택이 Node.js 외에도 최소 한 번 더 검증됐는지
 
@@ -69,6 +69,7 @@
 
 ### AGENTS.md
 
+- backend-api archetype agent rules가 반영됨
 - Python style 규칙이 기본 제공됨
 - `ruff`, type hints, async 우선, Pydantic v2, SQLAlchemy 2.0 async style 지침이 포함됨
 - `--skip-ai`라서 프로젝트 고유 설명/명령/구조 placeholder는 남아 있음

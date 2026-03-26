@@ -101,6 +101,7 @@ README는 진입 문서만 맡고, 상세 설명은 아래로 분리했습니다
 
 - [docs/usage.ko.md](docs/usage.ko.md): 명령, 옵션, update/sync 흐름, MCP 사용, plugin 사용
 - [docs/reference.ko.md](docs/reference.ko.md): 생성 파일, 프로필, 훅/에이전트/스킬 상세, 감지 로직
+- [docs/plans/execution-plan.ko.md](docs/plans/execution-plan.ko.md): 현재 상위 실행 순서와 문서 우선 정리 계획
 - [docs/deployment-checklist.md](docs/deployment-checklist.md): npm/release/Homebrew 검증
 - [docs/distribution/README.ko.md](docs/distribution/README.ko.md): npm/Homebrew 배포 운영 문서
 - [docs/plugin-guide.md](docs/plugin-guide.md): 플러그인 작성/패키징 가이드

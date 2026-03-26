@@ -79,6 +79,10 @@ Detected stack examples:
 - `Ruby`
 - `PHP`
 
+Archetype-specific composition:
+- `CLAUDE.md` gets an archetype partial automatically
+- `AGENTS.md` also gets archetype-specific agent-rules partials automatically
+
 ## Link and Copy Behavior
 
 `--link`:

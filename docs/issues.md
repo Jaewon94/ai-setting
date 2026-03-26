@@ -32,10 +32,11 @@
 **상태**: ✅ 수정 완료 (2026-03-19)
 
 **문제**:
-- 7종 archetype partial이 CLAUDE.md에 올바르게 삽입되는지 자동 테스트가 없음
+- archetype partial이 생성 문서에 올바르게 삽입되는지 자동 테스트가 부족했음
+- 초기에는 `CLAUDE.md` 중심으로만 검증했고, 이후 `AGENTS.md` archetype agent rules partial까지 검증 범위를 넓힘
 
 **수정 내용**:
-- test_detect.sh에 frontend-web, backend-api partial 삽입 검증 테스트 추가
+- test_detect.sh에 frontend-web, backend-api의 `CLAUDE.md` / `AGENTS.md` partial 삽입 검증 추가
 - blank-start에서 partial 미삽입 확인 테스트 추가
 
 ---

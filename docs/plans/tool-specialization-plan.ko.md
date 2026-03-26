@@ -23,6 +23,7 @@
 - 커뮤니티에서 많이 쓰이는 패턴 정리
 - `ai-setting` 기준 갭 분석
 - 구현 우선순위, 실행 단위, 검증 기준 정의
+- 문서화 스킬 팩과 운영 메타데이터 확장 방향 정의
 
 ## 조사 기준
 
@@ -34,6 +35,7 @@
 2. 경로별 또는 파일 타입별 규칙을 적극적으로 쓴다.
 3. 실행 제어, 승인, sandbox, context 범위를 도구별 방식에 맞게 분리한다.
 4. `AGENTS.md` / `CLAUDE.md`의 공통 규칙은 재사용하되, 각 도구의 고유 기능은 별도 레이어로 둔다.
+5. 도구별 생성물 외에도 "문서화 workflow"와 "운영 메타데이터"를 별도 레이어로 관리한다.
 
 ## 현재 상태 요약
 
@@ -89,6 +91,26 @@
   - 특정 모델 강제
   - 과도한 승인 정책
   - 팀 문화에 영향을 주는 커밋/리뷰 규칙
+
+### 4. 문서화 스킬은 자동 생성이 아니라 명시적 실행 자산으로 둔다
+
+- downstream 프로젝트의 기능/인프라/보안 문서를 강제 생성하지 않는다.
+- 대신 필요할 때 호출할 수 있는 문서화 스킬 팩으로 제공한다.
+- 문서화 스킬은 "어떤 폴더에 어떤 문서를 만들고, 각 문서가 무엇에 답해야 하는지"를 표준화하는 데 집중한다.
+
+### 5. 메타데이터는 "도구가 읽는 필드"와 "운영을 위해 사람이 읽는 필드"를 구분한다
+
+- 도구가 공식적으로 읽는 필드:
+  - Codex skill의 `name`, `description`, `agents/openai.yaml`
+  - Claude hook의 `type`, `matcher`, `timeout`, `async`
+  - Claude agent/skill frontmatter
+- 사람이 운영을 위해 필요한 필드:
+  - 적용 프로필
+  - 기본 활성화 여부
+  - 위험도
+  - 수동 입력 필요 여부
+  - 의존 도구/MCP
+- 공식 필드가 없는 경우에는 sidecar notes 또는 manifest로 관리한다.
 
 ## 우선순위
 
@@ -322,6 +344,105 @@
 - `CLAUDE.md`가 archetype 문맥을 더 잘 반영해야 함
 - hooks/agents/skills의 책임 경계가 문서에 명확해야 함
 
+### 6. 문서화 스킬 팩
+
+### 도입 배경
+
+- 다른 프로젝트에서 검증된 문서화 스킬 패턴을 `ai-setting`의 선택형 자산으로 흡수한다.
+- 목표는 README 장문화를 유도하는 것이 아니라, 주제별 문서를 구조적으로 정리하게 만드는 것이다.
+- 초기 범위는 `feature`, `infra`, `security` 세 가지로 제한한다.
+
+### 참고한 실사용 패턴
+
+- `document-feature`
+  - 출력: `docs/features/<slug>/`
+  - 구성 예: `README.md`, `decisions.md`, `architecture.md`, `guide.md`
+- `document-infra`
+  - 출력: `docs/infrastructure/<slug>/`
+  - 구성 예: `README.md`, `decisions.md`, `configuration.md`, `operations.md`
+- `document-security`
+  - 출력: `docs/security/<slug>/`
+  - 구성 예: `README.md`, `decisions.md`, `implementation.md`, `operations.md`
+
+### 현재 갭
+
+- 현재는 배포/레퍼런스/이슈 문서는 잘 정리되어 있지만, 주제별 문서화 workflow는 스킬로 제공하지 않는다.
+- `docs/decisions.md`, `docs/research-notes.md`는 전역 문서라 특정 기능/인프라 주제 문서와 역할이 다르다.
+- downstream 프로젝트에서 기능/인프라/보안 정리를 시작할 때 사용할 수 있는 구조화된 템플릿이 부족하다.
+
+### 실행 항목
+
+1. 문서화 스킬 팩 설계
+- `document-feature`, `document-infra`, `document-security` 3개로 시작
+- 자동 생성이 아니라 명시적 실행 전용 skill로 둠
+
+2. 출력 구조 표준화
+- `docs/features/*`, `docs/infrastructure/*`, `docs/security/*` 폴더 규칙 고정
+- 각 문서가 답해야 하는 질문을 skill 본문에 명시
+
+3. 기존 문서 체계와의 연결
+- 전역 ADR/연구 메모와 주제별 문서의 경계를 정의
+- README에는 링크만 두고, 긴 설명은 주제별 폴더로 내림
+
+4. 최소 템플릿과 notes 제공
+- 너무 무거운 boilerplate는 피함
+- 문서 생성 전에 필요한 입력과 작성 순서를 notes로 안내
+
+### 완료 기준
+
+- 3개 문서화 skill이 각각 명확한 호출 조건과 출력 폴더 규칙을 가짐
+- 각 skill은 문서 3~4개 수준의 최소 구조만 강제함
+- 전역 문서와 주제별 문서의 역할 충돌이 문서상 해소됨
+
+### 7. 스킬/훅 메타데이터 고도화
+
+### 공식 문서 기준
+
+- Codex skills는 `SKILL.md`의 `name`, `description`을 필수로 요구하고, `agents/openai.yaml`로 UI metadata, invocation policy, tool dependency를 추가할 수 있다.
+- Codex는 skill `description`을 기반으로 암묵 호출을 판단하므로, 설명 문구의 범위와 경계가 중요하다.
+- Claude hooks는 이벤트별 `matcher` regex, `type`, `timeout`, `async`를 공식적으로 지원한다.
+- Claude는 `prompt`/`agent` hook을 공식 지원하므로, 단순 shell command 외에 검증 hook 설계가 가능하다.
+- Claude docs는 plugin의 `hooks/hooks.json`과 component frontmatter를 shareable metadata 경로로 다룬다.
+
+### 현재 갭
+
+- 현재 skill frontmatter는 대부분 `name`, `description`, `disable-model-invocation`까지만 사용한다.
+- 어떤 skill이 명시적 호출 전용인지, 어떤 의존 도구를 전제로 하는지 파일 수준에서 드러나지 않는다.
+- hooks는 동작은 명확하지만, 프로필 범위, 위험도, blocking/async 성격을 사람이 한눈에 보기 어렵다.
+- Claude hook이 공식적으로 지원하는 `prompt`/`agent` 타입을 어디에 써볼지 기준 문서가 없다.
+
+### 실행 항목
+
+1. skill metadata 표준안 정의
+- 공통 최소 필드: `name`, `description`
+- Codex 확장 필드: `agents/openai.yaml`의 `interface`, `policy.allow_implicit_invocation`, `dependencies.tools`
+- Claude/Codex 공통 운영 필드: notes 또는 manifest에 `category`, `explicit_only`, `profile_scope`, `required_tools`, `required_mcp`
+
+2. hook metadata 표준안 정의
+- 공식 필드 사용 원칙: `type`, `matcher`, `timeout`, `async`
+- 운영용 sidecar manifest 또는 주석 필드:
+  - purpose
+  - enabled_profiles
+  - blocking_or_async
+  - risk_level
+  - requires_network_or_secret
+
+3. hook 타입 확장 후보 정리
+- 현재 command hook 위주 구성을 유지
+- 검증 가치가 큰 지점은 prompt/agent hook 후보로 문서화
+- 예: Stop 시 테스트/상태 검증, PermissionRequest 시 민감 작업 점검
+
+4. doctor/reference와의 연결
+- doctor에서 metadata 기반 진단 항목을 확장할 수 있는지 검토
+- `docs/reference*`에 "왜 이 hook/skill이 있는지"를 메타데이터 기준으로 설명
+
+### 완료 기준
+
+- skill metadata와 hook metadata의 표준 필드 목록이 문서로 고정됨
+- 공식 지원 필드와 내부 운영용 필드가 구분돼 설명됨
+- 최소 1개 이상 skill/Codex metadata, 1개 이상 hook metadata 적용 후보가 정의됨
+- 추후 구현 시 lint/test 대상으로 삼을 수 있는 manifest 구조 초안이 생김
+
 ## 구현 순서
 
 ### Step 1. 설계 고정
@@ -353,6 +474,12 @@
 - `docs/reference*`에 생성물 설명 반영
 - 배포 문서는 변경 없으면 유지
 
+### Step 6. 문서화/메타데이터 레이어 확장
+
+- 문서화 skill pack 초안 작성
+- skill/hook metadata 표준안과 sidecar manifest 초안 작성
+- 공식 지원 필드와 내부 운영 필드를 구분해 정리
+
 ## 검증 기준
 
 - 같은 archetype라도 도구별 생성물이 실제로 달라져야 한다.
@@ -374,7 +501,9 @@
 3. Gemini settings/context 확장안
 4. Codex config/rules 프로필안
 5. Claude archetype guidance 정리안
-6. 테스트 매트릭스 초안
+6. 문서화 skill pack 설계안
+7. skill/hook metadata 표준안
+8. 테스트 매트릭스 초안
 
 ## 참고 자료
 
@@ -385,7 +514,9 @@
 - Claude Code memory: https://code.claude.com/docs/en/memory
 - Claude Code settings: https://code.claude.com/docs/en/settings
 - Claude Code hooks: https://code.claude.com/docs/en/hooks
+- Claude Code hooks guide: https://code.claude.com/docs/en/hooks-guide
 - Claude Code subagents: https://code.claude.com/docs/en/sub-agents
+- Codex Skills: https://developers.openai.com/codex/skills
 - Codex Rules: https://developers.openai.com/codex/rules
 - Codex AGENTS.md: https://developers.openai.com/codex/guides/agents-md
 - Codex Subagents: https://developers.openai.com/codex/subagents
