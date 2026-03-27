@@ -67,7 +67,7 @@ hooks.json은 Claude Code의 settings.json hook 형식을 따릅니다.
 # marketplace에 등록된 플러그인 목록
 ai-setting plugin list
 
-# 설치 (hook 스크립트 복사 + settings.json merge)
+# 설치 (hook 스크립트/agents/skills 복사 + settings.json hook merge)
 ai-setting plugin install my-plugin /path/to/project
 
 # 제거
@@ -76,6 +76,13 @@ ai-setting plugin uninstall my-plugin /path/to/project
 # 업데이트 확인
 ai-setting plugin check-update /path/to/project
 ```
+
+현재 동작 메모:
+
+- `install`은 플러그인 `scripts/`, `agents/`, `skills/`를 프로젝트 `.claude/` 아래로 복사합니다.
+- `install`은 `hooks/hooks.json`이 있으면 `.claude/settings.json`의 `hooks`에 병합합니다.
+- `uninstall`은 현재 복사된 hook 스크립트와 agent 파일, 설치 기록을 제거합니다.
+- `uninstall`은 현재 skill 디렉토리 삭제나 `settings.json` hook 병합분의 역정리를 자동으로 하지는 않습니다. 이런 경우는 수동 점검이 필요합니다.
 
 ## marketplace.json에 등록
 
