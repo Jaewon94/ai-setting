@@ -111,6 +111,7 @@ Always local:
 |------|---------|------|
 | `protect-files.sh` | before edit | blocks sensitive file edits |
 | `block-dangerous-commands.sh` | before bash | blocks destructive commands |
+| `format-on-write.sh` | after edit/write | runs formatter selection based on the nearest project markers |
 | `async-test.sh` | after edit/write | best-effort background test run |
 | `compact-backup.sh` | stop / compact start | compact recovery snapshots |
 | `session-context.sh` | stop / compact start | session context preservation |

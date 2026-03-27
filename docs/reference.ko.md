@@ -111,6 +111,7 @@ archetype 특화 반영:
 |------|--------|------|
 | `protect-files.sh` | 편집 전 | 민감 파일 편집 차단 |
 | `block-dangerous-commands.sh` | Bash 실행 전 | 위험 명령 차단 |
+| `format-on-write.sh` | Edit/Write 후 | 가장 가까운 프로젝트 마커 기준으로 포맷터 실행 |
 | `async-test.sh` | Edit/Write 후 | 백그라운드 테스트 실행 |
 | `compact-backup.sh` | Stop / compact 시작 | compact 복구용 스냅샷 |
 | `session-context.sh` | Stop / compact 시작 | 세션 컨텍스트 보존 |
