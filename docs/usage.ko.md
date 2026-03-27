@@ -150,6 +150,17 @@ manifest 예시:
 - `.mcp.json`
 - `.mcp.notes.md`
 - `docs/decisions.md`
+- `docs/research-notes.md`
+
+## Merge 모드
+
+```bash
+./bin/ai-setting --merge /path/to/project
+```
+
+- 기존 `.claude/settings.json`의 사용자 설정을 최대한 유지하면서 ai-setting 관리 hook만 병합합니다.
+- 이미 ai-setting이 관리 중인 hook은 `_source` 마커 기준으로 교체하고, 동일 matcher의 중복 등록은 제거합니다.
+- 기존 커스텀 key와 notification 설정은 유지하는 쪽을 우선합니다.
 
 ## 프로젝트 해석 힌트
 

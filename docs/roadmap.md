@@ -20,7 +20,7 @@
 - [x] Phase 5: 고급 hooks (branch 보호, async test, compact backup, session context, team webhook)
 - [x] Phase 6: 커뮤니티 & 배포 (CI/CD, npm 준비, brew formula, LICENSE, SECURITY, issue templates)
 
-### 현재 상태 (v1.1.8, 2026-03-24 기준)
+### 현재 상태 (v1.1.8, 2026-03-27 문서 점검 기준)
 
 ```
 init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → Claude autofill (timeout) → Codex fallback → 수동 안내
@@ -28,7 +28,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 
 | 영역 | 구현 내용 |
 |------|-----------|
-| **Claude Code** | standard/minimal/strict/team 프로필, hooks 7개, agents 4개, skills 5개 |
+| **Claude Code** | standard/minimal/strict/team 프로필, hooks 8종(프로필별 적용), agents 4개, skills 8개 |
 | **멀티 도구** | Cursor (.cursor/rules), Gemini CLI (.gemini), GitHub Copilot (.github), Codex (.codex) |
 | **MCP** | core(기본)/web(선택)/infra(선택) preset, `--auto-mcp` archetype 기반 자동 적용 |
 | **감지** | blank-start/docs-first/hybrid/code-first 모드, 8종 archetype, 9종 스택 자동 감지 |
@@ -40,8 +40,8 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 
 추가 상태:
 - `CLAUDE.md` 공통 템플릿에 도구 역할 분담과 프로필 운영 기준 반영 완료
-| **신뢰성** | research-notes / decisions 추적성 구조, doctor 문서 형식 검사, session/backup 반영 |
-| **검증** | 범위별 빠른 스위트(`test_hooks`, `test_profiles`, `test_basic`) + 최종 `run_all.sh`, macOS/BSD sed 비호환 제거, field test 4건 문서화 |
+- 신뢰성: `docs/research-notes.md`, `docs/decisions.md` 추적성 구조, doctor 문서 형식 검사, session/backup 반영
+- 검증: `./tests/run_all.sh` 기준 회귀 테스트, macOS/BSD sed 비호환 제거, field test 4건 문서화
 
 ### 1차 고도화 상세 (아카이브)
 
@@ -191,7 +191,7 @@ ai-setting/
 
 - `init.sh`: 약 94행
 - 분리 완료 모듈: `cli.sh`, `deps.sh`, `init-flow.sh`, `ai-autofill.sh` 포함
-- 회귀 검증: 기능 변경 시 범위별 빠른 스위트를 먼저 실행하고, `./tests/run_all.sh`는 마지막 게이트로 1회 실행
+- 회귀 검증: `./tests/run_all.sh` 기준 `PASS 248 / FAIL 0`
 
 #### 다음 착수 단위
 

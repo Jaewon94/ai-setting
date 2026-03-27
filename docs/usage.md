@@ -150,6 +150,17 @@ Still kept as local files:
 - `.mcp.json`
 - `.mcp.notes.md`
 - `docs/decisions.md`
+- `docs/research-notes.md`
+
+## Merge Mode
+
+```bash
+./bin/ai-setting --merge /path/to/project
+```
+
+- Preserves existing user settings in `.claude/settings.json` while merging in ai-setting managed hooks.
+- Replaces hooks already managed by ai-setting using the `_source` marker and avoids duplicate registration for the same matcher.
+- Prefers keeping existing custom keys and notification settings intact.
 
 ## Project Interpretation Hints
 
