@@ -16,7 +16,7 @@
 
 권장 순서:
 
-1. 먼저 [../deployment-checklist.md](../deployment-checklist.md)로 현재 릴리스 체크 항목을 본다.
+1. 먼저 [../deployment-checklist.md](../deployment-checklist.md)로 마지막 검증 기준 릴리스 체크 항목을 본다.
 2. npm 작업은 [npm.ko.md](npm.ko.md)를 본다.
 3. Homebrew 작업은 [homebrew.ko.md](homebrew.ko.md)를 본다.
 

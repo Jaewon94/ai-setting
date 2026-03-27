@@ -16,7 +16,7 @@ Documents:
 
 Suggested order:
 
-1. Read [../deployment-checklist.md](../deployment-checklist.md) for the current release checklist.
+1. Read [../deployment-checklist.md](../deployment-checklist.md) for the most recently verified release checklist.
 2. Use [npm.md](npm.md) for npm-specific execution details.
 3. Use [homebrew.md](homebrew.md) for tap maintenance and formula verification.
 

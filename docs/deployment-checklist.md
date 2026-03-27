@@ -1,8 +1,9 @@
 # Phase 10: 실제 배포 체크리스트
 
-**기준일**: 2026-03-24
+**문서 점검일**: 2026-03-27
+**외부 배포 마지막 검증일**: 2026-03-24 ~ 2026-03-25
 **대상 버전**: `v1.1.8`
-**상태**: npm v1.1.8 배포 완료, `npx` clean directory 검증 완료, Homebrew install/test 검증 완료
+**상태**: 마지막 외부 검증 기준으로 npm v1.1.8 배포, `npx` clean directory, Homebrew install/test가 확인된 상태
 
 ---
 
@@ -24,7 +25,7 @@
 
 ---
 
-## 현재 준비 상태
+## 마지막 검증 기준 준비 상태
 
 | 항목 | 상태 | 근거 |
 |------|------|------|
@@ -66,7 +67,7 @@
   - `docs/field-test-python-backend.md`
 - [x] release 대상 커밋이 `main`에 반영됐는지 확인
 
-권장 검증 명령:
+문서 점검 시 로컬 기준 권장 검증 명령:
 
 ```bash
 ./tests/test_hooks.sh
@@ -142,7 +143,7 @@ npx @jaewon94/ai-setting --help
 
 - [x] `npx @jaewon94/ai-setting --help` 정상 출력 확인
   - 2026-03-24 검증: clean temp directory 기준 성공
-  - 저장소 루트에서는 `sh: ai-setting: command not found` 재현됨 → 사용자 설치 가이드 검토 필요
+  - 저장소 루트에서는 로컬 패키지 컨텍스트 영향으로 clean directory와 다른 결과가 날 수 있음
 - [x] README / homepage / repository 링크 정상
 - [x] 패키지 버전이 `1.1.8`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
 
@@ -213,7 +214,7 @@ ai-setting --help
 
 ## 5. 배포 후 확인
 
-- [x] `npx @jaewon94/ai-setting --help` 확인 (clean temp directory 기준)
+- [x] `npx @jaewon94/ai-setting --help` 확인 (마지막 외부 검증은 clean temp directory 기준)
 - [x] `brew install` 경로 확인
   - 검증 명령: `brew install Jaewon94/ai-setting/ai-setting`
 - [x] GitHub README에 설치 방법 업데이트
@@ -245,4 +246,4 @@ ai-setting --help
 - Homebrew tap 운영까지는 아직 필요 없음
 - 실전 프로젝트 field test를 한두 개 더 보고 싶음
 
-이 경우 현재 상태는 "npm/Homebrew 배포 경로는 유지, 추가 배포 채널은 추후 검토"로 관리하면 됩니다.
+이 경우 문서 상태는 "npm/Homebrew 배포 경로는 유지, 추가 배포 채널은 추후 검토"로 관리하면 됩니다.
