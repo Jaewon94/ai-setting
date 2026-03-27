@@ -60,6 +60,7 @@ venv/
 .claude/context/
 .claude/plans/
 .claude.backup.*
+.serena/
 
 # === Package build ===
 *.tgz

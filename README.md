@@ -26,6 +26,9 @@ For contributions and extension points, see [CONTRIBUTING.md](CONTRIBUTING.md).
 # Update shared assets for an existing project
 ./bin/ai-setting update /path/to/project
 
+# Merge ai-setting hooks into an existing Claude settings file
+./bin/ai-setting --merge /path/to/project
+
 # Sync multiple projects
 ./bin/ai-setting sync ./projects.manifest
 ```
@@ -118,6 +121,7 @@ Start here, then go deeper only as needed.
 - Run `./bin/ai-setting --doctor /path/to/project`
 - Open generated `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, and Copilot instructions
 - Confirm the detected archetype and stack match the project
+- If the project already had `.claude/settings.json`, prefer `--merge` before overwriting it
 - If AI autofill was skipped, fill bracketed sections manually or rerun later with more project signals
 
 ## Verification Loop

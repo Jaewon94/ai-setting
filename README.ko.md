@@ -26,6 +26,9 @@ Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot용 프로젝트 설정을
 # 기존 프로젝트의 공유 자산만 업데이트
 ./bin/ai-setting update /path/to/project
 
+# 기존 Claude settings를 유지하면서 ai-setting hook만 병합
+./bin/ai-setting --merge /path/to/project
+
 # 여러 프로젝트 동기화
 ./bin/ai-setting sync ./projects.manifest
 ```
@@ -118,6 +121,7 @@ README는 진입 문서만 맡고, 상세 설명은 아래로 분리했습니다
 - `./bin/ai-setting --doctor /path/to/project` 실행
 - 생성된 `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Copilot instructions 확인
 - 감지된 archetype/stack이 프로젝트와 맞는지 확인
+- 프로젝트에 기존 `.claude/settings.json`이 있다면 덮어쓰기 전에 `--merge`를 우선 검토
 - AI 자동 채우기가 건너뛰어졌다면 대괄호 섹션을 수동 보정하거나 나중에 다시 실행
 
 ## 검증 루프
