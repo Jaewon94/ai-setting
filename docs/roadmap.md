@@ -41,7 +41,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 추가 상태:
 - `CLAUDE.md` 공통 템플릿에 도구 역할 분담과 프로필 운영 기준 반영 완료
 | **신뢰성** | research-notes / decisions 추적성 구조, doctor 문서 형식 검사, session/backup 반영 |
-| **검증** | `./tests/run_all.sh` 기준 회귀 테스트, macOS/BSD sed 비호환 제거, field test 4건 문서화 |
+| **검증** | 범위별 빠른 스위트(`test_hooks`, `test_profiles`, `test_basic`) + 최종 `run_all.sh`, macOS/BSD sed 비호환 제거, field test 4건 문서화 |
 
 ### 1차 고도화 상세 (아카이브)
 
@@ -191,7 +191,7 @@ ai-setting/
 
 - `init.sh`: 약 94행
 - 분리 완료 모듈: `cli.sh`, `deps.sh`, `init-flow.sh`, `ai-autofill.sh` 포함
-- 회귀 검증: `./tests/run_all.sh` 기준 `PASS 120 / FAIL 0`
+- 회귀 검증: 기능 변경 시 범위별 빠른 스위트를 먼저 실행하고, `./tests/run_all.sh`는 마지막 게이트로 1회 실행
 
 #### 다음 착수 단위
 
@@ -209,7 +209,7 @@ ai-setting/
 
 상세 실행 계획: [`docs/plans/tool-specialization-plan.ko.md`](plans/tool-specialization-plan.ko.md)
 
-현재 Cursor/Gemini/Copilot/Codex의 1차 특화는 반영됐지만, 문서화 스킬 팩과 스킬/훅 메타데이터 표준화까지 포함한 Phase 8 전체는 아직 진행 중이다.
+현재 Cursor/Gemini/Copilot/Codex의 1차 특화, 문서화 스킬 팩, 스킬/훅 메타데이터 표준화는 반영됐다. Phase 8의 잔여 작업은 도구별 심화 특화, 보호 정책 후속 검증, metadata 기반 doctor/test 확장이다.
 
 #### 구현 지침
 
@@ -376,7 +376,7 @@ tests/
 
 #### 완료 기준
 
-- `./tests/run_all.sh` 한 번에 전체 테스트 실행
+- 범위별 빠른 스위트(`test_hooks.sh`, `test_profiles.sh`, `test_basic.sh`)를 먼저 실행하고, `./tests/run_all.sh`는 마지막에 1회 실행
 - CI에서 fixture 테스트 자동 실행
 - 새 기능 추가 시 테스트 없으면 CI 실패하도록 가이드
 

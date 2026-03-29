@@ -75,7 +75,8 @@ fill_rule_based_placeholders() {
   local test_backend_cmd="" test_frontend_cmd="" lint_cmd="" deploy_backend_cmd=""
   local deploy_frontend_cmd="" test_cmd="" deploy_cmd=""
   local files_to_process=()
-  local replaced=0 file changed f
+  local replacements=()
+  local replaced=0 file f
 
   case "$PROJECT_ARCHETYPE" in
     backend-api|worker-batch|data-automation)
@@ -135,52 +136,28 @@ fill_rule_based_placeholders() {
   deploy_frontend_cmd="${deploy_frontend_cmd:-"# TODO: 프론트엔드 배포 명령을 설정하세요"}"
   deploy_cmd="${deploy_cmd:-"# TODO: 배포 명령을 설정하세요"}"
 
+  replacements=(
+    "[프로젝트명]" "$PROJECT_NAME"
+    "{{TEST_BACKEND_CMD}}" "$test_backend_cmd"
+    "{{TEST_FRONTEND_CMD}}" "$test_frontend_cmd"
+    "{{TEST_CMD}}" "$test_cmd"
+    "{{LINT_CMD}}" "$lint_cmd"
+    "{{DEPLOY_BACKEND_CMD}}" "$deploy_backend_cmd"
+    "{{DEPLOY_FRONTEND_CMD}}" "$deploy_frontend_cmd"
+    "{{DEPLOY_CMD}}" "$deploy_cmd"
+  )
+
   [ -f "$TARGET/docs/decisions.md" ] && files_to_process+=("$TARGET/docs/decisions.md")
   [ -f "$TARGET/docs/research-notes.md" ] && files_to_process+=("$TARGET/docs/research-notes.md")
 
   if [ -d "$TARGET/.claude/skills" ]; then
     while IFS= read -r -d '' f; do
       files_to_process+=("$f")
-    done < <(find "$TARGET/.claude/skills" -name "SKILL.md" -print0 2>/dev/null)
+  done < <(find "$TARGET/.claude/skills" -name "SKILL.md" -print0 2>/dev/null)
   fi
 
   for file in "${files_to_process[@]}"; do
-    changed=false
-
-    if grep -q '\[프로젝트명\]' "$file" 2>/dev/null; then
-      replace_literal_in_file "$file" "[프로젝트명]" "$PROJECT_NAME"
-      changed=true
-    fi
-    if grep -q '{{TEST_BACKEND_CMD}}' "$file" 2>/dev/null; then
-      replace_literal_in_file "$file" "{{TEST_BACKEND_CMD}}" "$test_backend_cmd"
-      changed=true
-    fi
-    if grep -q '{{TEST_FRONTEND_CMD}}' "$file" 2>/dev/null; then
-      replace_literal_in_file "$file" "{{TEST_FRONTEND_CMD}}" "$test_frontend_cmd"
-      changed=true
-    fi
-    if grep -q '{{TEST_CMD}}' "$file" 2>/dev/null; then
-      replace_literal_in_file "$file" "{{TEST_CMD}}" "$test_cmd"
-      changed=true
-    fi
-    if grep -q '{{LINT_CMD}}' "$file" 2>/dev/null; then
-      replace_literal_in_file "$file" "{{LINT_CMD}}" "$lint_cmd"
-      changed=true
-    fi
-    if grep -q '{{DEPLOY_BACKEND_CMD}}' "$file" 2>/dev/null; then
-      replace_literal_in_file "$file" "{{DEPLOY_BACKEND_CMD}}" "$deploy_backend_cmd"
-      changed=true
-    fi
-    if grep -q '{{DEPLOY_FRONTEND_CMD}}' "$file" 2>/dev/null; then
-      replace_literal_in_file "$file" "{{DEPLOY_FRONTEND_CMD}}" "$deploy_frontend_cmd"
-      changed=true
-    fi
-    if grep -q '{{DEPLOY_CMD}}' "$file" 2>/dev/null; then
-      replace_literal_in_file "$file" "{{DEPLOY_CMD}}" "$deploy_cmd"
-      changed=true
-    fi
-
-    if [ "$changed" = true ]; then
+    if replace_literals_in_file "$file" "${replacements[@]}"; then
       replaced=$((replaced + 1))
     fi
   done

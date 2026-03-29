@@ -120,6 +120,27 @@ README는 진입 문서만 맡고, 상세 설명은 아래로 분리했습니다
 - 감지된 archetype/stack이 프로젝트와 맞는지 확인
 - AI 자동 채우기가 건너뛰어졌다면 대괄호 섹션을 수동 보정하거나 나중에 다시 실행
 
+## 검증 루프
+
+개발 중에는 변경 범위에 맞는 빠른 검증만 먼저 돌리고, 마지막에만 전체 스위트를 1회 실행합니다.
+
+```bash
+# hooks / 보안 정책 변경
+./tests/test_hooks.sh
+
+# profile / 설치 경로 / metadata 변경
+./tests/test_profiles.sh
+
+# init / doctor / 템플릿 / locale 변경
+./tests/test_basic.sh
+
+# 마지막 게이트에서만
+./tests/run_all.sh
+```
+
+- Windows + Git Bash에서는 `./tests/run_all.sh`가 빠른 스위트보다 훨씬 오래 걸릴 수 있습니다.
+- `ai-setting`을 설치해서 사용하는 downstream 프로젝트에서도 같은 원칙을 권장합니다. 먼저 범위별 빠른 확인을 하고, 마지막에만 전체 검증을 1회 수행합니다.
+
 ## 생성되는 자산 요약
 
 - `.claude/` : Claude Code 설정, hooks, agents, skills

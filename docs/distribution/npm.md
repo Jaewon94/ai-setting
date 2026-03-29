@@ -34,7 +34,20 @@ Without `NPM_TOKEN`, `.github/workflows/release.yml` cannot publish.
 
 ## Local Verification
 
-Run these before tagging:
+Use a two-stage verification flow before tagging.
+
+1. Run only the fast suites that match your change.
+2. Run `./tests/run_all.sh` once as the final gate.
+
+Recommended quick checks:
+
+```bash
+./tests/test_hooks.sh
+./tests/test_profiles.sh
+./tests/test_basic.sh   # when init/doctor/messages/templates changed
+```
+
+Final release check:
 
 ```bash
 ./tests/run_all.sh
@@ -59,12 +72,17 @@ npx @jaewon94/ai-setting --help
 ## Release-Day Checklist
 
 ```bash
+./tests/test_hooks.sh
+./tests/test_profiles.sh
+./tests/test_basic.sh
 ./tests/run_all.sh
 npm pack --dry-run
 git log --oneline -5
 git tag v1.1.8
 git push origin v1.1.8
 ```
+
+On Windows + Git Bash, avoid rerunning `./tests/run_all.sh` during each small edit. It is intended as the final verification step, not the default inner-loop command.
 
 After release:
 

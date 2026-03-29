@@ -120,6 +120,27 @@ Start here, then go deeper only as needed.
 - Confirm the detected archetype and stack match the project
 - If AI autofill was skipped, fill bracketed sections manually or rerun later with more project signals
 
+## Verification Loop
+
+Use a range-based verification loop during development, then run the full suite once at the end.
+
+```bash
+# Hooks / security policy changes
+./tests/test_hooks.sh
+
+# Profile / install-path / metadata changes
+./tests/test_profiles.sh
+
+# init / doctor / template / locale changes
+./tests/test_basic.sh
+
+# Final gate only
+./tests/run_all.sh
+```
+
+- On Windows + Git Bash, `./tests/run_all.sh` can take significantly longer than the focused suites.
+- For downstream projects that install and use `ai-setting`, prefer the same pattern: quick scoped checks first, final full verification once.
+
 ## Generated Assets at a Glance
 
 - `.claude/` for Claude Code settings, hooks, agents, skills

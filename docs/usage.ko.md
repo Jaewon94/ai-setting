@@ -173,6 +173,31 @@ manifest 예시:
 
 ## 유지보수 명령
 
+## 권장 검증 흐름
+
+먼저 변경 범위에 맞는 가장 작은 스위트부터 실행합니다.
+
+```bash
+# hooks, override 정책, metadata 확인
+./tests/test_hooks.sh
+
+# profile별 생성 자산 확인
+./tests/test_profiles.sh
+
+# init, doctor, locale, 템플릿 출력 확인
+./tests/test_basic.sh
+```
+
+전체 스위트는 마지막 게이트에서만 1회 실행합니다.
+
+```bash
+./tests/run_all.sh
+```
+
+메모:
+- 이 저장소의 bash 기반 통합 테스트는 Windows + Git Bash에서 특히 느릴 수 있습니다.
+- 설치형 downstream 프로젝트에서도 같은 패턴을 권장합니다. 먼저 범위별 빠른 검증을 하고, 마지막에만 전체 검증을 1회 실행합니다.
+
 ### Doctor
 
 ```bash

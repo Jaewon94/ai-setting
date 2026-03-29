@@ -827,4 +827,24 @@ fi
 
 **검증 기준**:
 - macOS에서 `tests/test_basic.sh`의 `멱등성 (2회 실행)` 통과
-- `./tests/run_all.sh` 전체 회귀 테스트 통과
+- 범위별 빠른 스위트(`tests/test_hooks.sh`, `tests/test_profiles.sh`, `tests/test_basic.sh`) 우선 확인
+- `./tests/run_all.sh`는 최종 게이트에서 1회 실행
+
+---
+
+### ISS-033: Stop hook의 테스트 강제 prompt가 작업 흐름을 과도하게 차단 (✅ 수정 완료)
+
+**발견일**: 2026-03-29
+**심각도**: 중간
+**상태**: ✅ 수정 완료 (2026-03-30)
+
+**문제**:
+- `Stop` hook의 prompt가 매 코드 수정 뒤 테스트/문서/PR 컨텍스트를 강제로 확인하려고 시도함
+- 사용자가 "마지막에 한 번 검증"하려는 흐름과 충돌하여 작업 속도를 크게 떨어뜨림
+- VS Code 확장에서는 승인 prompt가 충분히 드러나지 않아 원인 파악도 어려움
+
+**수정 내용**:
+- `claude/settings.json`, `claude/settings.strict.json`, `claude/settings.team.json`에서 Stop prompt 제거
+- `plugins/ai-setting-core/hooks/hooks.json`에서도 동일 prompt 제거
+- Stop에서는 `session-context.sh`, `compact-backup.sh`, `team-webhook-notify.sh`만 유지
+- 문서 전반에 "범위별 빠른 검증 후 마지막에 전체 검증 1회" 원칙 반영

@@ -196,6 +196,16 @@ suite "ISS-014/017: merge 로직에 strip_managed_hooks 존재"
 assert_file_contains "$REPO_ROOT/lib/profile.sh" "strip_managed_hooks" "profile.sh에 strip_managed_hooks 함수"
 assert_file_contains "$REPO_ROOT/lib/profile.sh" "is_managed" "profile.sh에 is_managed 함수"
 
+suite "ISS-033: Stop hook 테스트 강제 prompt 제거"
+
+assert_file_contains "$REPO_ROOT/claude/settings.json" 'session-context.sh write standard' "standard stop에 session-context 유지"
+assert_file_contains "$REPO_ROOT/claude/settings.json" 'compact-backup.sh write standard' "standard stop에 compact-backup 유지"
+assert_file_not_contains "$REPO_ROOT/claude/settings.json" '"type": "prompt"' "standard stop prompt 제거"
+assert_file_not_contains "$REPO_ROOT/claude/settings.strict.json" '"type": "prompt"' "strict stop prompt 제거"
+assert_file_not_contains "$REPO_ROOT/claude/settings.team.json" '"type": "prompt"' "team stop prompt 제거"
+assert_file_contains "$REPO_ROOT/claude/settings.team.json" 'team-webhook-notify.sh stop team' "team stop에 webhook 유지"
+assert_file_not_contains "$REPO_ROOT/plugins/ai-setting-core/hooks/hooks.json" '"type": "prompt"' "core plugin stop prompt 제거"
+
 # ━━━ ISS-024: MCP command 체크 함수 존재 ━━━
 suite "ISS-024: check_mcp_commands 함수 존재"
 
@@ -212,8 +222,8 @@ suite "ISS-016/020/021/025: archetype 기반 명령 매핑"
 
 assert_file_contains "$REPO_ROOT/lib/ai-autofill.sh" "test_backend_cmd" "ai-autofill.sh에 test_backend_cmd 변수"
 assert_file_contains "$REPO_ROOT/lib/ai-autofill.sh" "test_frontend_cmd" "ai-autofill.sh에 test_frontend_cmd 변수"
-assert_file_contains "$REPO_ROOT/lib/ai-autofill.sh" 'replace_literal_in_file.*"\[프로젝트명\]"' "ai-autofill.sh에 프로젝트명 치환 로직"
-assert_file_contains "$REPO_ROOT/lib/common.sh" 'replace_literal_in_file\(\)' "portable 치환 헬퍼 존재"
+assert_file_contains "$REPO_ROOT/lib/ai-autofill.sh" '"\[프로젝트명\]"' "ai-autofill.sh에 프로젝트명 치환 토큰 존재"
+assert_file_contains "$REPO_ROOT/lib/common.sh" 'replace_literals_in_file\(\)' "portable 다중 치환 헬퍼 존재"
 
 # ISS-015: .gitignore 자동 추가 확인
 suite "ISS-015: .gitignore에 .claude/context/ 추가 로직"

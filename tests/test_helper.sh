@@ -97,6 +97,39 @@ assert_output_contains() {
   fi
 }
 
+assert_file_not_contains() {
+  local path="$1"
+  local pattern="$2"
+  local label="${3:-$path should not contain '$pattern'}"
+  TEST_TOTAL=$((TEST_TOTAL + 1))
+  if [ -f "$path" ] && ! grep -q -- "$pattern" "$path" 2>/dev/null; then
+    TEST_PASS=$((TEST_PASS + 1))
+    echo "  ✅ $label"
+  else
+    TEST_FAIL=$((TEST_FAIL + 1))
+    echo "  ❌ $label"
+  fi
+}
+
+assert_output_contains_any() {
+  local output="$1"
+  local label="$2"
+  shift 2
+  local pattern
+
+  TEST_TOTAL=$((TEST_TOTAL + 1))
+  for pattern in "$@"; do
+    if printf '%s\n' "$output" | grep -qF -- "$pattern" 2>/dev/null; then
+      TEST_PASS=$((TEST_PASS + 1))
+      echo "  ✅ $label"
+      return 0
+    fi
+  done
+
+  TEST_FAIL=$((TEST_FAIL + 1))
+  echo "  ❌ $label"
+}
+
 make_tmpdir() {
   mktemp -d
 }

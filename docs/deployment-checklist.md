@@ -30,7 +30,7 @@
 |------|------|------|
 | CLI 엔트리 | ✅ 준비됨 | `bin/ai-setting`, `package.json#bin` |
 | npm 메타데이터 | ✅ 준비됨 | `package.json` |
-| 테스트 스위트 | ✅ 준비됨 | `./tests/run_all.sh` |
+| 테스트 스위트 | ✅ 준비됨 | 범위별 빠른 검증(`test_hooks.sh`, `test_profiles.sh`, `test_basic.sh`) + 최종 `./tests/run_all.sh` |
 | CI workflow | ✅ 준비됨 | `.github/workflows/ci.yml` |
 | release workflow | ✅ 준비됨 | `.github/workflows/release.yml` |
 | Homebrew formula 초안 | ✅ 준비됨 | `Formula/ai-setting.rb` |
@@ -43,7 +43,17 @@
 
 ## 배포 전 최종 점검
 
-- [x] `./tests/run_all.sh` 통과 확인
+일상 개발과 배포 직전 검증은 분리해서 운영합니다.
+
+- 일상 개발:
+  - 변경 범위에 맞는 빠른 스위트만 먼저 실행
+  - 예: hooks 변경이면 `tests/test_hooks.sh`, profile/install 경로면 `tests/test_profiles.sh`, init/doctor 문구면 `tests/test_basic.sh`
+- 배포 직전:
+  - 빠른 스위트가 모두 맞는 상태에서 마지막에 `./tests/run_all.sh`를 1회 실행
+  - Windows + Git Bash에서는 전체 스위트가 오래 걸릴 수 있으므로, 중간 단계에서 반복 실행하지 않음
+
+- [ ] 범위별 빠른 검증 통과 확인 (`tests/test_hooks.sh`, `tests/test_profiles.sh`, 필요 시 `tests/test_basic.sh`)
+- [ ] 마지막 `./tests/run_all.sh` 1회 통과 확인
 - [x] `npm pack --dry-run` 결과 확인
 - [x] 로컬 npm cache 권한 상태 확인 (`~/.npm`에 root-owned file이 없는지)
 - [x] `package.json` 버전 확인
@@ -59,6 +69,9 @@
 권장 검증 명령:
 
 ```bash
+./tests/test_hooks.sh
+./tests/test_profiles.sh
+./tests/test_basic.sh   # init/doctor/locale 관련 변경이 있을 때
 ./tests/run_all.sh
 npm pack --dry-run
 git log --oneline -5
@@ -211,14 +224,15 @@ ai-setting --help
 
 ## 권장 실행 순서
 
-1. `./tests/run_all.sh`
-2. `npm pack --dry-run`
-3. npm cache 권한/패키지 이름/NPM_TOKEN 확인
-4. GitHub 저장소 public 전환
-5. `npm publish --access public`
-6. `git tag v<version> && git push origin v<version>`
-7. 필요 시 Homebrew tap 정리 및 formula 반영
-8. `docs/roadmap.md`의 Phase 10 상태 업데이트
+1. 범위별 빠른 검증 실행 (`test_hooks.sh`, `test_profiles.sh`, 필요 시 `test_basic.sh`)
+2. 마지막 `./tests/run_all.sh` 1회 실행
+3. `npm pack --dry-run`
+4. npm cache 권한/패키지 이름/NPM_TOKEN 확인
+5. GitHub 저장소 public 전환
+6. `npm publish --access public`
+7. `git tag v<version> && git push origin v<version>`
+8. 필요 시 Homebrew tap 정리 및 formula 반영
+9. `docs/roadmap.md`의 Phase 10 상태 업데이트
 
 ---
 

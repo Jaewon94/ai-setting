@@ -20,17 +20,17 @@
 - Create: `plugins/ai-setting-core/skills/document-infra/SKILL.md`
 - Create: `plugins/ai-setting-core/skills/document-security/SKILL.md`
 
-- [ ] **Step 1: frontmatter와 호출 문구 설계**
-- [ ] **Step 2: 최소 문서 구조와 파일별 질문 정의**
-- [ ] **Step 3: core plugin mirror 반영**
+- [x] **Step 1: frontmatter와 호출 문구 설계**
+- [x] **Step 2: 최소 문서 구조와 파일별 질문 정의**
+- [x] **Step 3: core plugin mirror 반영**
 
 ### Task 2: 생성/동기화 경로 연결
 
 **Files:**
 - Modify: `lib/profile.sh`
 
-- [ ] **Step 1: managed path 목록에 새 skill 추가**
-- [ ] **Step 2: copy/link 경로에 새 skill 디렉토리 반영**
+- [x] **Step 1: managed path 목록에 새 skill 추가**
+- [x] **Step 2: copy/link 경로에 새 skill 디렉토리 반영**
 
 ### Task 3: 문서와 테스트 반영
 
@@ -39,9 +39,9 @@
 - Modify: `docs/reference.md`
 - Modify: `tests/test_profiles.sh`
 
-- [ ] **Step 1: reference에 새 skill 역할 설명 추가**
-- [ ] **Step 2: standard profile에서 새 skill 생성 확인 테스트 추가**
-- [ ] **Step 3: 필요한 경우 minimal profile 미생성 확인 유지**
+- [x] **Step 1: reference에 새 skill 역할 설명 추가**
+- [x] **Step 2: standard profile에서 새 skill 생성 확인 테스트 추가**
+- [x] **Step 3: 필요한 경우 minimal profile 미생성 확인 유지**
 
 ### Task 4: 회귀 검증
 

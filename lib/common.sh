@@ -94,6 +94,69 @@ replace_literal_in_file() {
   ' "$file" > "$temp_file" && mv "$temp_file" "$file"
 }
 
+replace_literals_in_file() {
+  local file="$1"
+  shift
+  local temp_file pairs_file
+
+  if [ $(( $# % 2 )) -ne 0 ]; then
+    return 1
+  fi
+
+  temp_file="$(make_temp_file)" || return 1
+  pairs_file="$(make_temp_file)" || {
+    rm -f "$temp_file"
+    return 1
+  }
+
+  while [ "$#" -gt 0 ]; do
+    printf '%s\t%s\n' "$1" "$2" >> "$pairs_file"
+    shift 2
+  done
+
+  if ! awk -F '\t' '
+    NR == FNR {
+      search[++count] = $1
+      replacement[count] = substr($0, index($0, $2))
+      next
+    }
+
+    function replace_all(text, needle, repl,    out, pos, needle_len) {
+      if (needle == "") {
+        return text
+      }
+
+      out = ""
+      needle_len = length(needle)
+      while ((pos = index(text, needle)) > 0) {
+        out = out substr(text, 1, pos - 1) repl
+        text = substr(text, pos + needle_len)
+      }
+      return out text
+    }
+
+    {
+      line = $0
+      for (i = 1; i <= count; i++) {
+        line = replace_all(line, search[i], replacement[i])
+      }
+      print line
+    }
+  ' "$pairs_file" "$file" > "$temp_file"; then
+    rm -f "$temp_file" "$pairs_file"
+    return 1
+  fi
+
+  rm -f "$pairs_file"
+
+  if cmp -s "$file" "$temp_file"; then
+    rm -f "$temp_file"
+    return 1
+  fi
+
+  mv "$temp_file" "$file"
+}
+
 truncate_file_from_marker() {
   local file="$1"
   local marker="$2"

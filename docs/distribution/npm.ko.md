@@ -34,7 +34,20 @@ release workflow는 tag 기반으로 동작합니다.
 
 ## 로컬 검증
 
-태그 전에는 아래를 확인합니다.
+태그 전 검증은 2단계로 나눕니다.
+
+1. 변경 범위에 맞는 빠른 스위트만 먼저 실행
+2. 마지막 게이트로 `./tests/run_all.sh`를 1회 실행
+
+권장 빠른 검증:
+
+```bash
+./tests/test_hooks.sh
+./tests/test_profiles.sh
+./tests/test_basic.sh   # init/doctor/문구/템플릿 변경 시
+```
+
+최종 릴리스 검증:
 
 ```bash
 ./tests/run_all.sh
@@ -59,12 +72,17 @@ npx @jaewon94/ai-setting --help
 ## 배포 당일 기본 순서
 
 ```bash
+./tests/test_hooks.sh
+./tests/test_profiles.sh
+./tests/test_basic.sh
 ./tests/run_all.sh
 npm pack --dry-run
 git log --oneline -5
 git tag v1.1.8
 git push origin v1.1.8
 ```
+
+Windows + Git Bash에서는 `./tests/run_all.sh`가 오래 걸릴 수 있으므로, 작은 수정마다 반복 실행하지 말고 마지막 확인용으로만 사용합니다.
 
 배포 후에는:
 

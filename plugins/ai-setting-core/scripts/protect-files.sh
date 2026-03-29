@@ -84,19 +84,22 @@ OVERRIDE_BLOCK_PATTERNS=()
 
 if [ -f "$OVERRIDE_CONFIG" ]; then
   while IFS= read -r pattern; do
+    pattern="${pattern%$'\r'}"
     [ -n "$pattern" ] || continue
     OVERRIDE_ALLOW_PATTERNS+=("$pattern")
-  done < <($JQ_BIN -r '.allow[]? // empty' "$OVERRIDE_CONFIG" 2>/dev/null)
+  done < <(cat "$OVERRIDE_CONFIG" | $JQ_BIN -r '.allow[]? // empty' 2>/dev/null)
 
   while IFS= read -r pattern; do
+    pattern="${pattern%$'\r'}"
     [ -n "$pattern" ] || continue
     OVERRIDE_CONFIRM_PATTERNS+=("$pattern")
-  done < <($JQ_BIN -r '.confirm[]? // empty' "$OVERRIDE_CONFIG" 2>/dev/null)
+  done < <(cat "$OVERRIDE_CONFIG" | $JQ_BIN -r '.confirm[]? // empty' 2>/dev/null)
 
   while IFS= read -r pattern; do
+    pattern="${pattern%$'\r'}"
     [ -n "$pattern" ] || continue
     OVERRIDE_BLOCK_PATTERNS+=("$pattern")
-  done < <($JQ_BIN -r '.block[]? // empty' "$OVERRIDE_CONFIG" 2>/dev/null)
+  done < <(cat "$OVERRIDE_CONFIG" | $JQ_BIN -r '.block[]? // empty' 2>/dev/null)
 fi
 
 for pattern in "${BLOCK_DIR_PATTERNS[@]}"; do

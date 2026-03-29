@@ -173,6 +173,31 @@ Supported archetypes:
 
 ## Maintenance Commands
 
+## Recommended Verification Flow
+
+Use the smallest relevant suite first.
+
+```bash
+# Hooks, override policy, metadata assertions
+./tests/test_hooks.sh
+
+# Profile-specific generated assets
+./tests/test_profiles.sh
+
+# init, doctor, locale, template output
+./tests/test_basic.sh
+```
+
+Run the full suite only once as the final gate:
+
+```bash
+./tests/run_all.sh
+```
+
+Notes:
+- This repo's bash-heavy integration tests can be slow on Windows + Git Bash.
+- Downstream projects using installed `ai-setting` should follow the same pattern: fast scoped verification first, full verification last.
+
 ### Doctor
 
 ```bash

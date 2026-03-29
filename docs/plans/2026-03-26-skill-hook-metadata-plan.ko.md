@@ -18,17 +18,17 @@
 - Create: `plugins/ai-setting-core/skills/metadata.json`
 - Create: `plugins/ai-setting-core/hooks/metadata.json`
 
-- [ ] **Step 1: skill metadata 필드 정의**
-- [ ] **Step 2: hook metadata 필드 정의**
-- [ ] **Step 3: core plugin mirror에도 동일 구조 반영**
+- [x] **Step 1: skill metadata 필드 정의**
+- [x] **Step 2: hook metadata 필드 정의**
+- [x] **Step 3: core plugin mirror에도 동일 구조 반영**
 
 ### Task 2: 설치 경로 반영
 
 **Files:**
 - Modify: `lib/profile.sh`
 
-- [ ] **Step 1: managed path 목록에 metadata 파일 추가**
-- [ ] **Step 2: file copy와 link-dir 모두에서 metadata가 유지되게 반영**
+- [x] **Step 1: managed path 목록에 metadata 파일 추가**
+- [x] **Step 2: file copy와 link-dir 모두에서 metadata가 유지되게 반영**
 
 ### Task 3: 문서와 테스트 반영
 
@@ -38,9 +38,9 @@
 - Modify: `tests/test_profiles.sh`
 - Modify: `tests/test_hooks.sh`
 
-- [ ] **Step 1: reference에 metadata manifest 위치와 의미 추가**
-- [ ] **Step 2: profile 테스트에 metadata 파일 생성 확인 추가**
-- [ ] **Step 3: hook 테스트에 metadata 핵심 필드 존재 확인 추가**
+- [x] **Step 1: reference에 metadata manifest 위치와 의미 추가**
+- [x] **Step 2: profile 테스트에 metadata 파일 생성 확인 추가**
+- [x] **Step 3: hook 테스트에 metadata 핵심 필드 존재 확인 추가**
 
 ### Task 4: 회귀 검증
 
