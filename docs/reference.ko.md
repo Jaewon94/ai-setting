@@ -121,7 +121,7 @@ archetype 특화 반영:
 - Python 포맷: `ruff`
 - TS/JS 포맷: `prettier`
 - 알림 hook
-- 테스트 리마인더 / 세션 리마인더
+- 세션 컨텍스트 / compact 복구 흐름
 
 ## Agents
 

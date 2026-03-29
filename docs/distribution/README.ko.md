@@ -19,3 +19,7 @@
 1. 먼저 [../deployment-checklist.md](../deployment-checklist.md)로 현재 릴리스 체크 항목을 본다.
 2. npm 작업은 [npm.ko.md](npm.ko.md)를 본다.
 3. Homebrew 작업은 [homebrew.ko.md](homebrew.ko.md)를 본다.
+
+검증 원칙:
+- 먼저 변경 범위에 맞는 가장 작은 테스트 스위트를 실행
+- `./tests/run_all.sh`는 최종 릴리스 게이트에서 1회만 실행

@@ -19,3 +19,7 @@ Suggested order:
 1. Read [../deployment-checklist.md](../deployment-checklist.md) for the current release checklist.
 2. Use [npm.md](npm.md) for npm-specific execution details.
 3. Use [homebrew.md](homebrew.md) for tap maintenance and formula verification.
+
+Verification policy:
+- use the smallest relevant test suite first
+- run `./tests/run_all.sh` once as the final release gate

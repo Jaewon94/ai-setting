@@ -57,6 +57,10 @@ hooks.json은 Claude Code의 settings.json hook 형식을 따릅니다.
 
 지원 hook 시점: `PreToolUse`, `PostToolUse`, `Notification`, `Stop`, `SessionStart`
 
+권장 사항:
+- `Stop` hook은 `session-context`, `compact-backup`, 팀 알림처럼 종료 시점에 꼭 필요한 작업에만 사용합니다.
+- 매 코드 수정마다 테스트 실행 여부를 강제하는 `prompt` hook은 기본 inner loop를 크게 늦출 수 있으므로 기본값으로는 권장하지 않습니다.
+
 ## 설치/제거
 
 ```bash

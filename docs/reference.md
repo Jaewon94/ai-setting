@@ -121,7 +121,7 @@ Related automatic behavior:
 - Python formatting via `ruff`
 - TS/JS formatting via `prettier`
 - Notification hooks
-- test reminder / session reminder flows
+- session context / compact recovery flows
 
 ## Agents
 
