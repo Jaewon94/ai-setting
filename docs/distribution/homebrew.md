@@ -45,6 +45,8 @@ Without those values, the Homebrew workflow cannot update the tap repository.
 
 The formula installs the repo into `libexec`, then exposes the Node wrapper from `bin/ai-setting.js` as `ai-setting`.
 
+For unreleased version candidates, [`Formula/ai-setting.rb`](../../Formula/ai-setting.rb) may still point at the last published tag until the Homebrew workflow regenerates it from the new release tarball.
+
 Current install logic:
 
 ```ruby

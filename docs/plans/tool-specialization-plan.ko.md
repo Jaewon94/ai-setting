@@ -39,17 +39,17 @@
 
 ## 현재 상태 요약
 
-현재 `ai-setting`은 아래 자산을 생성한다.
+2026-03-31 기준 `ai-setting`은 아래 자산을 생성한다.
 
 | 도구 | 현재 생성물 | 현재 수준 |
 |---|---|---|
-| Claude Code | `.claude/settings.json`, hooks, agents, skills, `CLAUDE.md` | 가장 성숙 |
-| Codex CLI | `.codex/config.toml`, `AGENTS.md` | 기본 설정 + MCP 중심 |
-| Cursor | `.cursor/rules/*.mdc` | 공통 rule + 일부 stack rule |
-| Gemini CLI | `.gemini/settings.json`, `GEMINI.md` | 기본 설정 + 컨텍스트 문서 |
-| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | 저장소/경로별 지침 기본 제공 |
+| Claude Code | `.claude/settings.json`, hooks, agents, skills, metadata manifests, `CLAUDE.md` | 가장 성숙, 프로필/archetype/메타데이터 반영 완료 |
+| Codex CLI | `.codex/config.toml`, `.codex/config.notes.md`, `AGENTS.md` | 프로필별 config + MCP + archetype guidance 반영 |
+| Cursor | `.cursor/rules/*.mdc` | 공통 + stack + archetype + docs/testing rules 반영 |
+| Gemini CLI | `.gemini/settings.json`, `.gemini/settings.notes.md`, `GEMINI.md` | 설정 레이어 + notes + context 문서 반영 |
+| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` | 저장소/경로별 지침과 archetype 조합 반영 |
 
-현재 구현은 "기본 파일 생성"과 "공통 규칙 이식"은 되어 있지만, 도구별 고유 기능을 체계적으로 활용하는 수준은 아직 부족하다.
+현재 단계의 계획 산출물은 구현과 문서에 대부분 반영됐다. 아래 "현재 갭" 문단은 초기 설계 시점의 기준 기록으로 남겨 두며, 최신 완료 상태 판단은 `docs/roadmap.md`, `docs/reference*`, `docs/issues.md`를 우선한다.
 
 ## 공통 전략
 

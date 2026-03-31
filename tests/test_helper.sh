@@ -129,7 +129,19 @@ assert_output_contains_any() {
   TEST_FAIL=$((TEST_FAIL + 1))
   echo "  ❌ $label"
 }
-
+assert_output_not_contains() {
+  local output="$1"
+  local pattern="$2"
+  local label="${3:-output does not contain '$pattern'}"
+  TEST_TOTAL=$((TEST_TOTAL + 1))
+  if printf '%s\n' "$output" | grep -qF -- "$pattern" 2>/dev/null; then
+    TEST_FAIL=$((TEST_FAIL + 1))
+    echo "  ❌ $label"
+  else
+    TEST_PASS=$((TEST_PASS + 1))
+    echo "  ✅ $label"
+  fi
+}
 make_tmpdir() {
   mktemp -d
 }

@@ -4,7 +4,7 @@
 add_mcp_preset() {
   local preset="$1"
   case "$preset" in
-    core|web|infra|local)
+    core|web|infra|git|local|chrome|next)
       ;;
     *)
       printf "${RED}${MSG_MCP_ERR_UNKNOWN_PRESET}${NC}\n" "$preset" >&2
@@ -58,6 +58,10 @@ calculate_recommended_mcp_presets() {
       fi
       ;;
   esac
+
+  if [[ "$PROJECT_STACK" == *"Next.js"* ]]; then
+    add_recommended_mcp_preset "next"
+  fi
 
   RECOMMENDED_MCP_PRESET_LABEL="$(IFS=,; echo "${RECOMMENDED_MCP_PRESETS[*]}")"
 }
@@ -120,6 +124,33 @@ EOF
 [mcp_servers.docker]
 command = "npx"
 args = ["-y", "@hypnosis/docker-mcp-server"]
+EOF
+      ;;
+    git)
+      cat <<EOF >> "$file"
+
+# Project-local MCP preset: git
+[mcp_servers.git]
+command = "uvx"
+args = ["mcp-server-git", "--repository", "${TARGET:-.}"]
+EOF
+      ;;
+    chrome)
+      cat <<'EOF' >> "$file"
+
+# Project-local MCP preset: chrome
+[mcp_servers.chrome-devtools]
+command = "npx"
+args = ["-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"]
+EOF
+      ;;
+    next)
+      cat <<'EOF' >> "$file"
+
+# Project-local MCP preset: next
+[mcp_servers.next-devtools]
+command = "npx"
+args = ["-y", "next-devtools-mcp@latest"]
 EOF
       ;;
     local)
@@ -188,6 +219,39 @@ EOF
 
 EOF
         ;;
+      git)
+        cat >> "$file" <<EOF
+## git
+
+- `git`: requires `uvx`, an initialized Git repository, and access to the target repository path.
+- The generated repository path is currently set to the project root.
+  - Current value: \`${target_path}\`
+  - If you want stricter scope, replace it with the exact repository directory you want to expose.
+  - Example: \`/absolute/path/to/project\`
+- This preset is opt-in because it exposes repository history, diffs, and branch state to the MCP client.
+
+EOF
+        ;;
+      chrome)
+        cat >> "$file" <<'EOF'
+## chrome
+
+- `chrome-devtools`: requires Node.js 20.19+ and Google Chrome or Chrome for Testing.
+- The generated preset uses `--no-usage-statistics` to disable the upstream usage-statistics collection by default.
+- Add this preset when you want browser debugging and performance inspection beyond the Playwright-only `web` preset.
+
+EOF
+        ;;
+      next)
+        cat >> "$file" <<'EOF'
+## next
+
+- `next-devtools`: requires Node.js 20.19+.
+- Runtime diagnostics work best when a Next.js dev server is already running (`npm run dev` or equivalent).
+- Upstream telemetry may be enabled by default; if you need stricter privacy controls, review the upstream docs and add the relevant environment override manually.
+
+EOF
+        ;;
       local)
         cat >> "$file" <<EOF
 ## local
@@ -229,7 +293,10 @@ check_mcp_commands() {
       core)
         commands_to_check+=("npx" "uvx")
         ;;
-      web|infra|local)
+      git)
+        commands_to_check+=("uvx")
+        ;;
+      web|infra|local|chrome|next)
         commands_to_check+=("npx")
         ;;
     esac
@@ -296,6 +363,15 @@ EOF
         ;;
       infra)
         append_claude_mcp_server "$file" "docker" "npx" '["-y", "@hypnosis/docker-mcp-server"]'
+        ;;
+      git)
+        append_claude_mcp_server "$file" "git" "uvx" '["mcp-server-git", "--repository", "."]'
+        ;;
+      chrome)
+        append_claude_mcp_server "$file" "chrome-devtools" "npx" '["-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"]'
+        ;;
+      next)
+        append_claude_mcp_server "$file" "next-devtools" "npx" '["-y", "next-devtools-mcp@latest"]'
         ;;
       local)
         append_claude_mcp_server "$file" "filesystem" "npx" '["--yes", "@anthropic/mcp-filesystem", "."]'

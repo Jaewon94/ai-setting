@@ -179,6 +179,9 @@ archetype 특화 반영:
 - `core`
 - 선택 `web`
 - 선택 `infra`
+- 선택 `git`
+- 선택 `chrome`
+- Next.js 스택 감지 시 자동 추천 `next`
 - 선택 `local`
 
 수동 입력값 처리:

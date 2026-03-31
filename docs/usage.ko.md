@@ -61,6 +61,9 @@
 | `core` | `sequential-thinking`, `serena`, `upstash-context-7-mcp` |
 | `web` | `playwright` |
 | `infra` | `docker` |
+| `git` | `mcp-server-git` |
+| `chrome` | `chrome-devtools-mcp` |
+| `next` | `next-devtools-mcp` |
 | `local` | `filesystem`, `fetch` |
 
 ### 예시
@@ -72,10 +75,19 @@
 # 인프라 도구 추가
 ./bin/ai-setting --mcp-preset infra /path/to/project
 
+# 저장소 조회 도구를 명시적으로 추가
+./bin/ai-setting --mcp-preset git /path/to/project
+
+# 브라우저 디버깅 도구 추가
+./bin/ai-setting --mcp-preset web,chrome /path/to/project
+
+# Next.js 진단 도구를 명시적으로 추가
+./bin/ai-setting --mcp-preset web,next /path/to/project
+
 # 조합 사용
 ./bin/ai-setting --mcp-preset web,infra /path/to/project
 
-# archetype 기반 자동 추천
+# archetype/stack 기반 자동 추천
 ./bin/ai-setting --auto-mcp /path/to/project
 
 # 프로젝트 로컬 MCP 건너뛰기
@@ -87,6 +99,9 @@
 - `.mcp.json`은 실제 실행되는 JSON 설정
 - `.mcp.notes.md`는 API 키, 절대 경로 같은 수동 입력값 안내
 - `.codex/config.toml`은 필요한 경우 인라인 주석 포함 가능
+- `git`은 opt-in preset이며 `uvx`가 필요하고 기본 저장소 경로는 프로젝트 루트
+- `chrome`은 opt-in preset이며 Chrome 또는 Chrome for Testing, Node.js 20.19+가 필요
+- `next`는 Next.js 스택 감지 시 자동 추천
 - `.ai-setting/protect-files.json`은 프로젝트별 파일 보호 정책 override
 - `.ai-setting/protect-files.notes.md`는 override 작성 가이드
 - 단, 기본 hard-block 항목은 override로 `allow`로 내릴 수 없음

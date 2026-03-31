@@ -43,6 +43,16 @@ For contributions and extension points, see [CONTRIBUTING.md](CONTRIBUTING.md).
 - Sync flow for keeping multiple projects aligned
 - Cross-platform bash-based hooks verified against macOS, Windows, and Linux behavior
 
+## Tool Support Snapshot
+
+| Tool | Support | Current Highlights |
+|------|---------|--------------------|
+| Claude Code | ★★★★ | Profiles, hooks, agents, skills, archetype-aware `CLAUDE.md` |
+| Codex CLI | ★★★★ | Profile-specific config, notes, MCP presets, `AGENTS.md` auto-read |
+| Cursor | ★★★☆ | Common + stack/archetype rules, docs/testing rules, known external `@file` limitation |
+| Gemini CLI | ★★★☆ | Project settings, notes, `GEMINI.md`, `AGENTS.md` context loading |
+| GitHub Copilot | ★★★☆ | Repo-wide instruction plus path-specific instructions by stack/archetype |
+
 ## Core Flow
 
 ```text
@@ -72,12 +82,17 @@ Default is `core`.
 | `core` | `sequential-thinking`, `serena`, `upstash-context-7-mcp` |
 | `web` | `playwright` |
 | `infra` | `docker` |
+| `git` | `mcp-server-git` |
+| `chrome` | `chrome-devtools-mcp` |
+| `next` | `next-devtools-mcp` |
 | `local` | `filesystem`, `fetch` |
 
 Notes:
 - `.mcp.json` is kept machine-parseable JSON without comments.
 - `.mcp.notes.md` is generated next to it for manual values like API keys or absolute paths.
 - `.codex/config.toml` can include inline comments for manual MCP edits.
+- `git` is opt-in and uses the project root repository path by default; review scope before enabling it on sensitive repos.
+- `chrome` is opt-in browser debugging alongside `web`; `next` is auto-recommended for detected Next.js stacks.
 
 ## Package and Runtime Notes
 

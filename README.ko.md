@@ -43,6 +43,16 @@ Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot용 프로젝트 설정을
 - 여러 프로젝트를 맞추는 sync 흐름
 - macOS, Windows, Linux 기준으로 검증한 bash hook 흐름
 
+## 도구 지원 현황
+
+| 도구 | 지원 수준 | 현재 강점 |
+|------|-----------|-----------|
+| Claude Code | ★★★★ | 프로필, hooks, agents, skills, archetype 반영 `CLAUDE.md` |
+| Codex CLI | ★★★★ | 프로필별 config, notes, MCP preset, `AGENTS.md` 자동 탐색 |
+| Cursor | ★★★☆ | 공통 + stack/archetype rule, docs/testing rule, 외부 `@file` 이슈 문서화 |
+| Gemini CLI | ★★★☆ | 프로젝트 설정, notes, `GEMINI.md`, `AGENTS.md` context 로딩 |
+| GitHub Copilot | ★★★☆ | 저장소 지침 + stack/archetype path-specific instructions |
+
 ## 핵심 흐름
 
 ```text
@@ -72,12 +82,17 @@ init.sh
 | `core` | `sequential-thinking`, `serena`, `upstash-context-7-mcp` |
 | `web` | `playwright` |
 | `infra` | `docker` |
+| `git` | `mcp-server-git` |
+| `chrome` | `chrome-devtools-mcp` |
+| `next` | `next-devtools-mcp` |
 | `local` | `filesystem`, `fetch` |
 
 메모:
 - `.mcp.json`은 JSON 파싱을 깨지 않도록 주석 없이 유지합니다.
 - 대신 `.mcp.notes.md`를 같이 생성해서 API 키, 절대 경로 같은 수동 입력값을 안내합니다.
 - `.codex/config.toml`은 TOML이라 필요한 경우 인라인 주석을 함께 넣을 수 있습니다.
+- `git`은 opt-in preset이며 기본값으로 프로젝트 루트 저장소 경로를 사용하므로, 민감한 저장소에서는 범위를 먼저 검토해야 합니다.
+- `chrome`은 `web`과 별도로 opt-in 브라우저 디버깅 preset이고, `next`는 Next.js 스택 감지 시 `--auto-mcp`에서 자동 추천됩니다.
 
 ## 패키지 / 실행 메모
 

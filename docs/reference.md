@@ -179,6 +179,9 @@ Default presets:
 - `core`
 - optional `web`
 - optional `infra`
+- optional `git`
+- optional `chrome`
+- auto-recommended `next` for detected Next.js stacks
 - optional `local`
 
 Manual values:

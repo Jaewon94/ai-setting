@@ -61,6 +61,9 @@ When switching profiles:
 | `core` | `sequential-thinking`, `serena`, `upstash-context-7-mcp` |
 | `web` | `playwright` |
 | `infra` | `docker` |
+| `git` | `mcp-server-git` |
+| `chrome` | `chrome-devtools-mcp` |
+| `next` | `next-devtools-mcp` |
 | `local` | `filesystem`, `fetch` |
 
 ### Examples
@@ -72,10 +75,19 @@ When switching profiles:
 # Add infrastructure helpers
 ./bin/ai-setting --mcp-preset infra /path/to/project
 
+# Add repository inspection helpers explicitly
+./bin/ai-setting --mcp-preset git /path/to/project
+
+# Add browser debugging helpers
+./bin/ai-setting --mcp-preset web,chrome /path/to/project
+
+# Add Next.js diagnostics explicitly
+./bin/ai-setting --mcp-preset web,next /path/to/project
+
 # Combine presets
 ./bin/ai-setting --mcp-preset web,infra /path/to/project
 
-# Let ai-setting choose based on detected archetype
+# Let ai-setting choose based on detected archetype/stack
 ./bin/ai-setting --auto-mcp /path/to/project
 
 # Skip project-local MCP generation
@@ -87,6 +99,9 @@ When switching profiles:
 - `.mcp.json` contains the runnable JSON config
 - `.mcp.notes.md` explains manual values such as API keys or absolute paths
 - `.codex/config.toml` may include inline comments for manual MCP editing
+- `git` is opt-in, requires `uvx`, and defaults to the project-root repository path
+- `chrome` is opt-in and requires Chrome or Chrome for Testing plus Node.js 20.19+
+- `next` is recommended automatically when a Next.js stack is detected
 - `.ai-setting/protect-files.json` overrides file-protection rules per project
 - `.ai-setting/protect-files.notes.md` explains how to write those overrides
 - built-in hard-block entries cannot be downgraded to `allow` by project override

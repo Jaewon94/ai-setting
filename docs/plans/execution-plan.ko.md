@@ -8,6 +8,11 @@
 
 **계획 저장 위치:** `docs/plans/`
 
+**현재 상태 (2026-03-31):**
+- 문서 최신화 루프를 계속 운영 중이며, 최근 5개 커밋은 모두 문서 정리다.
+- 우선순위 2~5 범위의 구현은 저장소에 반영되어 있고 `./tests/run_all.sh` 기준 `PASS 258 / FAIL 0`이다.
+- 다음 큰 남은 축은 문서 최신화 유지와 Phase 11 잔여 MCP preset(`brave-search`, `Agentation`) 확장이다.
+
 ---
 
 ## 1. 최우선 원칙
@@ -74,6 +79,11 @@
 - `docs/features/*`, `docs/infrastructure/*`, `docs/security/*` 구조를 표준화한다.
 - 전역 문서와 주제별 문서의 역할 충돌을 해소한다.
 
+### 현재 상태
+
+- `document-feature`, `document-infra`, `document-security`가 Claude skill과 core plugin mirror에 반영됐다.
+- 설치 경로, reference 문서, profile 테스트까지 연결된 상태다.
+
 ## 4. 3순위: 파일 보호 정책 재설계
 
 ### 목표
@@ -102,6 +112,11 @@
 - 사용자 편의와 안전의 균형이 문서로 명확히 정리돼야 한다.
 - 추후 구현 시 profile/manifest와 연결할 수 있는 구조가 정의돼야 한다.
 
+### 현재 상태
+
+- `protect-files.sh`는 `block / confirm / allow` 3단계 정책으로 동작한다.
+- `.ai-setting/protect-files.json` override와 hard-block downgrade 불가 제약까지 문서/테스트에 반영됐다.
+
 ## 5. 4순위: 스킬/훅 메타데이터 표준화
 
 상세 계획: [tool-specialization-plan.ko.md](/Users/jaewon/my-project/ai-setting/docs/plans/tool-specialization-plan.ko.md)
@@ -125,6 +140,11 @@
 - sidecar notes 또는 manifest 초안이 정의된다.
 - 이후 doctor/test에서 metadata 기반 검증 확장이 가능해진다.
 
+### 현재 상태
+
+- `.claude/skills/metadata.json`, `.claude/hooks/metadata.json` manifest가 도입됐다.
+- reference 문서와 tests가 핵심 필드를 검증한다.
+
 ## 6. 5순위: 테스트 자동화 강화
 
 상세 계획: [docs/roadmap.md](/Users/jaewon/my-project/ai-setting/docs/roadmap.md)
@@ -133,6 +153,11 @@
 
 - 문서화 스킬과 metadata 표준화가 들어온 뒤에도 회귀가 없도록 테스트를 보강한다.
 - `run_all.sh` 수준을 넘어, 문서/생성물/manifest까지 검증 범위를 넓힌다.
+
+### 현재 상태
+
+- `tests/run_all.sh`가 profile, hooks, tools, detect, sync, basic 흐름을 묶어 회귀를 검증한다.
+- 2026-03-31 재실행 기준 `PASS 258 / FAIL 0`이다.
 
 ## 7. 하위 계획 문서
 

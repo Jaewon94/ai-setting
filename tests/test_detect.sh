@@ -39,12 +39,14 @@ output=$("$INIT_SH" --skip-ai --dry-run --archetype backend-api --stack Python "
 assert_output_contains "$output" "backend-api" "archetype 힌트 적용"
 assert_output_contains "$output" "Python" "stack 힌트 적용"
 
-suite "auto-mcp (frontend-web → core,web)"
+suite "auto-mcp (Next.js frontend-web → core,web,next)"
 t=$(make_tmpdir)
 mkdir -p "$t/src/app"
 echo '{"dependencies":{"next":"14.0.0"}}' > "$t/package.json"
+touch "$t/next.config.ts"
 output=$("$INIT_SH" --skip-ai --auto-mcp --dry-run "$t" 2>&1)
-assert_output_contains "$output" "core,web" "auto-mcp → core,web"
+assert_output_contains "$output" "core,web,next" "auto-mcp → core,web,next"
+assert_output_not_contains "$output" "core,web,next,git" "auto-mcp에 git 미포함"
 
 suite "archetype partial 삽입 — frontend-web"
 t=$(make_tmpdir)

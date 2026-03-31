@@ -20,7 +20,7 @@
 - [x] Phase 5: 고급 hooks (branch 보호, async test, compact backup, session context, team webhook)
 - [x] Phase 6: 커뮤니티 & 배포 (CI/CD, npm 준비, brew formula, LICENSE, SECURITY, issue templates)
 
-### 현재 상태 (v1.1.8, 2026-03-27 문서 점검 기준)
+### 현재 상태 (v1.2.0 release prep, 2026-03-31 문서 점검 기준)
 
 ```
 init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → Claude autofill (timeout) → Codex fallback → 수동 안내
@@ -30,12 +30,12 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 |------|-----------|
 | **Claude Code** | standard/minimal/strict/team 프로필, hooks 8종(프로필별 적용), agents 4개, skills 8개 |
 | **멀티 도구** | Cursor (.cursor/rules), Gemini CLI (.gemini), GitHub Copilot (.github), Codex (.codex) |
-| **MCP** | core(기본)/web(선택)/infra(선택) preset, `--auto-mcp` archetype 기반 자동 적용 |
+| **MCP** | core(기본)/web·infra·git·chrome·local(선택) preset + Next.js용 `next` preset, `--auto-mcp` archetype/stack 기반 자동 적용 |
 | **감지** | blank-start/docs-first/hybrid/code-first 모드, 8종 archetype, 9종 스택 자동 감지 |
 | **안전** | doctor, dry-run, diff, backup-all, reapply |
 | **동기화** | `--link`(파일), `--link-dir`(디렉토리), update, sync(manifest), settings.local.json override, `--sync-conflict` |
 | **플러그인** | ai-setting-core/strict/team, `plugin list\|install\|uninstall\|check-update\|upgrade` |
-| **배포** | package.json v1.1.8, MIT, CI/CD, release workflow (npm auto-publish), brew formula |
+| **배포** | package.json v1.2.0 release prep, latest external publish v1.1.8, MIT, CI/CD, release workflow (npm auto-publish), brew formula |
 | **문서** | BEHAVIORAL_CORE.md, CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md, research-notes.md, decisions.md 템플릿 |
 
 추가 상태:
@@ -121,8 +121,8 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 ### 완료 체크
 
 - [x] Phase 7: init.sh 모듈 분리
-- [ ] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
-- [ ] Phase 9: 테스트 자동화
+- [x] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
+- [x] Phase 9: 테스트 자동화
 - [x] Phase 10: 실제 배포 실행 (npm 배포 + Homebrew 설치 검증 완료)
 - [ ] Phase 11: MCP preset 확장
 - [x] Phase 12: 커뮤니티 플러그인 생태계 (가이드 문서)
@@ -131,12 +131,17 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 ### 2차 고도화 최신 메모
 
 - Copilot path-specific instructions 생성 완료
+- Cursor/Gemini/Copilot/Codex별 특화 생성물과 archetype 연동 검증 완료
+- `document-feature`, `document-infra`, `document-security` 문서화 스킬 팩 추가 완료
+- `.claude/skills/metadata.json`, `.claude/hooks/metadata.json` 운영 메타데이터 manifest 반영 완료
+- `protect-files.sh`의 `block / confirm / allow` 정책과 override 문서화 완료
 - `--merge` 모드로 기존 `.claude/settings.json` 보존 + hook 병합 완료
 - monorepo-aware `format-on-write.sh` 적용 완료
 - `BEHAVIORAL_CORE.md` 공통 행동 코어 도입 완료
 - `docs/research-notes.md` / `docs/decisions.md` 추적성 구조와 doctor 검증 완료
 - Claude timeout 후 Codex fallback까지 포함한 AI autofill 안정화 완료
-- npm scoped package `@jaewon94/ai-setting@1.0.1` publish 완료 (v1.0.0 bin CRLF 문제 수정)
+- MCP preset 확장 반영: `git` opt-in preset, `chrome` opt-in preset, Next.js 스택용 `next` preset 및 auto-mcp 연동
+- npm scoped package의 마지막 외부 배포는 `@jaewon94/ai-setting@1.1.8`이며, 현재 저장소 버전은 `1.2.0` 릴리스 준비 상태다 (v1.0.0 bin CRLF 문제는 1.0.1에서 수정)
 - tag push 기반 npm auto-publish + GitHub Release 자동화 동작 확인
 - Homebrew tap repo 생성, GitHub variable/secret 설정, `brew install` / `brew test` 검증 완료
 - ISS-010~025 전수 검증 이슈 16건 일괄 수정 (보안, 크로스플랫폼, monorepo, merge 중복 등)
@@ -191,7 +196,7 @@ ai-setting/
 
 - `init.sh`: 약 94행
 - 분리 완료 모듈: `cli.sh`, `deps.sh`, `init-flow.sh`, `ai-autofill.sh` 포함
-- 회귀 검증: `./tests/run_all.sh` 기준 `PASS 248 / FAIL 0`
+- 회귀 검증: `./tests/run_all.sh` 기준 `PASS 258 / FAIL 0`
 
 #### 다음 착수 단위
 
@@ -201,7 +206,7 @@ ai-setting/
 
 ---
 
-### Phase 8: 멀티 도구 지원 심화 ⭐ 최우선
+### Phase 8: 멀티 도구 지원 심화 (완료) ⭐ 최우선
 
 > "설정 파일 복사 수준에서 각 도구의 고유 기능을 활용하는 수준으로 끌어올린다"
 
@@ -209,140 +214,60 @@ ai-setting/
 
 상세 실행 계획: [`docs/plans/tool-specialization-plan.ko.md`](plans/tool-specialization-plan.ko.md)
 
-현재 Cursor/Gemini/Copilot/Codex의 1차 특화, 문서화 스킬 팩, 스킬/훅 메타데이터 표준화는 반영됐다. Phase 8의 잔여 작업은 도구별 심화 특화, 보호 정책 후속 검증, metadata 기반 doctor/test 확장이다.
+현재는 초기 설계 범위를 모두 구현 자산과 문서로 반영한 상태다. 남아 있는 것은 저장소 내부 미구현이 아니라 Cursor `@file` 참조의 외부 제품 이슈 추적뿐이다.
 
-#### 구현 지침
+#### 반영 결과
 
-- **반드시 각 도구의 공식 문서를 먼저 확인**하고 최신 설정 스키마/기능을 파악한다
-- 커뮤니티 베스트 프랙티스 (cursorrules.org, awesome-cursorrules 등)를 참고한다
-- 각 도구마다 실제로 해당 도구를 실행해서 설정이 적용되는지 검증한다
-- 기존 AGENTS.md/CLAUDE.md의 규칙을 각 도구 형식에 맞게 변환하되, 도구 고유 기능도 활용한다
-
-#### 8-1. Cursor 지원 심화
-
-현재: 공통 rule + stack rule + archetype rule 생성이 가능하지만, 세분화와 검증 범위를 더 넓혀야 함
-
-목표:
-- **glob 패턴 기반 파일 타입별 규칙** 추가 (Cursor의 핵심 차별점)
-- always/auto/manual/agent-requested 타입 분리 활용
-- 프로젝트 archetype별 Cursor rule 변형
-
-참고 자료:
-- [Cursor Rules 공식 문서](https://docs.cursor.com/context/rules)
-- [cursorrules.org](https://cursorrules.org/) — 커뮤니티 규칙 생성기
-- [awesome-cursorrules](https://github.com/PatrickJS/awesome-cursorrules)
-
-추가 대상 예시:
-```
-.cursor/rules/
-├── ai-setting.mdc            # 기존: 프로젝트 공통 규칙 (always)
-├── typescript.mdc            # glob: **/*.ts,**/*.tsx — TS 코딩 규칙
-├── python.mdc                # glob: **/*.py — Python 코딩 규칙
-├── testing.mdc               # glob: **/*.test.*,**/*.spec.* — 테스트 규칙
-└── docs.mdc                  # glob: **/*.md — 문서 작성 규칙
-```
-
-#### 8-2. Gemini CLI 지원 심화
-
-현재: `.gemini/settings.json`, `.gemini/settings.notes.md`, `GEMINI.md`까지 생성 가능하지만 Gemini 전용 운영 규칙은 더 다듬을 여지가 있음
-
-목표:
-- Gemini CLI의 고유 설정 옵션 활용 (sandbox mode, model 설정 등)
-- `GEMINI.md`에 Gemini 특화 지침 추가 (tool use 패턴, 응답 형식 등)
-- `.gemini/` 디렉토리의 추가 설정 파일 활용
-
-참고 자료:
-- [Gemini CLI Configuration](https://geminicli.com/docs/reference/configuration/)
-- [Gemini CLI GitHub](https://github.com/google-gemini/gemini-cli)
-
-#### 8-3. GitHub Copilot 지원 심화
-
-현재: repository-wide instruction + stack/archetype path-specific instructions까지 생성 가능하지만 세부 규칙 축약과 경로 범위는 더 다듬을 여지가 있음
-
-목표:
-- Copilot의 파일별 지침 (`*.test.ts` 패턴 등) 활용
-- `copilot-instructions.md`에 프로젝트 구조, 네이밍 컨벤션, API 패턴 등 Copilot 특화 지침 추가
-- VS Code settings 연동 (`.vscode/settings.json`의 Copilot 관련 설정)
-
-참고 자료:
-- [GitHub Copilot Instructions 공식 문서](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot)
-- [Copilot Best Practices](https://github.blog/developer-skills/github/how-to-use-github-copilot-in-your-ide-tips-tricks-and-best-practices/)
-
-#### 8-4. Codex CLI 지원 심화
-
-현재: `.codex/config.toml`, `.codex/config.notes.md`, `AGENTS.md` 조합으로 운영 가능하며, AGENTS archetype 보강까지 반영됨. 세부 정책 정리는 추가 여지가 있음
-
-목표:
-- Codex의 approval_policy 세분화 (suggest/auto-edit/full-auto)
-- 프로필별 Codex 설정 차등 적용
-- Codex는 AGENTS.md를 자동으로 읽으므로 별도 지침 파일 불필요 (공식 문서 확인 완료)
-
-참고 자료:
-- [Codex CLI Config Reference](https://developers.openai.com/codex/config-reference/)
-- [Codex CLI GitHub](https://github.com/openai/codex)
-
-#### 8-5. 문서화 스킬 팩 추가
-
-현재: 배포/레퍼런스/로드맵/이슈 문서는 정리돼 있지만, downstream 프로젝트에서 기능/인프라/보안 문서를 구조적으로 남기는 skill은 아직 없음
-
-목표:
-- `document-feature`, `document-infra`, `document-security` 성격의 명시적 문서화 skill 제공
-- `docs/features/*`, `docs/infrastructure/*`, `docs/security/*` 구조 표준화
-- 전역 문서(`docs/decisions.md`, `docs/research-notes.md`)와 주제별 문서의 경계 명확화
-
-구현 방향:
-- 자동 생성이 아니라 명시적 호출 skill로 둔다
-- 각 skill은 폴더 규칙과 문서별 질문만 강하게 정의하고 boilerplate는 최소화한다
-- README에는 요약/링크만 두고 상세는 주제별 문서 폴더로 내린다
-
-#### 8-6. 스킬/훅 메타데이터 표준화
-
-현재: skill frontmatter와 hook 설정은 동작 중심으로만 관리되고 있어, 적용 범위와 운영 맥락을 한눈에 파악하기 어렵다
-
-목표:
-- 공식 문서가 지원하는 메타데이터 필드는 적극 활용
-- 공식 필드가 없는 운영 정보는 sidecar notes 또는 manifest로 표준화
-- 이후 doctor/test에서 metadata 기반 진단이 가능하도록 구조를 고정
-
-구현 방향:
-- Codex skill: `name`, `description`, `agents/openai.yaml` 활용 검토
-- Claude hook: `type`, `matcher`, `timeout`, `async`, prompt/agent hook 활용 후보 정리
-- 내부 운영 필드:
-  - `profile_scope`
-  - `required_tools`
-  - `required_mcp`
-  - `risk_level`
-  - `blocking_or_async`
-
-#### 8-7. 파일 보호 정책 재설계
-
-현재: `protect-files.sh`는 민감 파일 보호에 유효하지만, 정책이 사실상 일괄 차단 중심이라 실제 프로젝트 작업에서는 불편할 수 있음
-
-목표:
-- 파일 보호를 `block / confirm / allow` 3단계로 재설계
-- 진짜 고위험 자산은 계속 강하게 보호
-- 운영 중 자주 수정하는 파일은 무조건 차단 대신 확인 기반 흐름으로 완화
-
-구현 방향:
-- `block`: 키/인증서/credential/DB/생성물
-- `confirm`: `.env*`, `docker-compose*.yml`, workflow, deploy script, infra config, lockfile
-- `allow`: 일반 코드/문서/테스트
-- 프로젝트별 override와 profile 차등 적용 가능성까지 함께 설계
+- Cursor
+  - `.cursor/rules/ai-setting.mdc`, `typescript.mdc`, `python.mdc`, `testing.mdc`, `docs.mdc`, `frontend.mdc`, `backend.mdc`, `cli-library.mdc` 제공
+  - stack/archetype/context-mode에 따라 rule 조합이 달라지도록 연결
+  - Cursor `@file` 미동작은 주석과 이슈 문서로 명시
+- Gemini CLI
+  - `.gemini/settings.json`, `.gemini/settings.notes.md`, `GEMINI.md` 생성
+  - `GEMINI.md`와 `AGENTS.md`를 함께 context로 읽도록 설정
+  - recursive search, directory tree, allowedDirectories 등 프로젝트 설정 레이어 반영
+- GitHub Copilot
+  - `.github/copilot-instructions.md`와 `applyTo` 기반 path-specific instructions 생성
+  - TypeScript, Python, testing, frontend, backend, docs 조합을 archetype에 맞게 생성
+- Codex CLI
+  - 프로필별 `config*.toml` 차등 제공
+  - `AGENTS.md` 자동 탐색을 전제로 한 운영 방식 정리
+  - `.codex/config.notes.md`와 project-local MCP preset 연결
+- Claude Code
+  - archetype partial이 포함된 `CLAUDE.md`
+  - 프로필별 hooks/agents/skills 차등 적용
+  - 문서화 skill pack과 hooks/skills metadata manifest 포함
+- Phase 8 확장 범위
+  - `document-feature`, `document-infra`, `document-security` 추가
+  - `.claude/skills/metadata.json`, `.claude/hooks/metadata.json` 추가
+  - `protect-files.sh`의 `block / confirm / allow` 정책과 project override 문서화
 
 #### 완료 기준
 
-- 각 도구에서 설정이 실제로 적용되고 동작하는지 검증
-- 도구별 2개 이상의 특화 규칙/설정 추가
-- archetype 감지와 연동하여 도구별 규칙이 프로젝트 유형에 맞게 생성
-- README에 도구별 지원 수준 표를 ★ 3개 이상으로 끌어올림
+- [x] 각 도구에서 설정이 실제로 적용되고 동작하는지 검증
+- [x] 도구별 2개 이상의 특화 규칙/설정 추가
+- [x] archetype 감지와 연동하여 도구별 규칙이 프로젝트 유형에 맞게 생성
+- [x] README에 도구별 지원 수준 표 반영
+
+#### 검증 근거
+
+- `tests/test_tools.sh`: 도구별 생성물과 add-tool 흐름 확인
+- `tests/test_detect.sh`: archetype/context-mode별 Cursor/Copilot 생성 조합 확인
+- `tests/test_profiles.sh`: 프로필별 Claude/Codex 자산 차등 확인
+- `tests/test_hooks.sh`: metadata manifest와 보호 정책 확인
+- `docs/issues.md`의 ISS-027: Cursor `@file` 외부 이슈 추적
+
+#### 남은 메모
+
+- Cursor `@file` 참조는 Cursor 측 수정 대기 상태다. 현재는 인라인 안내와 주석으로 우회한다.
 
 ---
 
-### Phase 9: 테스트 자동화
+### Phase 9: 테스트 자동화 (완료)
 
 > "CI에서 스모크 테스트를 넘어 체계적인 회귀 테스트를 실행한다"
 
-Phase 7 모듈 분리와 함께 진행하면 분리 과정의 회귀를 방지할 수 있다.
+Phase 7 모듈 분리 이후 테스트 범위를 단계적으로 넓혀, 현재는 도구별 생성물과 프로필/감지/동기화/훅 동작까지 한 번에 회귀 검증하는 상태다.
 
 #### 테스트 범위
 
@@ -376,9 +301,24 @@ tests/
 
 #### 완료 기준
 
-- 범위별 빠른 스위트(`test_hooks.sh`, `test_profiles.sh`, `test_basic.sh`)를 먼저 실행하고, `./tests/run_all.sh`는 마지막에 1회 실행
-- CI에서 fixture 테스트 자동 실행
-- 새 기능 추가 시 테스트 없으면 CI 실패하도록 가이드
+- [x] `./tests/run_all.sh` 한 번에 전체 테스트 실행
+- [x] CI에서 fixture 테스트 자동 실행
+- [x] 새 기능 추가 시 테스트 없으면 CI 실패하도록 가이드
+
+#### 최신 상태
+
+- 테스트 엔트리: `tests/run_all.sh`
+- 포함 범위:
+  - `test_basic.sh`
+  - `test_commit_message.sh`
+  - `test_profiles.sh`
+  - `test_hooks.sh`
+  - `test_tools.sh`
+  - `test_detect.sh`
+  - `test_sync.sh`
+- CI: `.github/workflows/ci.yml`에서 syntax check + `./tests/run_all.sh` 실행
+- 기여 가이드: `CONTRIBUTING.md`에서 자동화 테스트를 기본 검증으로 요구
+- 최신 재검증: 2026-03-31 `./tests/run_all.sh` 기준 `PASS 258 / FAIL 0`
 
 ---
 
@@ -412,13 +352,15 @@ tests/
 
 > "1차에서 보류했던 MCP를 조건부로 추가한다"
 
+현재 기본/선택 preset으로 `core`, `web`, `infra`, `git`, `local`, `chrome`, `next`를 제공한다.
+이 단계는 남은 확장 후보를 정리하고, 보안/환경 제약이 큰 preset을 후속 라운드로 분리하는 작업이다.
+
 | 분류 | MCP | 조건 | 선행 작업 |
 |------|-----|------|-----------|
-| `local-tools` | `filesystem` | 허용 루트 정책 설계 완료 후 | 보안 스코프 정의, allowedDirectories 설정 자동화 |
-| `local-tools` | `git` | 권한 정책 정의 후 | read-only 기본, write는 opt-in |
-| `web-debug` | `Chrome DevTools` | web preset 선택 시 | playwright와 역할 구분 문서화 |
+| `local-tools` | `git` | `git` preset 선택 시 | 완료: opt-in preset + repository path notes 문서화 |
+| `web-debug` | `Chrome DevTools` | `chrome` preset 선택 시 | 완료: opt-in preset + notes 문서화 |
 | `frontend-addon` | `Agentation` | React/Next archetype일 때 | React 18+ 감지 로직 |
-| `next-addon` | `Next.js DevTools` | Next.js 스택일 때 | next.config 감지와 연동 |
+| `next-addon` | `Next.js DevTools` | Next.js 스택일 때 | 완료: next.config 감지 + `--auto-mcp` 연동 |
 | `api-key` | `brave-search` | API 키 제공 시 | `.env` 기반 키 주입 패턴 설계 |
 
 #### 완료 기준
@@ -426,6 +368,12 @@ tests/
 - preset 추가 시 `--mcp-preset` 옵션으로 선택 가능
 - archetype 감지와 연동하여 `--auto-mcp`에서 자동 추천
 - 보안 민감 MCP는 opt-in + 문서 경고
+
+#### 현재 상태 (2026-03-31)
+
+- 완료: `git`, `chrome`, `next`
+- 남음: `brave-search`, `Agentation`
+- 비고: `filesystem`은 `local` preset으로 이미 제공 중
 
 ---
 

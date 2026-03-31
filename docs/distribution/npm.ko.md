@@ -8,7 +8,8 @@
 
 - 패키지 이름: `@jaewon94/ai-setting`
 - 현재 CLI 엔트리: `bin/ai-setting.js`
-- 현재 `package.json` 버전: `1.1.8`
+- 현재 `package.json` 버전: `1.2.0`
+- 마지막 npm 배포 버전: `1.1.8`
 - 사용자 실행 형태: `npx @jaewon94/ai-setting ...`
 
 ## 기준 파일
@@ -78,8 +79,8 @@ npx @jaewon94/ai-setting --help
 ./tests/run_all.sh
 npm pack --dry-run
 git log --oneline -5
-git tag v1.1.8
-git push origin v1.1.8
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 Windows + Git Bash에서는 `./tests/run_all.sh`가 오래 걸릴 수 있으므로, 작은 수정마다 반복 실행하지 말고 마지막 확인용으로만 사용합니다.

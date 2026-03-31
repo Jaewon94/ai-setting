@@ -49,6 +49,6 @@
 - Test: `bash tests/test_hooks.sh`
 - Test: `./tests/run_all.sh`
 
-- [ ] **Step 1: 개별 테스트 실행**
-- [ ] **Step 2: 전체 회귀 실행**
+- [x] **Step 1: 개별 테스트 실행**
+- [x] **Step 2: 전체 회귀 실행**
 - [ ] **Step 3: 결과 정리 후 커밋**

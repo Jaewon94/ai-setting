@@ -45,6 +45,8 @@ Repository secret:
 
 formula는 저장소 전체를 `libexec` 아래에 설치한 뒤, `bin/ai-setting.js`를 `ai-setting` 이름으로 노출합니다.
 
+아직 태그되지 않은 릴리스 후보 단계에서는 [`Formula/ai-setting.rb`](../../Formula/ai-setting.rb)가 마지막으로 배포된 태그를 계속 가리킬 수 있습니다. 새 release tarball 기준 formula 갱신은 Homebrew workflow가 담당합니다.
+
 현재 install 로직:
 
 ```ruby

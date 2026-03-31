@@ -74,6 +74,9 @@ output=$("$INIT_SH" --help 2>&1)
 assert_output_contains "$output" "--tools" "help에 --tools 포함"
 assert_output_contains "$output" "--all" "help에 --all 포함"
 assert_output_contains "$output" "add-tool" "help에 add-tool 포함"
+assert_output_contains "$output" "git" "help에 git MCP preset 포함"
+assert_output_contains "$output" "chrome" "help에 chrome MCP preset 포함"
+assert_output_contains "$output" "next" "help에 next MCP preset 포함"
 
 suite "dry-run"
 t3=$(make_tmpdir)
@@ -137,10 +140,16 @@ assert_file_contains "$t7/ai-setting.rb" 'sha256 "deadbeef"' "formula sha256 렌
 
 suite "MCP notes guide"
 t8=$(make_tmpdir)
-"$INIT_SH" --skip-ai --tools claude,codex --mcp-preset core,local "$t8" >/dev/null 2>&1
+"$INIT_SH" --skip-ai --tools claude,codex --mcp-preset core,local,git,chrome,next "$t8" >/dev/null 2>&1
 assert_file_contains "$t8/.mcp.notes.md" "YOUR_API_KEY_HERE" "API 키 placeholder 안내"
 assert_file_contains "$t8/.mcp.notes.md" "/absolute/path/to/project" "경로 placeholder 안내"
 assert_file_contains "$t8/.mcp.notes.md" "Current value" "현재 filesystem 경로 안내"
+assert_file_contains "$t8/.mcp.notes.md" "## git" "git MCP notes 섹션 안내"
+assert_file_contains "$t8/.mcp.notes.md" "## chrome" "chrome MCP notes 섹션 안내"
+assert_file_contains "$t8/.mcp.notes.md" "## next" "next MCP notes 섹션 안내"
+assert_file_contains "$t8/.mcp.json" '"git"' "git MCP 서버 생성"
+assert_file_contains "$t8/.mcp.json" '"chrome-devtools"' "chrome MCP 서버 생성"
+assert_file_contains "$t8/.mcp.json" '"next-devtools"' "next MCP 서버 생성"
 assert_file_contains "$t8/.codex/config.toml" "Replace" "Codex MCP 주석 안내"
 
 suite "Gemini notes guide"

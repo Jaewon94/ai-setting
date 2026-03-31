@@ -45,6 +45,18 @@ Refresh project documentation against current implementation state before any ne
 - Add missing `--merge` documentation in `docs/usage.md`
 - Add missing `--merge` documentation in `docs/usage.ko.md`
 
+### Pass 2
+
+- Reconcile Phase 8/9 roadmap state with current implementation and tests
+- Sync execution/sub-plan documents with delivered document skills, metadata manifests, and protect-files policy
+- Add tool support summary tables to `README.md` and `README.ko.md`
+
+### Pass 3
+
+- Sync MCP preset documentation with shipped `git`, `chrome`, and `next` presets
+- Update roadmap Phase 11 notes to separate shipped presets from remaining candidates
+- Re-run help/test verification after documentation refresh
+
 ## Exit Criteria
 
 - No documented behavior contradicts current CLI help or test results

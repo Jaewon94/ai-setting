@@ -8,7 +8,8 @@ Package facts:
 
 - package name: `@jaewon94/ai-setting`
 - current CLI entry: `bin/ai-setting.js`
-- current `package.json` version: `1.1.8`
+- current `package.json` version: `1.2.0`
+- last published npm version: `1.1.8`
 - expected runtime entry from users: `npx @jaewon94/ai-setting ...`
 
 ## Source of Truth
@@ -78,8 +79,8 @@ npx @jaewon94/ai-setting --help
 ./tests/run_all.sh
 npm pack --dry-run
 git log --oneline -5
-git tag v1.1.8
-git push origin v1.1.8
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 On Windows + Git Bash, avoid rerunning `./tests/run_all.sh` during each small edit. It is intended as the final verification step, not the default inner-loop command.

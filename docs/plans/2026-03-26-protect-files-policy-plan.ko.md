@@ -43,6 +43,6 @@
 - Test: `tests/run_all.sh`
 
 - [x] **Step 1: `bash tests/test_hooks.sh` 실행**
-- [ ] **Step 2: `bash tests/test_basic.sh` 실행**
-- [ ] **Step 3: `./tests/run_all.sh` 실행**
+- [x] **Step 2: `bash tests/test_basic.sh` 실행**
+- [x] **Step 3: `./tests/run_all.sh` 실행**
 - [ ] **Step 4: 결과 반영 후 커밋**

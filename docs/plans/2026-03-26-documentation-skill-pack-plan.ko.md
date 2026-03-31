@@ -49,6 +49,6 @@
 - Test: `tests/test_profiles.sh`
 - Test: `./tests/run_all.sh`
 
-- [ ] **Step 1: `bash tests/test_profiles.sh` 실행**
-- [ ] **Step 2: `./tests/run_all.sh` 실행**
+- [x] **Step 1: `bash tests/test_profiles.sh` 실행**
+- [x] **Step 2: `./tests/run_all.sh` 실행**
 - [ ] **Step 3: 결과 정리 후 커밋**

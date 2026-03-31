@@ -1,9 +1,9 @@
 # Phase 10: 실제 배포 체크리스트
 
-**문서 점검일**: 2026-03-27
+**문서 점검일**: 2026-03-31
 **외부 배포 마지막 검증일**: 2026-03-24 ~ 2026-03-25
-**대상 버전**: `v1.1.8`
-**상태**: 마지막 외부 검증 기준으로 npm v1.1.8 배포, `npx` clean directory, Homebrew install/test가 확인된 상태
+**대상 버전**: `v1.2.0`
+**상태**: `v1.2.0` 릴리스 후보를 로컬에서 준비 중이며, 마지막 외부 배포 검증 상태는 npm/Homebrew 기준 `v1.1.8`이다
 
 ---
 
@@ -37,8 +37,8 @@
 | Homebrew formula 초안 | ✅ 준비됨 | `Formula/ai-setting.rb` |
 | LICENSE / SECURITY / 이슈 템플릿 | ✅ 준비됨 | 루트 및 `.github/ISSUE_TEMPLATE/` |
 | 공개 저장소 전환 | ✅ 완료 | GitHub public 확인 |
-| npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.1.8` 배포 확인 |
-| brew tap 등록 | ✅ 완료 | `Jaewon94/homebrew-ai-setting` 생성 및 formula 초기 반영 완료 |
+| npm publish | ⏳ `v1.2.0` 대기 | 마지막 배포는 `@jaewon94/ai-setting@1.1.8` |
+| brew tap 등록 | ⏳ `v1.2.0` 대기 | 마지막 검증은 `Jaewon94/homebrew-ai-setting` 기준 `v1.1.8` |
 
 ---
 
@@ -65,7 +65,7 @@
   - `docs/field-test-research-traceability.md`
   - `docs/field-test-ai-autofill.md`
   - `docs/field-test-python-backend.md`
-- [x] release 대상 커밋이 `main`에 반영됐는지 확인
+- [ ] release 대상 커밋이 `main`에 반영됐는지 확인
 
 문서 점검 시 로컬 기준 권장 검증 명령:
 
@@ -145,7 +145,7 @@ npx @jaewon94/ai-setting --help
   - 2026-03-24 검증: clean temp directory 기준 성공
   - 저장소 루트에서는 로컬 패키지 컨텍스트 영향으로 clean directory와 다른 결과가 날 수 있음
 - [x] README / homepage / repository 링크 정상
-- [x] 패키지 버전이 `1.1.8`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
+- [ ] 패키지 버전이 `1.2.0`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
 
 ---
 
@@ -157,8 +157,8 @@ npx @jaewon94/ai-setting --help
 실행 순서:
 
 ```bash
-git tag v1.1.8
-git push origin v1.1.8
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 체크리스트:
