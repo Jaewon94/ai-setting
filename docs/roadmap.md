@@ -124,7 +124,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - [x] Phase 8: 멀티 도구 지원 심화 (Cursor, Gemini CLI, Copilot, Codex)
 - [x] Phase 9: 테스트 자동화
 - [x] Phase 10: 실제 배포 실행 (npm 배포 + Homebrew 설치 검증 완료)
-- [ ] Phase 11: MCP preset 확장
+- [ ] Phase 11: MCP preset 확장 (잔여 후보 보류)
 - [x] Phase 12: 커뮤니티 플러그인 생태계 (가이드 문서)
 - [x] Phase 13: archetype별 템플릿 특화
 
@@ -134,6 +134,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - Cursor/Gemini/Copilot/Codex별 특화 생성물과 archetype 연동 검증 완료
 - `document-feature`, `document-infra`, `document-security` 문서화 스킬 팩 추가 완료
 - `.claude/skills/metadata.json`, `.claude/hooks/metadata.json` 운영 메타데이터 manifest 반영 완료
+- Phase 11 잔여 후보 `brave-search`, `Agentation`은 현재 라운드에서 보류
 - `protect-files.sh`의 `block / confirm / allow` 정책과 override 문서화 완료
 - `--merge` 모드로 기존 `.claude/settings.json` 보존 + hook 병합 완료
 - monorepo-aware `format-on-write.sh` 적용 완료
@@ -369,10 +370,12 @@ tests/
 - archetype 감지와 연동하여 `--auto-mcp`에서 자동 추천
 - 보안 민감 MCP는 opt-in + 문서 경고
 
-#### 현재 상태 (2026-03-31)
+#### 현재 상태 (2026-04-01)
 
 - 완료: `git`, `chrome`, `next`
-- 남음: `brave-search`, `Agentation`
+- 보류: `brave-search`, `Agentation`
+  - `brave-search`: API 키 없이는 실사용 가치가 낮아, 실제 수요가 확인될 때 opt-in preset으로 다시 검토한다.
+  - `Agentation`: React/Next 프로젝트에서 별도 패키지 설치와 개발용 mount까지 필요해 현재 범위에서는 제외한다.
 - 비고: `filesystem`은 `local` preset으로 이미 제공 중
 
 ---
@@ -437,7 +440,7 @@ templates/
 | **Phase 8** | 멀티 도구 특화 | 중간 | Cursor/Gemini/Copilot 실질적 가치 | ⭐ 1순위 |
 | **Phase 9** | 테스트 자동화 | 중간 | 회귀 방지, 품질 보증 | 2순위 |
 | **Phase 10** | 실제 배포 실행 | 쉬움 | npm/brew로 누구나 설치 가능 | 3순위 |
-| **Phase 11** | MCP preset 확장 | 중간 | 프로젝트별 최적 도구 제공 | 4순위 |
+| **Phase 11** | MCP preset 확장 | 보류 | 프로젝트별 최적 도구 제공 | 4순위 |
 | **Phase 12** | 커뮤니티 플러그인 | 중간~높음 | 생태계 확장, 외부 기여 | 5순위 |
 | **Phase 13** | archetype 템플릿 특화 | 중간 | 프로젝트별 정확도 향상 | 6순위 |
 
@@ -446,7 +449,8 @@ templates/
 1. **Phase 7 (모듈 분리)** → **Phase 8 (멀티 도구 심화)** — 동시 진행 가능, 최우선
 2. **Phase 9 (테스트)** — 모듈 분리 직후 회귀 검증 체계 구축
 3. **Phase 10 (배포)** — 안정화 후 실제 배포
-4. **Phase 11~13** — 사용자 피드백 반영하며 순차 진행
+4. **Phase 11** — 실제 수요가 확인될 때 재개
+5. **Phase 12~13 이후 작업** — 사용자 피드백 반영하며 순차 진행
 
 ---
 
