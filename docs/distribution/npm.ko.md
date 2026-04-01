@@ -9,7 +9,7 @@
 - 패키지 이름: `@jaewon94/ai-setting`
 - 현재 CLI 엔트리: `bin/ai-setting.js`
 - 현재 `package.json` 버전: `1.2.0`
-- 마지막 npm 배포 버전: `1.1.8`
+- 마지막 npm 배포 버전: `1.2.0`
 - 사용자 실행 형태: `npx @jaewon94/ai-setting ...`
 
 ## 기준 파일

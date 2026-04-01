@@ -20,7 +20,7 @@
 - [x] Phase 5: 고급 hooks (branch 보호, async test, compact backup, session context, team webhook)
 - [x] Phase 6: 커뮤니티 & 배포 (CI/CD, npm 준비, brew formula, LICENSE, SECURITY, issue templates)
 
-### 현재 상태 (v1.2.0 release prep, 2026-03-31 문서 점검 기준)
+### 현재 상태 (v1.2.0, 2026-04-01 외부 배포 검증 기준)
 
 ```
 init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복사 → 프로젝트 모드/archetype 감지 → Claude autofill (timeout) → Codex fallback → 수동 안내
@@ -35,7 +35,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 | **안전** | doctor, dry-run, diff, backup-all, reapply |
 | **동기화** | `--link`(파일), `--link-dir`(디렉토리), update, sync(manifest), settings.local.json override, `--sync-conflict` |
 | **플러그인** | ai-setting-core/strict/team, `plugin list\|install\|uninstall\|check-update\|upgrade` |
-| **배포** | package.json v1.2.0 release prep, latest external publish v1.1.8, MIT, CI/CD, release workflow (npm auto-publish), brew formula |
+| **배포** | package.json/npm/Homebrew 모두 v1.2.0 확인, MIT, CI/CD, release workflow (npm auto-publish), brew formula |
 | **문서** | BEHAVIORAL_CORE.md, CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md, research-notes.md, decisions.md 템플릿 |
 
 추가 상태:
@@ -141,7 +141,7 @@ init.sh 실행 → profile 적용 → 로컬 MCP preset 생성 → 템플릿 복
 - `docs/research-notes.md` / `docs/decisions.md` 추적성 구조와 doctor 검증 완료
 - Claude timeout 후 Codex fallback까지 포함한 AI autofill 안정화 완료
 - MCP preset 확장 반영: `git` opt-in preset, `chrome` opt-in preset, Next.js 스택용 `next` preset 및 auto-mcp 연동
-- npm scoped package의 마지막 외부 배포는 `@jaewon94/ai-setting@1.1.8`이며, 현재 저장소 버전은 `1.2.0` 릴리스 준비 상태다 (v1.0.0 bin CRLF 문제는 1.0.1에서 수정)
+- npm scoped package `@jaewon94/ai-setting@1.2.0` publish, GitHub Release `v1.2.0`, Homebrew install/test 재검증 완료 (v1.0.0 bin CRLF 문제는 1.0.1에서 수정)
 - tag push 기반 npm auto-publish + GitHub Release 자동화 동작 확인
 - Homebrew tap repo 생성, GitHub variable/secret 설정, `brew install` / `brew test` 검증 완료
 - ISS-010~025 전수 검증 이슈 16건 일괄 수정 (보안, 크로스플랫폼, monorepo, merge 중복 등)

@@ -1,9 +1,9 @@
 # Phase 10: 실제 배포 체크리스트
 
-**문서 점검일**: 2026-03-31
-**외부 배포 마지막 검증일**: 2026-03-24 ~ 2026-03-25
+**문서 점검일**: 2026-04-01
+**외부 배포 마지막 검증일**: 2026-04-01
 **대상 버전**: `v1.2.0`
-**상태**: `v1.2.0` 릴리스 후보를 로컬에서 준비 중이며, 마지막 외부 배포 검증 상태는 npm/Homebrew 기준 `v1.1.8`이다
+**상태**: npm `@jaewon94/ai-setting@1.2.0`, GitHub Release `v1.2.0`, Homebrew install/test까지 확인된 상태
 
 ---
 
@@ -37,8 +37,8 @@
 | Homebrew formula 초안 | ✅ 준비됨 | `Formula/ai-setting.rb` |
 | LICENSE / SECURITY / 이슈 템플릿 | ✅ 준비됨 | 루트 및 `.github/ISSUE_TEMPLATE/` |
 | 공개 저장소 전환 | ✅ 완료 | GitHub public 확인 |
-| npm publish | ⏳ `v1.2.0` 대기 | 마지막 배포는 `@jaewon94/ai-setting@1.1.8` |
-| brew tap 등록 | ⏳ `v1.2.0` 대기 | 마지막 검증은 `Jaewon94/homebrew-ai-setting` 기준 `v1.1.8` |
+| npm publish | ✅ 완료 | `@jaewon94/ai-setting@1.2.0` 노출 확인 |
+| brew tap 등록 | ✅ 완료 | `Jaewon94/homebrew-ai-setting` formula `v1.2.0` 반영 및 install/test 확인 |
 
 ---
 
@@ -53,8 +53,8 @@
   - 빠른 스위트가 모두 맞는 상태에서 마지막에 `./tests/run_all.sh`를 1회 실행
   - Windows + Git Bash에서는 전체 스위트가 오래 걸릴 수 있으므로, 중간 단계에서 반복 실행하지 않음
 
-- [ ] 범위별 빠른 검증 통과 확인 (`tests/test_hooks.sh`, `tests/test_profiles.sh`, 필요 시 `tests/test_basic.sh`)
-- [ ] 마지막 `./tests/run_all.sh` 1회 통과 확인
+- [x] 범위별 빠른 검증 통과 확인 (`tests/test_hooks.sh`, `tests/test_profiles.sh`, 필요 시 `tests/test_basic.sh`)
+- [x] 마지막 `./tests/run_all.sh` 1회 통과 확인
 - [x] `npm pack --dry-run` 결과 확인
 - [x] 로컬 npm cache 권한 상태 확인 (`~/.npm`에 root-owned file이 없는지)
 - [x] `package.json` 버전 확인
@@ -65,7 +65,7 @@
   - `docs/field-test-research-traceability.md`
   - `docs/field-test-ai-autofill.md`
   - `docs/field-test-python-backend.md`
-- [ ] release 대상 커밋이 `main`에 반영됐는지 확인
+- [x] release 대상 커밋이 `main`에 반영됐는지 확인
 
 문서 점검 시 로컬 기준 권장 검증 명령:
 
@@ -143,9 +143,10 @@ npx @jaewon94/ai-setting --help
 
 - [x] `npx @jaewon94/ai-setting --help` 정상 출력 확인
   - 2026-03-24 검증: clean temp directory 기준 성공
+  - 2026-04-01 기준 npm `1.2.0` 노출 확인
   - 저장소 루트에서는 로컬 패키지 컨텍스트 영향으로 clean directory와 다른 결과가 날 수 있음
 - [x] README / homepage / repository 링크 정상
-- [ ] 패키지 버전이 `1.2.0`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
+- [x] 패키지 버전이 `1.2.0`으로 노출됨 (`npm view ... --userconfig=/dev/null`)
 
 ---
 
@@ -207,6 +208,7 @@ ai-setting --help
 - [x] brew install 성공
 - [x] 설치 후 `ai-setting --help` 정상 출력
   - 2026-03-25 최종 검증: `brew install Jaewon94/ai-setting/ai-setting` 후 `/opt/homebrew/bin/ai-setting --help` 정상
+  - 2026-04-01 재검증: `brew install Jaewon94/ai-setting/ai-setting` 결과 `1.2.0`
   - formula는 `bin/ai-setting.js`를 `ai-setting` 이름으로 symlink 하도록 수정
 - [x] `brew test Jaewon94/ai-setting/ai-setting` 통과
 

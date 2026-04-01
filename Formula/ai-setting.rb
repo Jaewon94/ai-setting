@@ -1,8 +1,8 @@
 class AiSetting < Formula
   desc "Bootstrap Claude Code, Codex, Cursor, Gemini CLI, and Copilot project settings"
   homepage "https://github.com/Jaewon94/ai-setting"
-  url "https://github.com/Jaewon94/ai-setting/archive/refs/tags/v1.1.8.tar.gz"
-  sha256 "da1bee479d0cb3a7dbaf9537f86aa3887e86bcfa3145e9f0f9be0e13e9798788"
+  url "https://github.com/Jaewon94/ai-setting/archive/refs/tags/v1.2.0.tar.gz"
+  sha256 "0a226c31b9cd532f216f25da2c65fed16f9e1cdb0caae9539adbc67a133bcdf2"
   license "MIT"
 
   depends_on "jq" => :recommended
